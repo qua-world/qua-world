@@ -9,7 +9,7 @@ mkDerivation {
   executableHaskellDepends = [ base ];
   testHaskellDepends = [ base hspec ];
   testToolDepends = [ hspec-discover ];
-  homepage = "https://github.com/alunduil/partir.qua.world";
+  homepage = "https://github.com/qua-world/partir.qua.world";
   description = "GUI Client and Client Interfaces for qua.world";
   license = stdenv.lib.licenses.mit;
 }
