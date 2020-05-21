@@ -72,12 +72,14 @@ executable partir
 
   other-modules:
       Partir
+    , Partir.Clients.GUI.Commands
     , Partir.Clients.GUI.Controls
 
   build-depends:
       base >= 4.12 && < 4.13
     , GLUT >= 2.7 && < 2.8
     , OpenGL >= 3.0 && < 3.1
+    , optparse-applicative >= 0.14 && < 0.15
     , partir-qua-world
     , StateVar >= 1.2 && < 1.3
 
