@@ -1,5 +1,5 @@
-{ mkDerivation, base, GLUT, hspec, hspec-discover, OpenGL, StateVar
-, stdenv
+{ mkDerivation, base, GLUT, hspec, hspec-discover, OpenGL
+, optparse-applicative, StateVar, stdenv
 }:
 mkDerivation {
   pname = "partir-qua-world";
@@ -8,7 +8,9 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [ base ];
-  executableHaskellDepends = [ base GLUT OpenGL StateVar ];
+  executableHaskellDepends = [
+    base GLUT OpenGL optparse-applicative StateVar
+  ];
   testHaskellDepends = [ base hspec ];
   testToolDepends = [ hspec-discover ];
   homepage = "https://github.com/qua-world/partir.qua.world";

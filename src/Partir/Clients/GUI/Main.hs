@@ -1,9 +1,12 @@
 module Main where
 
+import           Control.Monad                  ( join )
 import           Data.StateVar                  ( ($=) )
 import           Debug.Trace                    ( traceIO )
 import qualified Graphics.UI.GLUT              as GLUT
+import           Options.Applicative
 import qualified Partir.Clients.GUI.Controls   as Controls
+import qualified Partir.Clients.GUI.Commands   as Commands
 
 main :: IO ()
 main = do
@@ -13,7 +16,6 @@ main = do
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
 
   GLUT.createWindow "Qua World"
-  GLUT.attachMenu GLUT.RightButton mainMenu -- TODO Change this to a contextual menu as GLUT expects.
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
@@ -31,10 +33,9 @@ main = do
   GLUT.motionCallback $= Nothing
   GLUT.passiveMotionCallback $= Nothing
 
-  GLUT.mainLoop
+  commands arguments
 
-mainMenu :: GLUT.Menu
-mainMenu = GLUT.Menu [GLUT.MenuEntry "quit" Controls.quit]
+  GLUT.mainLoop
 
 display :: GLUT.DisplayCallback
 display = do
@@ -42,3 +43,9 @@ display = do
   GLUT.clear [GLUT.ColorBuffer, GLUT.DepthBuffer]
   GLUT.swapBuffers
   traceIO "stopping display"
+
+commands :: [String] -> IO ()
+commands = join . handleParseResult . execParserPure defaultPrefs info'
+ where
+  info'     = info (commands' <**> helper) (fullDesc <> progDesc "partir.qua.world")
+  commands' = subparser (command "observe" Commands.observe)
