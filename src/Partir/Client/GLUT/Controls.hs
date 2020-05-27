@@ -1,4 +1,4 @@
-module Partir.Clients.GUI.Controls
+module Partir.Client.GLUT.Controls
   ( -- * Primary Callback
     primary
     -- * Controls
