@@ -11,6 +11,7 @@ let config = {
 
                 manualOverrides = haskellPackagesNew: haskellPackagesOld: {
                   # See https://github.com/Gabrial439/haskell-nix/blob/master/project4/README.md#composing-overrides
+                  LambdaHack = pkgs.haskell.lib.dontCheck haskellPackagesOld.LambdaHack;
                 };
             in pkgs.haskellPackages.override {
                  overrides = pkgs.lib.composeExtensions generatedOverrides manualOverrides;

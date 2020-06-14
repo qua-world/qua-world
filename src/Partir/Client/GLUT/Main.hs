@@ -15,7 +15,7 @@ main = do
 
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
 
-  GLUT.createWindow "Qua World"
+  _ <- GLUT.createWindow "Qua World"
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing

@@ -1,5 +1,5 @@
-{ mkDerivation, base, GLUT, hspec, hspec-discover, OpenGL
-, optparse-applicative, StateVar, stdenv
+{ mkDerivation, base, GLUT, hspec, hspec-discover, LambdaHack
+, OpenGL, optparse-applicative, StateVar, stdenv, text
 }:
 mkDerivation {
   pname = "partir-qua-world";
@@ -9,10 +9,11 @@ mkDerivation {
   isExecutable = true;
   libraryHaskellDepends = [ base ];
   executableHaskellDepends = [
-    base GLUT OpenGL optparse-applicative StateVar
+    base GLUT LambdaHack OpenGL optparse-applicative StateVar text
   ];
-  testHaskellDepends = [ base hspec ];
+  testHaskellDepends = [ base hspec LambdaHack text ];
   testToolDepends = [ hspec-discover ];
+  doHaddock = false;
   homepage = "https://github.com/qua-world/partir.qua.world";
   description = "GUI Client and Client Interfaces for qua.world";
   license = stdenv.lib.licenses.mit;

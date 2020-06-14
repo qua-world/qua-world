@@ -1,20 +1,21 @@
 module Main where
 
-import           Options.Applicative            ( (<**>)
-                                                , ParserInfo
-                                                , execParser
-                                                , fullDesc
-                                                , helper
-                                                , info
-                                                , progDesc
-                                                )
-import           Partir.Client.LambdaHack.Options
-                                                ( Options(Options) )
-import           Partir.Client.LambdaHack.Game  ( game )
+import qualified Game.LambdaHack.Client        as LambdaHack
+                                                ( mkUIOptions )
+import qualified Game.LambdaHack.Client.UI.ContentClientUI
+                                               as LambdaHack
+                                                ( emptyCCUI )
+import qualified Game.LambdaHack.Server        as LambdaHack
+                                                ( serverOptionsPI )
+import qualified Implementation.MonadServerImplementation
+                                               as LambdaHack
+                                                ( executorSer )
+import           Options.Applicative            ( execParser )
+import           Partir.Client.LambdaHack.Content
+                                                ( content )
 
 main :: IO ()
-main = execParser options >>= game
-
-options :: ParserInfo Options
-options = info (options' <**> helper) (fullDesc <> progDesc "Qua World LambdaHack Client")
-  where options' = pure Options
+main = do
+  serverOptions <- execParser LambdaHack.serverOptionsPI
+  uiOptions     <- LambdaHack.mkUIOptions content False
+  LambdaHack.executorSer content LambdaHack.emptyCCUI serverOptions uiOptions
