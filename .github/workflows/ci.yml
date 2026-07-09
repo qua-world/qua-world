@@ -15,15 +15,9 @@ concurrency:
 
 jobs:
   build:
-    name: GHC ${{ matrix.ghc }} / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: GHC 9.10 / ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        ghc: ["9.10"]
 
     steps:
       - name: Checkout
@@ -36,11 +30,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y freeglut3-dev libglu1-mesa-dev
 
-      - name: Set up GHC ${{ matrix.ghc }}
+      - name: Set up GHC 9.10
         id: setup
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
         with:
-          ghc-version: ${{ matrix.ghc }}
+          ghc-version: "9.10"
           cabal-version: latest
 
       - name: Update Hackage index
