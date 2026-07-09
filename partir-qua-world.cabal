@@ -24,7 +24,7 @@ description:
 
 category:            Game
 
-tested-with:         GHC == 8.6.*
+tested-with:         GHC == 9.10.*
 
 extra-source-files:
     CHANGELOG.md
@@ -42,7 +42,7 @@ library
   other-modules:
 
   build-depends:
-      base >= 4.12 && < 4.13
+      base >= 4.20 && < 4.21
 
   hs-source-dirs:
       src
@@ -60,12 +60,12 @@ test-suite partir-qua-world-test
   main-is:             Spec.hs
 
   build-depends:
-      base >=4.12 && < 4.13
-    , hspec >= 2.7 && < 2.8
+      base >= 4.20 && < 4.21
+    , hspec >= 2.11 && < 2.12
     , partir-qua-world
 
   build-tool-depends:
-      hspec-discover:hspec-discover >= 2.7 && < 2.8
+      hspec-discover:hspec-discover >= 2.11 && < 2.12
 
 executable partir
   main-is:             Partir/Clients/GUI/Main.hs
@@ -76,10 +76,10 @@ executable partir
     , Partir.Clients.GUI.Controls
 
   build-depends:
-      base >= 4.12 && < 4.13
+      base >= 4.20 && < 4.21
     , GLUT >= 2.7 && < 2.8
     , OpenGL >= 3.0 && < 3.1
-    , optparse-applicative >= 0.14 && < 0.15
+    , optparse-applicative >= 0.18 && < 0.19
     , partir-qua-world
     , StateVar >= 1.2 && < 1.3
 
