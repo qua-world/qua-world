@@ -38,11 +38,17 @@ source-repository head
 library
   exposed-modules:
       Partir
+    , Partir.World.Event
+    , Partir.World.Scene
+    , Partir.World.Types
 
   other-modules:
 
   build-depends:
       base >= 4.20 && < 4.21
+    , containers >= 0.7 && < 0.8
+    , linear >= 1.22 && < 1.24
+    , text >= 2.1 && < 2.2
 
   hs-source-dirs:
       src
@@ -54,15 +60,20 @@ test-suite partir-qua-world-test
   type:                exitcode-stdio-1.0
 
   hs-source-dirs:
-      src
-    , test
+      test
 
   main-is:             Spec.hs
+
+  other-modules:
+      Partir.World.SceneSpec
 
   build-depends:
       base >= 4.20 && < 4.21
     , hspec >= 2.11 && < 2.12
+    , linear >= 1.22 && < 1.24
     , partir-qua-world
+    , QuickCheck >= 2.14 && < 2.16
+    , text >= 2.1 && < 2.2
 
   build-tool-depends:
       hspec-discover:hspec-discover >= 2.11 && < 2.12
