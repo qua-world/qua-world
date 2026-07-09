@@ -1,4 +1,4 @@
-module Partir.Clients.GUI.Commands
+module Partir.Client.GLUT.Commands
   ( observe
   )
 where
