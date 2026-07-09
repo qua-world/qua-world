@@ -5,8 +5,8 @@ import           Data.StateVar                  ( ($=) )
 import           Debug.Trace                    ( traceIO )
 import qualified Graphics.UI.GLUT              as GLUT
 import           Options.Applicative
-import qualified Partir.Clients.GUI.Controls   as Controls
-import qualified Partir.Clients.GUI.Commands   as Commands
+import qualified Partir.Client.GLUT.Controls   as Controls
+import qualified Partir.Client.GLUT.Commands   as Commands
 
 main :: IO ()
 main = do
@@ -15,7 +15,7 @@ main = do
 
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
 
-  GLUT.createWindow "Qua World"
+  _ <- GLUT.createWindow "Qua World"
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
