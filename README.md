@@ -11,6 +11,12 @@ world.
 Usage is pretty straightforward and documented in the help output in the partir
 executable.
 
+# Contributing Content
+
+Producing art, level, audio, or dialogue assets? See [content-authoring tools]
+for the recommended open-source tools and the formats the client is built to
+load.
+
 # Reporting Issues
 
 Any issues discovered should be recorded on [Github].  If you believe you've
@@ -24,6 +30,7 @@ request.  This project follows [git flow].
 
 This project is released under the [MIT License](LICENSE).
 
+[content-authoring tools]: docs/tooling.md
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [Github]: https://github.com/qua-world/partir.qua.world/issues
 [qua.world]: https://github.com/qua-world
