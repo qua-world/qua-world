@@ -1,5 +1,9 @@
 # Revision history for partir-qua-world
 
-## 0.1.0.0 -- YYYY-mm-dd
+## Unreleased
 
-* First version. Released on an unsuspecting world.
+### Added
+
+* GLUT-based GUI client that opens a "Qua World" window.
+* `observe` subcommand to become an observer in qua.world.
+* Escape key quits the client.
