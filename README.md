@@ -30,7 +30,7 @@ request.  This project follows [git flow].
 
 This project is released under the [MIT License](LICENSE).
 
-[content-authoring tools]: docs/tooling.md
+[content-authoring tools]: docs/reference/tooling.md
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [Github]: https://github.com/qua-world/partir.qua.world/issues
 [qua.world]: https://github.com/qua-world

@@ -14,5 +14,5 @@ bucket; later `[Unreleased]` sections split by change type.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
-* `docs/tooling.md` recommending open-source content-authoring tools and the
-  formats the client will load.
+* `docs/reference/tooling.md` recommending open-source content-authoring tools
+  and the formats the client will load.
