@@ -8,10 +8,12 @@ world.
 
 # Architecture
 
-This repository is the **client** half of qua.world. The authoritative
-**world-server** is a separate, Erlang/OTP project. See
-[ADR 0001](docs/adr/0001-architecture.md) for the client/server split and the
-rest of [`docs/adr/`](docs/adr/) for the decisions behind it.
+This repository is becoming the qua.world **polyglot monorepo**, built with
+buck2. It holds the Haskell **client** today; the authoritative Erlang/OTP
+**world-server** will join it as a sibling build target. See
+[ADR 0001](docs/adr/0001-architecture.md) for the client/server boundary and
+monorepo layout, and the rest of [`docs/adr/`](docs/adr/) for the decisions
+behind it.
 
 # Getting Started
 
