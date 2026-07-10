@@ -6,6 +6,13 @@ A GUI client for interacting with the qua.world MMO gaming environment and
 client interfaces for creating bots, automation, and other actors in the game
 world.
 
+# Architecture
+
+This repository is the **client** half of qua.world. The authoritative
+**world-server** is a separate, Erlang/OTP project. See
+[ADR 0001](docs/adr/0001-architecture.md) for the client/server split and the
+rest of [`docs/adr/`](docs/adr/) for the decisions behind it.
+
 # Getting Started
 
 Usage is pretty straightforward and documented in the help output in the partir
