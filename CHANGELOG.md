@@ -11,6 +11,9 @@ bucket; later `[Unreleased]` sections split by change type.
 
 ### Added
 
+* Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers
+  and `linear`-backed `Vec3`/`Quat` aliases), `Event` (agent-produced world
+  changes), and `Scene` (the shared state and its `apply` fold).
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
