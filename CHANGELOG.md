@@ -12,7 +12,7 @@ bucket; later `[Unreleased]` sections split by change type.
 ### Added
 
 * `Partir.Sim.Interpolate`: pure snapshot interpolation that smooths remote
-  agents between buffered `Snapshot`s, sampling a fixed delay in the past and
+  agents between buffered pose `Sample`s, sampling a fixed delay in the past and
   blending position linearly and orientation by `slerp`.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),

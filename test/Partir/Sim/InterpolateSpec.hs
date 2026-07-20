@@ -13,7 +13,7 @@ import Test.QuickCheck (Gen, choose, forAll, suchThat)
 import Partir.Sim.Interpolate
   ( RemoteHistory
   , RenderTime (..)
-  , Snapshot (..)
+  , Sample (..)
   , emptyHistory
   , interpolate
   , record
@@ -30,7 +30,7 @@ spec = do
       posAt 0 line `closeTo` origin
       posAt 10 line `closeTo` far
 
-    it "tracks the linear midpoint between two snapshots" $
+    it "tracks the linear midpoint between two samples" $
       posAt 5 line `closeTo` V3 5 10 15
 
     it "shifts the sampled instant back by the delay" $
@@ -76,15 +76,15 @@ noRotation = Quaternion 1 (V3 0 0 0)
 -- A two-snapshot history spanning ticks 0..10, both facing forward.
 line :: RemoteHistory
 line =
-  record (Snapshot (Tick 10) (Pose far noRotation)) $
-    record (Snapshot (Tick 0) (Pose origin noRotation)) emptyHistory
+  record (Sample (Tick 10) (Pose far noRotation)) $
+    record (Sample (Tick 0) (Pose origin noRotation)) emptyHistory
 
 -- A two-snapshot history at ticks 0 and 1000, so a fraction in [0, 1] maps
 -- onto a render time in [0, 1000].
 poses :: Vec3 -> Quat -> Vec3 -> Quat -> RemoteHistory
 poses p0 q0 p1 q1 =
-  record (Snapshot (Tick 1000) (Pose p1 q1)) $
-    record (Snapshot (Tick 0) (Pose p0 q0)) emptyHistory
+  record (Sample (Tick 1000) (Pose p1 q1)) $
+    record (Sample (Tick 0) (Pose p0 q0)) emptyHistory
 
 -- Helpers
 
