@@ -13,13 +13,12 @@ import Test.QuickCheck (Gen, choose, forAll, suchThat)
 import Partir.Sim.Interpolate
   ( RemoteHistory
   , RenderTime (..)
-  , Pose (..)
   , Snapshot (..)
   , emptyHistory
   , interpolate
   , record
   )
-import Partir.World.Types (Quat, Tick (..), Vec3)
+import Partir.World.Types (Pose (..), Quat, Tick (..), Vec3)
 
 spec :: Spec
 spec = do

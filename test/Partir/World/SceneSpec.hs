@@ -14,8 +14,7 @@ import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof)
 
 import Partir.World.Event (Event (..), eventTick)
 import Partir.World.Scene
-  ( Entity (..)
-  , Scene (..)
+  ( Scene (..)
   , apply
   , empty
   , entityAt
@@ -23,6 +22,7 @@ import Partir.World.Scene
 import Partir.World.Types
   ( AgentId (..)
   , EntityId (..)
+  , Pose (..)
   , Quat
   , Tick (..)
   , Vec3
@@ -38,7 +38,7 @@ spec = do
   describe "apply" $ do
     it "spawns an entity at its position and orientation" $
       entityAt anEntity (spawned empty)
-        `shouldBe` Just (Entity here facing)
+        `shouldBe` Just (Pose here facing)
 
     it "despawns a previously spawned entity" $
       entityAt anEntity (apply (Despawn (Tick 2) anAgent anEntity) (spawned empty))
@@ -46,11 +46,11 @@ spec = do
 
     it "moves a spawned entity, leaving its orientation" $
       entityAt anEntity (apply (Move (Tick 2) anAgent anEntity there) (spawned empty))
-        `shouldBe` Just (Entity there facing)
+        `shouldBe` Just (Pose there facing)
 
     it "reorients a spawned entity, leaving its position" $
       entityAt anEntity (apply (Look (Tick 2) anAgent anEntity turned) (spawned empty))
-        `shouldBe` Just (Entity here turned)
+        `shouldBe` Just (Pose here turned)
 
     it "ignores moves that target an absent entity" $
       sceneEntities (apply (Move (Tick 1) anAgent anEntity there) empty)

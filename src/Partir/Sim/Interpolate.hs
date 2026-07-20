@@ -18,8 +18,7 @@ fractional ticks. Keeping one unit avoids threading a tick-rate constant and
 leaves the whole module @IO@-free and total.
 -}
 module Partir.Sim.Interpolate
-  ( Pose (..)
-  , Snapshot (..)
+  ( Snapshot (..)
   , RenderTime (..)
   , RemoteHistory
   , emptyHistory
@@ -32,16 +31,7 @@ where
 import Linear.Quaternion (slerp)
 import Linear.Vector ((*^), (^+^), (^-^))
 
-import Partir.World.Types (Quat, Tick (..), Vec3)
-
--- | Where a remote agent is and which way it faces (a rigid-body pose: no
--- scale). Distinct from "Partir.World.Scene"'s @Entity@ (canonical scene state)
--- — a 'Pose' is a per-frame, interpolated render output.
-data Pose = Pose
-  { posePosition :: Vec3    -- ^ Where to draw the agent.
-  , poseOrientation :: Quat -- ^ Which way it faces.
-  }
-  deriving (Eq, Show)
+import Partir.World.Types (Pose (..), Tick (..))
 
 -- | A remote agent's observed pose at a single tick.
 data Snapshot = Snapshot

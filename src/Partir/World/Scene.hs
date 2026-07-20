@@ -11,7 +11,6 @@ property-test and reusable across every client and headless bot.
 -}
 module Partir.World.Scene
   ( Scene (..)
-  , Entity (..)
   , empty
   , apply
   , entityAt
@@ -22,19 +21,12 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
 import Partir.World.Event (Event (..), eventTick)
-import Partir.World.Types (EntityId, Quat, Tick (..), Vec3)
-
--- | A live entity's spatial state.
-data Entity = Entity
-  { entityPosition :: Vec3    -- ^ Where the entity is.
-  , entityOrientation :: Quat -- ^ Which way the entity faces.
-  }
-  deriving (Eq, Show)
+import Partir.World.Types (EntityId, Pose (..), Tick (..))
 
 -- | The shared world state at a point in simulation time.
 data Scene = Scene
-  { sceneTick :: Tick                    -- ^ The latest tick observed.
-  , sceneEntities :: Map EntityId Entity -- ^ Live entities by identifier.
+  { sceneTick :: Tick                  -- ^ The latest tick observed.
+  , sceneEntities :: Map EntityId Pose -- ^ Each live entity's pose, by identifier.
   }
   deriving (Eq, Show)
 
@@ -47,17 +39,17 @@ empty = Scene (Tick 0) Map.empty
 apply :: Event -> Scene -> Scene
 apply e s = mutate e s {sceneTick = max (sceneTick s) (eventTick e)}
 
--- | Look up an entity by identifier.
-entityAt :: EntityId -> Scene -> Maybe Entity
+-- | Look up an entity's pose by identifier.
+entityAt :: EntityId -> Scene -> Maybe Pose
 entityAt eid = Map.lookup eid . sceneEntities
 
 mutate :: Event -> Scene -> Scene
-mutate (Spawn _ _ eid pos orient) = onEntities (Map.insert eid (Entity pos orient))
+mutate (Spawn _ _ eid pos orient) = onEntities (Map.insert eid (Pose pos orient))
 mutate (Despawn _ _ eid) = onEntities (Map.delete eid)
-mutate (Move _ _ eid pos) = onEntities (Map.adjust (\ent -> ent {entityPosition = pos}) eid)
-mutate (Look _ _ eid orient) = onEntities (Map.adjust (\ent -> ent {entityOrientation = orient}) eid)
+mutate (Move _ _ eid pos) = onEntities (Map.adjust (\p -> p {posePosition = pos}) eid)
+mutate (Look _ _ eid orient) = onEntities (Map.adjust (\p -> p {poseOrientation = orient}) eid)
 mutate (Speak _ _ _) = id
 mutate (Interact _ _ _) = id
 
-onEntities :: (Map EntityId Entity -> Map EntityId Entity) -> Scene -> Scene
+onEntities :: (Map EntityId Pose -> Map EntityId Pose) -> Scene -> Scene
 onEntities f s = s {sceneEntities = f (sceneEntities s)}
