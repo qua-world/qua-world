@@ -6,7 +6,7 @@ License     : MIT
 
 Remote agents arrive as a sparse, jittery stream of 'Snapshot's. Rendering them
 at the latest snapshot makes them teleport; rendering a continuously
-'interpolate'd pose makes them glide. Following the standard snapshot
+'interpolate'd 'Pose' makes them glide. Following the standard snapshot
 interpolation approach (Valve's @cl_interp@, Gambetta, Gaffer On Games), the
 client plays remote agents back on a clock held a fixed delay /in the past/, so
 the two snapshots bracketing that delayed instant have almost always arrived and
@@ -18,7 +18,7 @@ fractional ticks. Keeping one unit avoids threading a tick-rate constant and
 leaves the whole module @IO@-free and total.
 -}
 module Partir.Sim.Interpolate
-  ( Transform (..)
+  ( Pose (..)
   , Snapshot (..)
   , RenderTime (..)
   , RemoteHistory
@@ -34,19 +34,19 @@ import Linear.Vector ((*^), (^+^), (^-^))
 
 import Partir.World.Types (Quat, Tick (..), Vec3)
 
--- | A pose to render: where a remote agent is and which way it faces. Distinct
--- from "Partir.World.Scene"'s @Entity@ (canonical scene state) — a 'Transform'
--- is a per-frame, interpolated render output.
-data Transform = Transform
-  { transformPosition :: Vec3    -- ^ Where to draw the agent.
-  , transformOrientation :: Quat -- ^ Which way it faces.
+-- | Where a remote agent is and which way it faces (a rigid-body pose: no
+-- scale). Distinct from "Partir.World.Scene"'s @Entity@ (canonical scene state)
+-- — a 'Pose' is a per-frame, interpolated render output.
+data Pose = Pose
+  { posePosition :: Vec3    -- ^ Where to draw the agent.
+  , poseOrientation :: Quat -- ^ Which way it faces.
   }
   deriving (Eq, Show)
 
 -- | A remote agent's observed pose at a single tick.
 data Snapshot = Snapshot
   { snapshotTick :: Tick
-  , snapshotTransform :: Transform
+  , snapshotPose :: Pose
   }
   deriving (Eq, Show)
 
@@ -86,17 +86,17 @@ snapshots (RemoteHistory ss) = ss
 -- instant are blended, position by linear interpolation and orientation by
 -- 'slerp'. Before the oldest snapshot the oldest pose is held; past the newest,
 -- the newest is held (no extrapolation). An empty history yields 'Nothing'.
-interpolate :: Tick -> RenderTime -> RemoteHistory -> Maybe Transform
+interpolate :: Tick -> RenderTime -> RemoteHistory -> Maybe Pose
 interpolate (Tick delay) (RenderTime now) (RemoteHistory ss) = go ss
   where
     target = now - fromIntegral delay
 
     go [] = Nothing
-    go [s] = Just (snapshotTransform s)
+    go [s] = Just (snapshotPose s)
     go (s0 : s1 : rest)
-      | target <= t0 = Just (snapshotTransform s0)
+      | target <= t0 = Just (snapshotPose s0)
       | target >= t1 = go (s1 : rest)
-      | otherwise = Just (blend alpha (snapshotTransform s0) (snapshotTransform s1))
+      | otherwise = Just (blend alpha (snapshotPose s0) (snapshotPose s1))
       where
         t0 = tickTime s0
         t1 = tickTime s1
@@ -105,14 +105,14 @@ interpolate (Tick delay) (RenderTime now) (RemoteHistory ss) = go ss
 -- | Blend two poses at @alpha@ in @[0, 1]@: @alpha = 0@ is the first pose,
 -- @alpha = 1@ the second. Position is written out longhand rather than via
 -- "Linear"'s @lerp@, whose coefficient runs the opposite way.
-blend :: Double -> Transform -> Transform -> Transform
+blend :: Double -> Pose -> Pose -> Pose
 blend alpha a b =
-  Transform
+  Pose
     (pa ^+^ alpha *^ (pb ^-^ pa))
-    (slerp (transformOrientation a) (transformOrientation b) alpha)
+    (slerp (poseOrientation a) (poseOrientation b) alpha)
   where
-    pa = transformPosition a
-    pb = transformPosition b
+    pa = posePosition a
+    pb = posePosition b
 
 tickTime :: Snapshot -> Double
 tickTime s = let Tick n = snapshotTick s in fromIntegral n

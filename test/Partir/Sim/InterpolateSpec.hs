@@ -13,8 +13,8 @@ import Test.QuickCheck (Gen, choose, forAll, suchThat)
 import Partir.Sim.Interpolate
   ( RemoteHistory
   , RenderTime (..)
+  , Pose (..)
   , Snapshot (..)
-  , Transform (..)
   , emptyHistory
   , interpolate
   , record
@@ -36,7 +36,7 @@ spec = do
 
     it "shifts the sampled instant back by the delay" $
       -- delay 5, now 10 -> target 5 -> the midpoint.
-      fmap transformPosition (interpolate (Tick 5) (RenderTime 10) line)
+      fmap posePosition (interpolate (Tick 5) (RenderTime 10) line)
         `shouldSatisfy` closeToJust (V3 5 10 15)
 
     it "holds the oldest pose before the buffer begins" $
@@ -77,28 +77,28 @@ noRotation = Quaternion 1 (V3 0 0 0)
 -- A two-snapshot history spanning ticks 0..10, both facing forward.
 line :: RemoteHistory
 line =
-  record (Snapshot (Tick 10) (Transform far noRotation)) $
-    record (Snapshot (Tick 0) (Transform origin noRotation)) emptyHistory
+  record (Snapshot (Tick 10) (Pose far noRotation)) $
+    record (Snapshot (Tick 0) (Pose origin noRotation)) emptyHistory
 
 -- A two-snapshot history at ticks 0 and 1000, so a fraction in [0, 1] maps
 -- onto a render time in [0, 1000].
 poses :: Vec3 -> Quat -> Vec3 -> Quat -> RemoteHistory
 poses p0 q0 p1 q1 =
-  record (Snapshot (Tick 1000) (Transform p1 q1)) $
-    record (Snapshot (Tick 0) (Transform p0 q0)) emptyHistory
+  record (Snapshot (Tick 1000) (Pose p1 q1)) $
+    record (Snapshot (Tick 0) (Pose p0 q0)) emptyHistory
 
 -- Helpers
 
 -- Interpolated position at a render time, with no delay.
 posAt :: Double -> RemoteHistory -> Vec3
-posAt t = maybe (error "posAt: empty") transformPosition . interpolate (Tick 0) (RenderTime t)
+posAt t = maybe (error "posAt: empty") posePosition . interpolate (Tick 0) (RenderTime t)
 
 sample :: Double -> RemoteHistory -> Vec3
 sample frac = posAt (frac * 1000)
 
 orientation :: Double -> RemoteHistory -> Quat
 orientation frac =
-  maybe (error "orientation: empty") transformOrientation
+  maybe (error "orientation: empty") poseOrientation
     . interpolate (Tick 0) (RenderTime (frac * 1000))
 
 orderedFractions :: Gen (Double, Double)
