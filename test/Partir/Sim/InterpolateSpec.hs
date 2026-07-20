@@ -101,7 +101,6 @@ orientation frac =
   maybe (error "orientation: empty") transformOrientation
     . interpolate (Tick 0) (RenderTime (frac * 1000))
 
--- Two ordered fractions in [0, 1].
 orderedFractions :: Gen (Double, Double)
 orderedFractions = do
   a <- choose (0, 1)
