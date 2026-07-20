@@ -5,8 +5,11 @@ import           Data.StateVar                  ( ($=) )
 import           Debug.Trace                    ( traceIO )
 import qualified Graphics.UI.GLUT              as GLUT
 import           Options.Applicative
+import qualified Partir.Asset                 as Asset
+import qualified Partir.Asset.GLTF             as GLTF
 import qualified Partir.Client.GLUT.Controls   as Controls
 import qualified Partir.Client.GLUT.Commands   as Commands
+import qualified Partir.Client.GLUT.Render     as Render
 
 main :: IO ()
 main = do
@@ -14,17 +17,22 @@ main = do
   traceIO $ unwords $ name : arguments
 
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
+  GLUT.initialWindowSize $= GLUT.Size 800 600
 
   _ <- GLUT.createWindow "Qua World"
+
+  GLUT.depthFunc $= Just GLUT.Less
+
+  mesh <- GLTF.loadAsset "examples/avatar.glb"
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
   GLUT.idleCallback $= Nothing
 
   -- Window Callbacks
-  GLUT.displayCallback $= display
+  GLUT.displayCallback $= display mesh
   GLUT.overlayDisplayCallback $= Nothing
-  GLUT.reshapeCallback $= Nothing
+  GLUT.reshapeCallback $= Just Render.reshape
   GLUT.positionCallback $= Nothing
   GLUT.windowStateCallback $= Nothing
   GLUT.closeCallback $= Nothing
@@ -37,12 +45,10 @@ main = do
 
   GLUT.mainLoop
 
-display :: GLUT.DisplayCallback
-display = do
-  traceIO "starting display"
-  GLUT.clear [GLUT.ColorBuffer, GLUT.DepthBuffer]
+display :: Asset.Mesh -> GLUT.DisplayCallback
+display mesh = do
+  Render.render mesh
   GLUT.swapBuffers
-  traceIO "stopping display"
 
 commands :: [String] -> IO ()
 commands = join . handleParseResult . execParserPure defaultPrefs info'

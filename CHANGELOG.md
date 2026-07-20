@@ -17,3 +17,8 @@ bucket; later `[Unreleased]` sections split by change type.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
+* `Partir.Asset` renderer-ready mesh type and `Partir.Asset.GLTF` loader for
+  binary glTF 2.0 (`.glb`), so content authored in Blockbench or any
+  glTF-emitting tool can be loaded.
+* The GLUT client renders a loaded mesh (`examples/avatar.glb`) in front of the
+  camera instead of clearing to an empty window.
