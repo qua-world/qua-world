@@ -1,7 +1,7 @@
 cabal-version:       2.4
 
 name:                partir-qua-world
-version:             0.1.0.0
+version:             0.2.1.0
 
 license:             MIT
 license-file:        LICENSE
@@ -38,6 +38,7 @@ source-repository head
 library
   exposed-modules:
       Partir
+    , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
     , Partir.World.Types
@@ -69,7 +70,8 @@ test-suite partir-qua-world-test
   main-is:             Spec.hs
 
   other-modules:
-      Partir.World.SceneSpec
+      Partir.Sim.InterpolateSpec
+    , Partir.World.SceneSpec
 
   build-depends:
       base >= 4.20 && < 4.21
