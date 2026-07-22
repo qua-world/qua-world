@@ -26,7 +26,7 @@ spec = do
     it "returns nothing for an empty history" $
       interpolate (Tick 0) (RenderTime 5) emptyHistory `shouldBe` Nothing
 
-    it "yields each snapshot's pose exactly at its tick" $ do
+    it "yields each sample's pose exactly at its tick" $ do
       posAt 0 line `closeTo` origin
       posAt 10 line `closeTo` far
 
@@ -44,7 +44,7 @@ spec = do
     it "holds the newest pose past the buffer's end" $
       posAt 1000 line `closeTo` far
 
-    prop "position moves monotonically toward the next snapshot" $
+    prop "position moves monotonically toward the next sample" $
       forAll genVec3 $ \p0 ->
         forAll genVec3 $ \p1 ->
           forAll orderedFractions $ \(lo, hi) ->
