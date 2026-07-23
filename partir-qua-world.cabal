@@ -38,6 +38,7 @@ source-repository head
 library
   exposed-modules:
       Partir
+    , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
     , Partir.World.Types
@@ -47,7 +48,7 @@ library
   build-depends:
       base >= 4.20 && < 4.21
     , containers >= 0.7 && < 0.8
-    , linear >= 1.22 && < 1.24
+    , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
 
   hs-source-dirs:
@@ -69,12 +70,13 @@ test-suite partir-qua-world-test
   main-is:             Spec.hs
 
   other-modules:
-      Partir.World.SceneSpec
+      Partir.Sim.InterpolateSpec
+    , Partir.World.SceneSpec
 
   build-depends:
       base >= 4.20 && < 4.21
     , hspec >= 2.11 && < 2.12
-    , linear >= 1.22 && < 1.24
+    , linear >= 1.23 && < 1.24
     , partir-qua-world
     , QuickCheck >= 2.14 && < 2.16
     , text >= 2.1 && < 2.2

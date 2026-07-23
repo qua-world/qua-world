@@ -4,9 +4,10 @@ Description : Scalar identifiers and spatial aliases for the world model
 Copyright   : (c) Alex Brandt, 2026
 License     : MIT
 
-Foundational, @IO@-free types shared across the @Partir.World.*@ domain: opaque
-identifiers for agents, entities, and simulation ticks, plus aliases for the
-positional and rotational vectors supplied by "Linear".
+Foundational, @IO@-free types shared across the simulation: opaque identifiers
+for agents, entities, and simulation ticks, aliases for the positional and
+rotational vectors supplied by "Linear", and the rigid-body 'Pose' that pairs
+them.
 -}
 module Partir.World.Types
   ( AgentId (..)
@@ -14,6 +15,7 @@ module Partir.World.Types
   , Tick (..)
   , Vec3
   , Quat
+  , Pose (..)
   )
 where
 
@@ -38,3 +40,12 @@ type Vec3 = V3 Double
 
 -- | An orientation in world space.
 type Quat = Quaternion Double
+
+-- | Where something is and which way it faces: a rigid-body pose, no scale.
+-- Shared by the canonical scene ("Partir.World.Scene") and the interpolated
+-- render output ("Partir.Sim.Interpolate").
+data Pose = Pose
+  { posePosition :: Vec3    -- ^ Where it is.
+  , poseOrientation :: Quat -- ^ Which way it faces.
+  }
+  deriving (Eq, Show)
