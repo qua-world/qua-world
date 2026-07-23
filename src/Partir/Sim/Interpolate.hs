@@ -72,19 +72,14 @@ samples (RemoteHistory m) = uncurry Sample <$> Map.toAscList m
 --
 -- The pose is sampled at @now - delay@: the two samples bracketing that instant
 -- are blended, position by linear interpolation and orientation by 'slerp'.
--- Before the oldest sample the oldest pose is held; past the newest, the newest
--- is held (no extrapolation). An empty history yields 'Nothing'.
+-- Outside that window the nearest boundary pose is held, not extrapolated —
+-- before the oldest sample there is no earlier motion to project from, and past
+-- the newest we hold rather than guess. An empty history yields 'Nothing'.
 interpolate :: Tick -> RenderTime -> RemoteHistory -> Maybe Pose
 interpolate (Tick delay) (RenderTime now) (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
     (Just (t0, p0), Just (t1, p1)) -> Just (blend (alpha t0 t1) p0 p1)
-    -- Playback clock is past the newest sample (updates stalled): hold the last
-    -- known pose. Forward extrapolation would hook in here (#66).
-    (Just (_, p0), Nothing) -> Just p0
-    -- Playback clock hasn't reached the oldest sample yet (e.g. an agent that
-    -- just appeared): nothing earlier to interpolate from, so hold its first
-    -- known pose. Extrapolating backward would invent motion from before we
-    -- ever observed the agent.
+    (Just (_, p0), Nothing) -> Just p0 -- past the newest; #66 extrapolates here
     (Nothing, Just (_, p1)) -> Just p1
     (Nothing, Nothing) -> Nothing
   where
