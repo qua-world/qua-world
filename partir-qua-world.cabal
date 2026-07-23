@@ -48,7 +48,7 @@ library
   build-depends:
       base >= 4.20 && < 4.21
     , containers >= 0.7 && < 0.8
-    , linear >= 1.22 && < 1.24
+    , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
 
   hs-source-dirs:
@@ -76,7 +76,7 @@ test-suite partir-qua-world-test
   build-depends:
       base >= 4.20 && < 4.21
     , hspec >= 2.11 && < 2.12
-    , linear >= 1.22 && < 1.24
+    , linear >= 1.23 && < 1.24
     , partir-qua-world
     , QuickCheck >= 2.14 && < 2.16
     , text >= 2.1 && < 2.2

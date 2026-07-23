@@ -32,7 +32,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
 import Linear.Quaternion (slerp)
-import Linear.Vector ((*^), (^+^), (^-^))
+import Linear.Vector (lerp)
 
 import Partir.World.Types (Pose (..), Tick (..))
 
@@ -88,16 +88,13 @@ interpolate (Tick delay) (RenderTime now) (RemoteHistory m) =
     alpha t0 t1 = (target - tickTime t0) / (tickTime t1 - tickTime t0)
 
 -- | Blend two poses at @alpha@ in @[0, 1]@: @alpha = 0@ is the first pose,
--- @alpha = 1@ the second. Position is written out longhand rather than via
--- "Linear"'s @lerp@, whose coefficient runs the opposite way.
+-- @alpha = 1@ the second. Both 'lerp' (since linear 1.23) and 'slerp' run in
+-- that direction.
 blend :: Double -> Pose -> Pose -> Pose
 blend alpha a b =
   Pose
-    (pa ^+^ alpha *^ (pb ^-^ pa))
+    (lerp alpha (posePosition a) (posePosition b))
     (slerp (poseOrientation a) (poseOrientation b) alpha)
-  where
-    pa = posePosition a
-    pb = posePosition b
 
 tickTime :: Tick -> Double
 tickTime (Tick n) = fromIntegral n
