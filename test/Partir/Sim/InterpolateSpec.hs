@@ -73,13 +73,13 @@ far = V3 10 20 30
 noRotation :: Quat
 noRotation = Quaternion 1 (V3 0 0 0)
 
--- A two-snapshot history spanning ticks 0..10, both facing forward.
+-- A two-sample history spanning ticks 0..10, both facing forward.
 line :: RemoteHistory
 line =
   record (Sample (Tick 10) (Pose far noRotation)) $
     record (Sample (Tick 0) (Pose origin noRotation)) emptyHistory
 
--- A two-snapshot history at ticks 0 and 1000, so a fraction in [0, 1] maps
+-- A two-sample history at ticks 0 and 1000, so a fraction in [0, 1] maps
 -- onto a render time in [0, 1000].
 poses :: Vec3 -> Quat -> Vec3 -> Quat -> RemoteHistory
 poses p0 q0 p1 q1 =
