@@ -14,8 +14,9 @@ import Partir.Asset
   )
 import Partir.Asset.GLTF (GltfLoadError, loadAsset, loadAssetBytes)
 
--- | The committed placeholder cube: 6 faces * 4 corners, 6 faces * 2 triangles,
--- one material. Kept in step with @examples/avatar.glb@ (see @examples/README.md@).
+-- | @examples/avatar.glb@ is a placeholder unit cube standing in for real
+-- Blockbench content: 6 faces * 4 corners = 24 vertices, 6 faces * 2 triangles
+-- = 36 indices, one material. These expectations track that file.
 spec :: Spec
 spec = do
   describe "loadAsset" $ do
