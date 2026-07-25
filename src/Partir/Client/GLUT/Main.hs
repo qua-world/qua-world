@@ -1,5 +1,6 @@
 module Main where
 
+import           Control.Exception              ( throwIO )
 import           Control.Monad                  ( join )
 import           Data.StateVar                  ( ($=) )
 import           Debug.Trace                    ( traceIO )
@@ -23,7 +24,8 @@ main = do
 
   GLUT.depthFunc $= Just GLUT.Less
 
-  mesh <- GLTF.loadAsset "examples/avatar.glb"
+  -- A missing asset at startup is fatal: crash on the decode failure too.
+  mesh <- either throwIO pure =<< GLTF.loadAsset "examples/avatar.glb"
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing

@@ -17,7 +17,7 @@ module Partir.Asset.GLTF
   )
 where
 
-import Control.Exception (Exception, throwIO)
+import Control.Exception (Exception)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
@@ -28,20 +28,22 @@ import qualified Partir.Asset as Asset
 import qualified Text.GLTF.Loader as GLTF
 
 -- | A glTF document that could not be decoded, wrapping the underlying
--- @gltf-loader@ diagnostic. 'loadAssetBytes' returns it; 'loadAsset' throws it.
+-- @gltf-loader@ diagnostic. Returned in the 'Left' of both loaders; its
+-- 'Exception' instance lets a caller 'Control.Exception.throwIO' it when a
+-- decode failure should be fatal (e.g. at startup).
 newtype GltfLoadError = GltfLoadError GLTF.Errors
   deriving (Show)
 
 instance Exception GltfLoadError
 
--- | Load a binary glTF file into a renderer-ready mesh, for the load-or-fail
--- path (the client cannot start without its asset). Throws 'GltfLoadError' on a
--- malformed document; a missing file surfaces as the usual 'IOError' from
--- reading it.
-loadAsset :: FilePath -> IO Asset.Mesh
-loadAsset path = ByteString.readFile path >>= loadAssetBytes >>= either throwIO pure
+-- | Load a binary glTF file into a renderer-ready mesh. A malformed document is
+-- returned as a 'Left' 'GltfLoadError' (a decode failure is anticipated, so it
+-- lives in the type); a missing or unreadable file surfaces as the usual
+-- 'IOError' thrown by reading it (an I\/O failure, left to exceptions).
+loadAsset :: FilePath -> IO (Either GltfLoadError Asset.Mesh)
+loadAsset path = ByteString.readFile path >>= loadAssetBytes
 
--- | Decode in-memory GLB bytes, returning the decode failure in the type so a
+-- | Decode in-memory GLB bytes, returning any decode failure in the type so a
 -- caller can recover locally — a bad asset need not crash the client. Useful
 -- for content streamed from the server, and the shared core of 'loadAsset'.
 loadAssetBytes :: ByteString -> IO (Either GltfLoadError Asset.Mesh)
