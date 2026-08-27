@@ -25,6 +25,11 @@ jobs:
       # truncated run warns and restarts rather than failing.
       issues: write
       pull-requests: write
+    # The messages quote the same counts the action enforces, so both read
+    # from here; editing one number can't leave the prose contradicting it.
+    env:
+      PR_STALE_DAYS: 30
+      PR_CLOSE_DAYS: 14
     steps:
       # Both issue legs are disabled, not just marking: an issue already
       # carrying the label would otherwise stay eligible for closing.
@@ -32,13 +37,15 @@ jobs:
         with:
           days-before-issue-stale: -1
           days-before-issue-close: -1
-          days-before-pr-stale: 30
-          days-before-pr-close: 14
+          days-before-pr-stale: ${{ env.PR_STALE_DAYS }}
+          days-before-pr-close: ${{ env.PR_CLOSE_DAYS }}
           stale-pr-message: >-
-            This has been quiet for 30 days, so it's picked up a stale label. A
-            comment or a push clears the label and restarts the clock. Otherwise
-            this closes in another 14 days.
+            This has been quiet for ${{ env.PR_STALE_DAYS }} days, so it's
+            picked up a stale label. A comment or a push clears the label and
+            restarts the clock. Otherwise this closes in another
+            ${{ env.PR_CLOSE_DAYS }} days.
           close-pr-message: >-
-            Closing this after 44 quiet days. That isn't a call on the change
-            itself, and nothing is lost: the branch stays where it is, so
-            comment here if you want to pick it back up and I'll reopen it.
+            Closing this after another ${{ env.PR_CLOSE_DAYS }} quiet days.
+            That isn't a call on the change itself, and nothing is lost: the
+            branch stays where it is, so comment here if you want to pick it
+            back up and I'll reopen it.
