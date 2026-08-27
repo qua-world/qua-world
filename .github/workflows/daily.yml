@@ -1,8 +1,9 @@
 name: Daily
 
-# Offset from the hour: on-the-hour schedules queue behind platform peak load.
 on:
   schedule:
+    # Offset from the hour: on-the-hour schedules queue behind platform
+    # peak load.
     - cron: '47 6 * * *'
       timezone: Europe/London
   workflow_dispatch:
@@ -11,8 +12,8 @@ permissions:
   contents: read
 
 concurrency:
-  # No cancel-in-progress: a truncated sweep loses the operations-per-run
-  # resume cache and restarts from the first pull request.
+  # A manual dispatch during the scheduled run would sweep the same pull
+  # requests twice, so runs queue rather than overlap.
   group: ${{ github.workflow }}
 
 jobs:
@@ -21,18 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      # `actions: write` is omitted: it covers only the resume cache, so a
-      # truncated run warns and restarts rather than failing.
+      # `actions: write`, which the action recommends, only persists resume
+      # state for runs that hit operations-per-run — beyond this repo's
+      # pull request volume.
       issues: write
       pull-requests: write
-    # The messages quote the same counts the action enforces, so both read
-    # from here; editing one number can't leave the prose contradicting it.
     env:
       PR_STALE_DAYS: 30
       PR_CLOSE_DAYS: 14
     steps:
-      # Both issue legs are disabled, not just marking: an issue already
-      # carrying the label would otherwise stay eligible for closing.
+      # Disabling only `days-before-issue-stale` would still close issues
+      # that already carry the label.
       - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11
         with:
           days-before-issue-stale: -1
