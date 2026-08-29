@@ -9,8 +9,9 @@
   "reviewers": [
     "alunduil"
   ],
-  // The daily stale sweep exempts pull requests by label, and closing a
-  // Renovate pull request tells Renovate the version is unwanted.
+  // Closing a Renovate pull request tells Renovate that version is
+  // unwanted and it stops re-offering it, so a stale sweep has to exempt
+  // them by label.
   "labels": [
     "dependencies"
   ],

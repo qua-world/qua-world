@@ -41,8 +41,6 @@ common warnings
 common language
   default-language:    Haskell2010
 
--- Every stanza builds against base, so Renovate has one bound to bump
--- rather than one per stanza.
 common deps
   build-depends:
       base >= 4.20 && < 4.23
