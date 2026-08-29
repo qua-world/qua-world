@@ -1,15 +1,14 @@
 # Contributing to partir
 
 Issues, questions, pull requests, and docs improvements are welcome.  This file
-covers what you need to build, test, and open a pull request: commands, branch
-policy, and the conventions a review expects.
+covers what you need to build, test, and open a pull request.
 
 # Your first contribution
 
 Issues tagged [good first issue] are scoped small and don't assume prior
 context on the codebase; [help wanted] marks anything else open to a
-contributor.  Neither is a prerequisite: an unlabelled issue, or a pull request
-for something not yet filed, is equally welcome.
+contributor.  Neither is a prerequisite: a pull request for something not yet
+filed is equally welcome.
 
 # Getting started
 
@@ -49,17 +48,12 @@ commit message][seven rules]: an imperative subject under 50 characters, a
 blank line, then a wrapped body covering why the change is needed and anything
 a reader of the diff would find surprising.
 
-# Reporting bugs, asking questions, proposing changes
+# Filing an issue
 
-File an issue on [Github].  For bugs, include your GHC version, cabal version,
-and platform, along with a minimal reproduction.  For proposals, describe the
-user-visible outcome and the problem it solves.  Questions about using partir
-are welcome as issues too; tag them [question].
-
-# Attribution
-
-Contributors are listed in [COPYRIGHT](COPYRIGHT).  Add yourself in the same
-pull request as your first contribution if you want attribution.
+File it on [Github].  For bugs, include your GHC and cabal versions, your
+platform, and a minimal reproduction; for proposals, the user-visible outcome
+and the problem it solves.  Questions about using partir are welcome as issues
+too — tag them [question].
 
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [Github]: https://github.com/qua-world/partir.qua.world/issues

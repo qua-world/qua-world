@@ -21,10 +21,6 @@ If you would like to contribute a fix or new feature, please submit a pull
 request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
 expects.
 
-# Contributors
-
-Contributors are listed in [COPYRIGHT](COPYRIGHT).
-
 # License
 
 This project is released under the [MIT License](LICENSE).
