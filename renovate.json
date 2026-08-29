@@ -20,16 +20,12 @@
   // timestamp-required mode holds every cabal update forever rather than
   // for three days. Datasources that do report them keep the full bake.
   "minimumReleaseAgeBehaviour": "timestamp-optional",
-  // The pinned GHC series lives in two files and no packaged manager reads
-  // either one. endoflife.date is the datasource because it enumerates the
-  // compiler by release series; hackage carries libraries, not GHC itself. It
-  // reports a cycle's newest point release rather than the cycle, so without
-  // extractVersionTemplate a lookup offers 9.14.1 and writes the malformed
-  // constraint `GHC == 9.14.1.*`.
+  // No packaged manager reads either place the GHC series is pinned.
+  // endoflife.date enumerates the compiler by release series, but labels each
+  // series with its newest point release; without extractVersionTemplate the
+  // constraint would pin that point release instead of the series.
   //
-  // Both managers extract the same dependency, so a bump lands on one branch
-  // touching both files. ci.yml re-checks that they agree, which is what
-  // catches a pattern below silently ceasing to match.
+  // Both managers extract the same dependency, so one branch carries both edits.
   "customManagers": [
     {
       "customType": "regex",

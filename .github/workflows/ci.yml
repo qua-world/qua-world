@@ -38,10 +38,9 @@ jobs:
           ghc-version: "9.10"
           cabal-version: latest
 
-      # The series above and the cabal tested-with are separate pins that
-      # Renovate moves together. A pattern that stopped matching would move
-      # only one of them, so compare the declaration against what CI installed
-      # rather than trusting the two to stay aligned.
+      # Renovate keeps this pin and the cabal tested-with in sync. Either
+      # pattern could stop matching, after which a bump moves one file and
+      # nothing else notices.
       - name: Check tested-with matches the installed GHC
         env:
           GHC_VERSION: ${{ steps.setup.outputs.ghc-version }}
