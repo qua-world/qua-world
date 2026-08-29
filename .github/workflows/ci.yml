@@ -14,8 +14,33 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/develop' }}
 
 jobs:
+  scripts:
+    name: scripts / ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Lint
+        run: shellcheck scripts/*.sh
+
+      # The helper libraries stay off: the suite asserts with plain bash, and
+      # each one installed is another version to pin and track.
+      - name: Set up bats
+        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+
+      - name: Test
+        run: bats scripts
+
   build:
-    name: GHC 9.10 / ubuntu-latest
+    name: build / ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -30,12 +55,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y freeglut3-dev libglu1-mesa-dev
 
-      - name: Set up GHC 9.10
+      - name: Set up GHC
         id: setup
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
         with:
+          # renovate: datasource=endoflife-date depName=ghc versioning=loose
           ghc-version: "9.10"
           cabal-version: latest
+
+      - name: Check tested-with matches the installed GHC
+        env:
+          GHC_VERSION: ${{ steps.setup.outputs.ghc-version }}
+        run: scripts/check-tested-with.sh "$GHC_VERSION"
 
       - name: Update Hackage index
         run: cabal update

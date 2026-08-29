@@ -20,6 +20,36 @@
   // timestamp-required mode holds every cabal update forever rather than
   // for three days. Datasources that do report them keep the full bake.
   "minimumReleaseAgeBehaviour": "timestamp-optional",
+  // No packaged manager reads either place the GHC series is pinned.
+  // endoflife.date enumerates the compiler by release series, but labels each
+  // series with its newest point release; without extractVersionTemplate the
+  // constraint would pin that point release instead of the series.
+  //
+  // Both managers extract the same dependency, so one branch carries both edits.
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update the pinned GHC series in the CI workflow",
+      "managerFilePatterns": [
+        ".github/workflows/ci.yml"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ghc-version\\s*:\\s*[\"']?(?<currentValue>.+?)[\"']?\\s"
+      ],
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the pinned GHC series in the cabal tested-with",
+      "managerFilePatterns": [
+        "*.cabal"
+      ],
+      "matchStrings": [
+        "-- renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+tested-with\\s*:\\s*GHC == (?<currentValue>.+?)\\.\\*"
+      ],
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
+    }
+  ],
   "packageRules": [
     {
       // None of these update types can carry a release timestamp, so a bake
