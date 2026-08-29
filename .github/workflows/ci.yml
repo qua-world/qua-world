@@ -14,6 +14,31 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/develop' }}
 
 jobs:
+  scripts:
+    name: scripts / ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Lint
+        run: shellcheck .github/scripts/*.sh
+
+      # The helper libraries stay off: the suite asserts with plain bash, and
+      # each one installed is another version to pin and track.
+      - name: Set up bats
+        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+
+      - name: Test
+        run: bats .github/scripts
+
   build:
     name: build / ubuntu-latest
     runs-on: ubuntu-latest
@@ -38,25 +63,10 @@ jobs:
           ghc-version: "9.10"
           cabal-version: latest
 
-      # Renovate keeps this pin and the cabal tested-with in sync. Either
-      # pattern could stop matching, after which a bump moves one file and
-      # nothing else notices.
       - name: Check tested-with matches the installed GHC
         env:
           GHC_VERSION: ${{ steps.setup.outputs.ghc-version }}
-        run: |
-          declared="$(sed -n 's/^tested-with: *GHC == \([0-9.]*\)\.\*$/\1/p' partir-qua-world.cabal)"
-          installed="$(printf '%s' "$GHC_VERSION" | cut -d. -f1,2)"
-
-          if [ -z "$declared" ]; then
-            echo "::error file=partir-qua-world.cabal::no GHC series found in tested-with"
-            exit 1
-          fi
-
-          if [ "$declared" != "$installed" ]; then
-            echo "::error file=partir-qua-world.cabal::tested-with declares GHC $declared but CI installed $GHC_VERSION"
-            exit 1
-          fi
+        run: .github/scripts/check-tested-with.sh "$GHC_VERSION"
 
       - name: Update Hackage index
         run: cabal update
