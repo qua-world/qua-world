@@ -37,6 +37,29 @@
       "minimumReleaseAge": null
     }
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track every GHC series reference so a new series arrives as a single pull request.",
+      // An unmatched file pattern yields no error, only zero updates.
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/",
+        "/\\.cabal$/"
+      ],
+      "matchStringsStrategy": "any",
+      "matchStrings": [
+        "ghc-version: \"(?<currentValue>\\d+\\.\\d+)\"",
+        "GHC == (?<currentValue>\\d+\\.\\d+)\\.\\*",
+        "name: [^\\n]*GHC (?<currentValue>\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "endoflife-date",
+      "depNameTemplate": "ghc",
+      "versioningTemplate": "loose",
+      // endoflife-date resolves a cycle to its latest patch, which would
+      // narrow tested-with and the CI pin from a series to one release.
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
+    }
+  ],
   "osvVulnerabilityAlerts": true,
   "pre-commit": {
     "enabled": true
