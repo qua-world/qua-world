@@ -35,7 +35,21 @@ source-repository head
   location:          https://github.com/qua-world/partir.qua.world.git
   branch:            develop
 
+common warnings
+  ghc-options:         -Wall
+
+common language
+  default-language:    Haskell2010
+
+-- Every stanza builds against base, so Renovate has one bound to bump
+-- rather than one per stanza.
+common deps
+  build-depends:
+      base >= 4.20 && < 4.23
+
 library
+  import:              warnings, language, deps
+
   exposed-modules:
       Partir
     , Partir.Sim.Interpolate
@@ -46,23 +60,17 @@ library
   other-modules:
 
   build-depends:
-      base >= 4.20 && < 4.23
-    , containers >= 0.7 && < 0.9
+      containers >= 0.7 && < 0.9
     , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
 
   hs-source-dirs:
       src
 
-  default-language:    Haskell2010
-
-  ghc-options:         -Wall
-
 test-suite partir-qua-world-test
-  default-language:    Haskell2010
-  type:                exitcode-stdio-1.0
+  import:              warnings, language, deps
 
-  ghc-options:         -Wall
+  type:                exitcode-stdio-1.0
 
   hs-source-dirs:
       test
@@ -74,8 +82,7 @@ test-suite partir-qua-world-test
     , Partir.World.SceneSpec
 
   build-depends:
-      base >= 4.20 && < 4.23
-    , hspec >= 2.11 && < 2.12
+      hspec >= 2.11 && < 2.12
     , linear >= 1.23 && < 1.24
     , partir-qua-world
     , QuickCheck >= 2.14 && < 2.19
@@ -85,6 +92,8 @@ test-suite partir-qua-world-test
       hspec-discover:hspec-discover >= 2.11 && < 2.12
 
 executable partir-glut
+  import:              warnings, language, deps
+
   main-is:             Partir/Client/GLUT/Main.hs
 
   other-modules:
@@ -93,8 +102,7 @@ executable partir-glut
     , Partir.Client.GLUT.Controls
 
   build-depends:
-      base >= 4.20 && < 4.23
-    , GLUT >= 2.7 && < 2.8
+      GLUT >= 2.7 && < 2.8
     , OpenGL >= 3.0 && < 3.1
     , optparse-applicative >= 0.18 && < 0.20
     , partir-qua-world
@@ -102,7 +110,3 @@ executable partir-glut
 
   hs-source-dirs:
       src
-
-  default-language:    Haskell2010
-
-  ghc-options:         -Wall
