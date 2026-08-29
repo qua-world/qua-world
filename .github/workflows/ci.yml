@@ -38,6 +38,27 @@ jobs:
           ghc-version: "9.10"
           cabal-version: latest
 
+      # The series above and the cabal tested-with are separate pins that
+      # Renovate moves together. A pattern that stopped matching would move
+      # only one of them, so compare the declaration against what CI installed
+      # rather than trusting the two to stay aligned.
+      - name: Check tested-with matches the installed GHC
+        env:
+          GHC_VERSION: ${{ steps.setup.outputs.ghc-version }}
+        run: |
+          declared="$(sed -n 's/^tested-with: *GHC == \([0-9.]*\)\.\*$/\1/p' partir-qua-world.cabal)"
+          installed="$(printf '%s' "$GHC_VERSION" | cut -d. -f1,2)"
+
+          if [ -z "$declared" ]; then
+            echo "::error file=partir-qua-world.cabal::no GHC series found in tested-with"
+            exit 1
+          fi
+
+          if [ "$declared" != "$installed" ]; then
+            echo "::error file=partir-qua-world.cabal::tested-with declares GHC $declared but CI installed $GHC_VERSION"
+            exit 1
+          fi
+
       - name: Update Hackage index
         run: cabal update
 
