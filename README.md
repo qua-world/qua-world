@@ -18,12 +18,12 @@ found an error or have a suggestion for a new feature, please ensure that it is
 reported.
 
 If you would like to contribute a fix or new feature, please submit a pull
-request.  This project follows [git flow].
+request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
+expects.
 
 # License
 
 This project is released under the [MIT License](LICENSE).
 
-[git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [Github]: https://github.com/qua-world/partir.qua.world/issues
 [qua.world]: https://github.com/qua-world
