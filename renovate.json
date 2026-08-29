@@ -40,11 +40,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Track the GHC series across the CI pin, the cabal tested-with field, and the CI job names.",
-      // Matching by shape rather than by path: a renamed workflow or a
-      // cabal file moved into a subdirectory would otherwise stop
-      // matching silently, and silence is the one failure this manager
-      // exists to prevent.
+      "description": "Track every GHC series reference so a new series arrives as a single pull request.",
+      // An unmatched file pattern yields no error, only zero updates.
       "managerFilePatterns": [
         "/^\\.github/workflows/.+\\.ya?ml$/",
         "/\\.cabal$/"
@@ -58,8 +55,8 @@
       "datasourceTemplate": "endoflife-date",
       "depNameTemplate": "ghc",
       "versioningTemplate": "loose",
-      // endoflife-date resolves a cycle to its latest patch, so without
-      // this the cabal field becomes the malformed GHC == 9.14.1.*.
+      // endoflife-date resolves a cycle to its latest patch, which would
+      // narrow tested-with and the CI pin from a series to one release.
       "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
     }
   ],
