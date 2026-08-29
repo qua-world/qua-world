@@ -37,6 +37,28 @@
       "minimumReleaseAge": null
     }
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the GHC series CI pins and the cabal tested-with declares.",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/ci\\.yml$/",
+        "/^partir-qua-world\\.cabal$/"
+      ],
+      "matchStringsStrategy": "any",
+      "matchStrings": [
+        "ghc-version: \"(?<currentValue>\\d+\\.\\d+)\"",
+        "GHC == (?<currentValue>\\d+\\.\\d+)\\.\\*",
+        "GHC (?<currentValue>\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "endoflife-date",
+      "depNameTemplate": "ghc",
+      "versioningTemplate": "loose",
+      // endoflife-date resolves a cycle to its latest patch, so without
+      // this the cabal field becomes the malformed GHC == 9.14.1.*.
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
+    }
+  ],
   "osvVulnerabilityAlerts": true,
   "pre-commit": {
     "enabled": true
