@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Lint
-        run: shellcheck .github/scripts/*.sh
+        run: shellcheck scripts/*.sh
 
       # The helper libraries stay off: the suite asserts with plain bash, and
       # each one installed is another version to pin and track.
@@ -37,7 +37,7 @@ jobs:
           file-install: false
 
       - name: Test
-        run: bats .github/scripts
+        run: bats scripts
 
   build:
     name: build / ubuntu-latest
@@ -66,7 +66,7 @@ jobs:
       - name: Check tested-with matches the installed GHC
         env:
           GHC_VERSION: ${{ steps.setup.outputs.ghc-version }}
-        run: .github/scripts/check-tested-with.sh "$GHC_VERSION"
+        run: scripts/check-tested-with.sh "$GHC_VERSION"
 
       - name: Update Hackage index
         run: cabal update
