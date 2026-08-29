@@ -24,6 +24,7 @@ description:
 
 category:            Game
 
+-- renovate: datasource=endoflife-date depName=ghc versioning=loose
 tested-with:         GHC == 9.10.*
 
 extra-source-files:

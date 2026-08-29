@@ -20,6 +20,29 @@
   // timestamp-required mode holds every cabal update forever rather than
   // for three days. Datasources that do report them keep the full bake.
   "minimumReleaseAgeBehaviour": "timestamp-optional",
+  // The pinned GHC series lives in two files that have to move together, and
+  // no packaged manager reads either one. endoflife.date is the datasource
+  // because it enumerates the compiler by release series; hackage carries
+  // libraries, not GHC itself.
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update the pinned GHC series in the CI workflow and the cabal tested-with",
+      "managerFilePatterns": [
+        ".github/workflows/ci.yml",
+        "*.cabal"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ghc-version\\s*:\\s*[\"']?(?<currentValue>.+?)[\"']?\\s",
+        "-- renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+tested-with\\s*:\\s*GHC == (?<currentValue>.+?)\\.\\*"
+      ],
+      // endoflife.date reports a cycle's newest point release rather than the
+      // cycle, so an unfiltered lookup offers 9.14.1 and writes the malformed
+      // constraint `GHC == 9.14.1.*`. Both sites pin a series, so cut the
+      // patch component back off.
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
+    }
+  ],
   "packageRules": [
     {
       // None of these update types can carry a release timestamp, so a bake
