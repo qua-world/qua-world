@@ -40,16 +40,20 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Track the GHC series CI pins and the cabal tested-with declares.",
+      "description": "Track the GHC series across the CI pin, the cabal tested-with field, and the CI job names.",
+      // Matching by shape rather than by path: a renamed workflow or a
+      // cabal file moved into a subdirectory would otherwise stop
+      // matching silently, and silence is the one failure this manager
+      // exists to prevent.
       "managerFilePatterns": [
-        "/^\\.github/workflows/ci\\.yml$/",
-        "/^partir-qua-world\\.cabal$/"
+        "/^\\.github/workflows/.+\\.ya?ml$/",
+        "/\\.cabal$/"
       ],
       "matchStringsStrategy": "any",
       "matchStrings": [
         "ghc-version: \"(?<currentValue>\\d+\\.\\d+)\"",
         "GHC == (?<currentValue>\\d+\\.\\d+)\\.\\*",
-        "GHC (?<currentValue>\\d+\\.\\d+)"
+        "name: [^\\n]*GHC (?<currentValue>\\d+\\.\\d+)"
       ],
       "datasourceTemplate": "endoflife-date",
       "depNameTemplate": "ghc",
