@@ -23,8 +23,7 @@ and commit conventions a review expects.
 
 # Contributors
 
-Contributors are listed in [COPYRIGHT](COPYRIGHT).  Add yourself in the same
-pull request as your first contribution if you want attribution.
+Contributors are listed in [COPYRIGHT](COPYRIGHT).
 
 # License
 
