@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    "security:openssf-scorecard",
+    "customManagers:githubActionsVersions"
+  ],
+  "timezone": "Europe/London",
+  "reviewers": [
+    "alunduil"
+  ],
+  // The daily stale sweep exempts pull requests by label, and closing a
+  // Renovate pull request tells Renovate the version is unwanted.
+  "labels": [
+    "dependencies"
+  ],
+  "minimumReleaseAge": "3 days",
+  // hackage reports no release timestamps, so the default
+  // timestamp-required mode holds every cabal update forever rather than
+  // for three days. Datasources that do report them keep the full bake.
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "packageRules": [
+    {
+      // None of these update types can carry a release timestamp, so a bake
+      // period strands them on a pending status check with no pull request.
+      "matchUpdateTypes": [
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance",
+        "lockfileUpdate",
+        "rollback",
+        "bump",
+        "replacement"
+      ],
+      "minimumReleaseAge": null
+    }
+  ],
+  "osvVulnerabilityAlerts": true,
+  "pre-commit": {
+    "enabled": true
+  }
+}
