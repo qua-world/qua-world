@@ -18,8 +18,8 @@ found an error or have a suggestion for a new feature, please ensure that it is
 reported.
 
 If you would like to contribute a fix or new feature, please submit a pull
-request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the build, test, branch,
-and commit conventions a review expects.
+request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
+expects.
 
 # Contributors
 

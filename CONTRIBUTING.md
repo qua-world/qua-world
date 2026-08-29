@@ -13,11 +13,11 @@ for something not yet filed, is equally welcome.
 
 # Getting started
 
-Prerequisites: GHC and `cabal-install`.  The supported GHC version is declared
-in [`tested-with`](partir-qua-world.cabal), and CI builds and tests against it
-on every pull request.  The `partir-glut` executable links GLUT and OpenGL, so
-the freeglut and GLU development headers must be installed before it builds —
-`freeglut3-dev` and `libglu1-mesa-dev` on Debian and Ubuntu.
+Prerequisites: `cabal-install` and the GHC version
+[`tested-with`](partir-qua-world.cabal) declares, which CI builds and tests
+against on every pull request.  The `partir-glut` executable links GLUT and
+OpenGL, so the freeglut and GLU development headers must be installed before it
+builds — `freeglut3-dev` and `libglu1-mesa-dev` on Debian and Ubuntu.
 
 ```sh
 cabal update
@@ -32,12 +32,10 @@ failure that reads like a broken build.
 # Pull requests
 
 This project follows [git flow].  Fork the repository, branch from `develop`,
-and open the pull request against `develop`; topic branches are deleted on
-merge.
+and open the pull request against `develop`.
 
 Open it as a draft and mark it ready once CI is green and you want review.
-Keep each pull request focused; unrelated cleanup goes in a separate one.  CI
-must pass before merge.
+Unrelated cleanup goes in a separate pull request.  CI must pass before merge.
 
 Leave `version:` in `partir-qua-world.cabal` alone — releases are cut by the
 maintainer.  Record user-visible changes under `[Unreleased]` in
