@@ -53,6 +53,9 @@ library
 
   exposed-modules:
       Partir
+    , Partir.Agent.Class
+    , Partir.Agent.Input
+    , Partir.Agent.Observer
     , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
@@ -79,7 +82,8 @@ test-suite partir-qua-world-test
   main-is:             Spec.hs
 
   other-modules:
-      Partir.Sim.InterpolateSpec
+      Partir.Agent.ObserverSpec
+    , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
 
   build-depends:
