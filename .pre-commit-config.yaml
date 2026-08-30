@@ -5,11 +5,25 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-vcs-permalinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: fix-byte-order-marker
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: check-yaml
+
+  # shellcheck cannot parse bats' `@test` blocks, and identify tags a .bats
+  # file as shell, so the suite has to be excluded by type.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        exclude_types: [bats]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.23.2
