@@ -14,6 +14,44 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/develop' }}
 
 jobs:
+  pre-commit:
+    name: pre-commit / ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
+    # the two hooks that run from PATH are pinned here instead.
+    #
+    # Both tools version with PVP. The default versioning coerces those
+    # four-component releases to semver and reports them unstable, which
+    # `ignoreUnstable` then hides. `loose` compares them component-wise.
+    env:
+      # renovate: datasource=github-releases depName=fourmolu/fourmolu versioning=loose extractVersion=^v(?<version>.+)$
+      FOURMOLU_VERSION: "0.20.1.0"
+      # renovate: datasource=github-releases depName=ndmitchell/hlint versioning=loose extractVersion=^v(?<version>.+)$
+      HLINT_VERSION: "3.10"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Fourmolu
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL -o /tmp/fourmolu.zip \
+            "https://github.com/fourmolu/fourmolu/releases/download/v${FOURMOLU_VERSION}/fourmolu-${FOURMOLU_VERSION}-linux-x86_64.zip"
+          unzip -j /tmp/fourmolu.zip '*/fourmolu' -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/fourmolu"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Set up HLint
+        uses: haskell-actions/hlint-setup@fe9cd1cd1af94a23900c06738e73f6ddb092966a # v2.4.10
+        with:
+          version: ${{ env.HLINT_VERSION }}
+
+      - name: Run pre-commit
+        uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
+
   scripts:
     name: scripts / ubuntu-latest
     runs-on: ubuntu-latest

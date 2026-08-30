@@ -26,7 +26,7 @@ repos:
         args: [--strict, --no-global]
 
   # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
-  # these two are pinned in .github/workflows/pre-commit.yml instead.
+  # these two are pinned in the CI workflow's pre-commit job instead.
   - repo: local
     hooks:
       - id: fourmolu

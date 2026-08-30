@@ -40,7 +40,7 @@ pre-commit run --all-files
 
 The `fourmolu` and `hlint` hooks invoke those tools from `PATH`, so install
 both alongside `cabal-install`.  The versions CI pins are in
-[.github/workflows/pre-commit.yml](.github/workflows/pre-commit.yml).
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Pull requests
 
