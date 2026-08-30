@@ -42,6 +42,13 @@ The `fourmolu` and `hlint` hooks invoke those tools from `PATH`, so install
 both alongside `cabal-install`.  The versions CI pins are in
 [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
+Haskell Language Server formats with ormolu unless told otherwise, and ormolu
+takes no configuration, so it never reads [fourmolu.yaml](fourmolu.yaml) and
+format-on-save can undo what the hook produced.  Point `formattingProvider` at
+`fourmolu` in your editor.  It has to go there rather than in this repository:
+the language server reads plugin settings from the editor, and `hie.yaml`
+covers only the build cradle.
+
 ## Pull requests
 
 This project follows [git flow].  Fork the repository, branch from `develop`,
