@@ -23,10 +23,6 @@ spec =
     it "emits no intents when the scene holds entities" $
       intentsFrom populated `shouldBe` []
 
--- What an observer asks for, having seen a scene.
-intentsFrom :: Scene -> [Intent]
-intentsFrom scene = snd (step scene Observer)
-
 -- Fixtures
 
 populated :: Scene
@@ -34,3 +30,8 @@ populated =
   apply
     (Spawn (Tick 1) (AgentId 7) (EntityId 42) (V3 1 2 3) (Quaternion 1 (V3 0 0 0)))
     empty
+
+-- Helpers
+
+intentsFrom :: Scene -> [Intent]
+intentsFrom scene = snd (step scene Observer)

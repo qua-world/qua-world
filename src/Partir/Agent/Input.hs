@@ -1,6 +1,6 @@
 {- |
 Module      : Partir.Agent.Input
-Description : The vocabulary an agent uses to ask the world for something
+Description : The intents an agent asks the world to carry out
 Copyright   : (c) Alex Brandt, 2026
 License     : MIT
 
@@ -10,8 +10,8 @@ whether and when it happens. It is the unstamped counterpart of
 simulation stamps the 'Partir.World.Types.Tick' and
 'Partir.World.Types.AgentId' onto it to produce the event it applies.
 
-Every participant speaks this one vocabulary, so the simulation and networking
-layers never branch on which kind of client produced an intent.
+Every participant speaks this one vocabulary, so the layers below never branch
+on which kind of client produced an intent.
 -}
 module Partir.Agent.Input (
   Intent (..),
@@ -24,14 +24,14 @@ import Partir.World.Types (EntityId, Quat, Vec3)
 
 -- | A single request an agent makes of the world.
 data Intent
-  = -- | Move to a position.
+  = -- | Move to an absolute position.
     Move Vec3
-  | -- | Face an orientation.
+  | -- | Face an absolute orientation.
     Look Quat
-  | -- | Interact with a target entity.
+  | -- | Interact with an entity.
     Interact EntityId
   | -- | Say something into the world.
     Speak Text
-  | -- | Leave the world. Client-local: it stamps no event.
+  | -- | Leave the world. Client-local: no event follows.
     Quit
   deriving (Eq, Show)

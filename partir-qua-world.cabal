@@ -112,8 +112,8 @@ executable partir-glut
     , partir-qua-world
     , StateVar >= 1.2 && < 1.3
 
-  -- Its own directory, not src: cabal makes every module under a target's
-  -- hs-source-dirs a home module, so sharing src recompiles the library
-  -- inside the executable, without the library's build-depends.
+  -- Cabal treats every module under a target's hs-source-dirs as a home
+  -- module, so an executable sharing src recompiles the library there and
+  -- fails on dependencies only the library declares.
   hs-source-dirs:
       app
