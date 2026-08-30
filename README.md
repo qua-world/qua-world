@@ -6,12 +6,12 @@ A GUI client for interacting with the qua.world MMO gaming environment and
 client interfaces for creating bots, automation, and other actors in the game
 world.
 
-# Getting Started
+## Getting Started
 
 Usage is pretty straightforward and documented in the help output in the partir
 executable.
 
-# Reporting Issues
+## Reporting Issues
 
 Any issues discovered should be recorded on [Github].  If you believe you've
 found an error or have a suggestion for a new feature, please ensure that it is
@@ -21,7 +21,7 @@ If you would like to contribute a fix or new feature, please submit a pull
 request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
 expects.
 
-# License
+## License
 
 This project is released under the [MIT License](LICENSE).
 

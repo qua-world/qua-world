@@ -1,6 +1,6 @@
-module Partir.Sim.InterpolateSpec
-  ( spec
-  )
+module Partir.Sim.InterpolateSpec (
+  spec,
+)
 where
 
 import Linear.Metric (dot, normalize, quadrance)
@@ -10,14 +10,14 @@ import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (Gen, choose, forAll, suchThat)
 
-import Partir.Sim.Interpolate
-  ( RemoteHistory
-  , RenderTime (..)
-  , Sample (..)
-  , emptyHistory
-  , interpolate
-  , record
-  )
+import Partir.Sim.Interpolate (
+  RemoteHistory,
+  RenderTime (..),
+  Sample (..),
+  emptyHistory,
+  interpolate,
+  record,
+ )
 import Partir.World.Types (Pose (..), Quat, Tick (..), Vec3)
 
 spec :: Spec
@@ -51,7 +51,7 @@ spec = do
             let hist = poses p0 noRotation p1 noRotation
                 a = sample lo hist
                 b = sample hi hist
-            in movesToward (p1 ^-^ p0) (b ^-^ a)
+             in movesToward (p1 ^-^ p0) (b ^-^ a)
 
     prop "orientation rotates monotonically away from the start" $
       forAll genUnitQuat $ \q0 ->
@@ -60,7 +60,7 @@ spec = do
             let hist = poses origin q0 origin q1
                 near = dot q0 (orientation lo hist)
                 farr = dot q0 (orientation hi hist)
-            in near >= farr - epsilon
+             in near >= farr - epsilon
 
 -- Fixtures
 
@@ -108,15 +108,15 @@ orderedFractions = do
 
 genVec3 :: Gen Vec3
 genVec3 = V3 <$> coord <*> coord <*> coord
-  where
-    coord = choose (-100, 100)
+ where
+  coord = choose (-100, 100)
 
 genUnitQuat :: Gen Quat
 genUnitQuat =
   normalize
     <$> (Quaternion <$> coord <*> genVec3) `suchThat` ((> 1e-3) . quadrance)
-  where
-    coord = choose (-100, 100)
+ where
+  coord = choose (-100, 100)
 
 -- A step @d@ moves toward direction @dir@ when it does not oppose it on any
 -- axis: linear interpolation can only carry each component toward the target.

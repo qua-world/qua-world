@@ -1,0 +1,10 @@
+{
+  "default": true,
+
+  // Prose isn't hard-wrapped to a fixed column here, and the vendored
+  // Contributor Covenant ships one paragraph per line.
+  "MD013": false,
+
+  // Keep a Changelog repeats Added/Changed/Fixed headings under every release.
+  "MD024": { "siblings_only": true }
+}

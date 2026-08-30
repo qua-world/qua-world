@@ -1,0 +1,55 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-vcs-permalinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: check-yaml
+
+  # shellcheck cannot parse bats' `@test` blocks, and identify tags a .bats
+  # file as shell, so the suite has to be excluded by type.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        exclude_types: [bats]
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+
+  # --strict also fails a config that merely needs migration, not only one
+  # that errors. --no-global reads the file as repository configuration;
+  # the default reads it as global config and misreports repository fields.
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 44.51.2
+    hooks:
+      - id: renovate-config-validator
+        args: [--strict, --no-global]
+
+  # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
+  # these two are pinned in the CI workflow's pre-commit job instead.
+  - repo: local
+    hooks:
+      - id: fourmolu
+        name: fourmolu
+        entry: fourmolu --mode inplace
+        language: system
+        types: [haskell]
+      - id: hlint
+        name: hlint
+        entry: hlint
+        language: system
+        types: [haskell]
