@@ -28,6 +28,20 @@ Run `cabal update` on a first checkout and after any gap between
 contributions.  A stale Hackage index surfaces as a dependency resolution
 failure that reads like a broken build.
 
+## Formatting and linting
+
+[pre-commit] runs formatting, linting, and file-hygiene checks on every commit,
+and the same hooks run in CI:
+
+```sh
+pre-commit install
+pre-commit run --all-files
+```
+
+The `fourmolu` and `hlint` hooks invoke those tools from `PATH`, so install
+both alongside `cabal-install`.  The versions CI pins are in
+[.github/workflows/pre-commit.yml](.github/workflows/pre-commit.yml).
+
 ## Pull requests
 
 This project follows [git flow].  Fork the repository, branch from `develop`,
@@ -59,5 +73,6 @@ too — tag them [question].
 [Github]: https://github.com/qua-world/partir.qua.world/issues
 [good first issue]: https://github.com/qua-world/partir.qua.world/labels/good%20first%20issue
 [help wanted]: https://github.com/qua-world/partir.qua.world/labels/help%20wanted
+[pre-commit]: https://pre-commit.com/
 [question]: https://github.com/qua-world/partir.qua.world/labels/question
 [seven rules]: https://cbea.ms/git-commit/
