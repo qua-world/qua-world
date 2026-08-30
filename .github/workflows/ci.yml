@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   pre-commit:
-    name: pre-commit / ubuntu-latest
+    name: Run pre-commit hooks
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -53,7 +53,7 @@ jobs:
         uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
 
   scripts:
-    name: scripts / ubuntu-latest
+    name: Test shell scripts
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -78,7 +78,7 @@ jobs:
         run: bats scripts
 
   build:
-    name: build / ubuntu-latest
+    name: Build and test
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
