@@ -8,6 +8,7 @@ import Linear.V3 (V3 (..))
 import Test.Hspec
 
 import Partir.Agent.Class (step)
+import Partir.Agent.Input (Intent)
 import Partir.Agent.Observer (Observer (..))
 import Partir.World.Event (Event (..))
 import Partir.World.Scene (Scene, apply, empty)
@@ -17,10 +18,14 @@ spec :: Spec
 spec =
   describe "step" $ do
     it "emits no intents when there is nothing to see" $
-      snd (step empty Observer) `shouldBe` []
+      intentsFrom empty `shouldBe` []
 
     it "emits no intents when the scene holds entities" $
-      snd (step populated Observer) `shouldBe` []
+      intentsFrom populated `shouldBe` []
+
+-- What an observer asks for, having seen a scene.
+intentsFrom :: Scene -> [Intent]
+intentsFrom scene = snd (step scene Observer)
 
 -- Fixtures
 
