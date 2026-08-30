@@ -3,14 +3,14 @@
 Issues, questions, pull requests, and docs improvements are welcome.  This file
 covers what you need to build, test, and open a pull request.
 
-# Your first contribution
+## Your first contribution
 
 Issues tagged [good first issue] are scoped small and don't assume prior
 context on the codebase; [help wanted] marks anything else open to a
 contributor.  Neither is a prerequisite: a pull request for something not yet
 filed is equally welcome.
 
-# Getting started
+## Getting started
 
 Prerequisites: `cabal-install` and the GHC version
 [`tested-with`](partir-qua-world.cabal) declares, which CI builds and tests
@@ -28,7 +28,7 @@ Run `cabal update` on a first checkout and after any gap between
 contributions.  A stale Hackage index surfaces as a dependency resolution
 failure that reads like a broken build.
 
-# Pull requests
+## Pull requests
 
 This project follows [git flow].  Fork the repository, branch from `develop`,
 and open the pull request against `develop`.
@@ -40,7 +40,7 @@ Leave `version:` in `partir-qua-world.cabal` alone — releases are cut by the
 maintainer.  Record user-visible changes under `[Unreleased]` in
 [CHANGELOG.md](CHANGELOG.md) instead.
 
-## Commit messages
+### Commit messages
 
 Pull requests are merged rather than squashed, so every commit on the branch
 lands on `develop` and is read on its own.  Follow the [seven rules of a great
@@ -48,7 +48,7 @@ commit message][seven rules]: an imperative subject under 50 characters, a
 blank line, then a wrapped body covering why the change is needed and anything
 a reader of the diff would find surprising.
 
-# Filing an issue
+## Filing an issue
 
 File it on [Github].  For bugs, include your GHC and cabal versions, your
 platform, and a minimal reproduction; for proposals, the user-visible outcome
