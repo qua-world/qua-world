@@ -28,10 +28,10 @@ Run `cabal update` on a first checkout and after any gap between
 contributions.  A stale Hackage index surfaces as a dependency resolution
 failure that reads like a broken build.
 
-## Formatting and linting
+## Before you commit
 
-[pre-commit] runs formatting, linting, and file-hygiene checks on every commit,
-and the same hooks run in CI:
+[pre-commit] gates each commit on formatting, linting, and file hygiene, and
+runs the same hooks again in CI:
 
 ```sh
 pre-commit install

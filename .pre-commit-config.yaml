@@ -1,6 +1,3 @@
-# Install: pre-commit install
-# Run all: pre-commit run --all-files
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -19,19 +16,17 @@ repos:
     hooks:
       - id: markdownlint-cli2
 
-  # --strict fails on configs needing migration rather than only on outright
-  # errors; --no-global reads the file as repository configuration, without
-  # which repository-only fields are misreported.
+  # --strict also fails a config that merely needs migration, not only one
+  # that errors. --no-global reads the file as repository configuration;
+  # the default reads it as global config and misreports repository fields.
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 44.51.2
     hooks:
       - id: renovate-config-validator
         args: [--strict, --no-global]
 
-  # fourmolu and hlint come from PATH, installed in the development
-  # environment or by the Pre-commit workflow. Renovate's pre-commit manager
-  # tracks only hooks carrying a `rev:`, so their pinned versions live in
-  # .github/workflows/pre-commit.yml.
+  # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
+  # these two are pinned in .github/workflows/pre-commit.yml instead.
   - repo: local
     hooks:
       - id: fourmolu

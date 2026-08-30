@@ -14,9 +14,9 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/develop' }}
 
 env:
-  # Both tools version with PVP, whose four-component releases the default
-  # semver-coerced versioning reports as unstable — `ignoreUnstable` then hides
-  # every update. `loose` compares them component-wise instead.
+  # Both tools version with PVP. The default versioning coerces those
+  # four-component releases to semver and reports them unstable, which
+  # `ignoreUnstable` then hides. `loose` compares them component-wise.
   # renovate: datasource=github-releases depName=fourmolu/fourmolu versioning=loose extractVersion=^v(?<version>.+)$
   FOURMOLU_VERSION: "0.20.1.0"
   # renovate: datasource=github-releases depName=ndmitchell/hlint versioning=loose extractVersion=^v(?<version>.+)$
