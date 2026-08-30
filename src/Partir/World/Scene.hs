@@ -51,8 +51,8 @@ mutate (Spawn _ _ eid pos orient) = onEntities (Map.insert eid (Pose pos orient)
 mutate (Despawn _ _ eid) = onEntities (Map.delete eid)
 mutate (Move _ _ eid pos) = onEntities (Map.adjust (\p -> p{posePosition = pos}) eid)
 mutate (Look _ _ eid orient) = onEntities (Map.adjust (\p -> p{poseOrientation = orient}) eid)
-mutate (Speak _ _ _) = id
-mutate (Interact _ _ _) = id
+mutate Speak{} = id
+mutate Interact{} = id
 
 onEntities :: (Map EntityId Pose -> Map EntityId Pose) -> Scene -> Scene
 onEntities f s = s{sceneEntities = f (sceneEntities s)}
