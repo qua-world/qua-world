@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Partir.World.SceneSpec
-  ( spec
-  )
+module Partir.World.SceneSpec (
+  spec,
+)
 where
 
 import Data.Text (pack)
@@ -13,20 +13,20 @@ import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof)
 
 import Partir.World.Event (Event (..), eventTick)
-import Partir.World.Scene
-  ( Scene (..)
-  , apply
-  , empty
-  , entityAt
-  )
-import Partir.World.Types
-  ( AgentId (..)
-  , EntityId (..)
-  , Pose (..)
-  , Quat
-  , Tick (..)
-  , Vec3
-  )
+import Partir.World.Scene (
+  Scene (..),
+  apply,
+  empty,
+  entityAt,
+ )
+import Partir.World.Types (
+  AgentId (..),
+  EntityId (..),
+  Pose (..),
+  Quat,
+  Tick (..),
+  Vec3,
+ )
 
 spec :: Spec
 spec = do

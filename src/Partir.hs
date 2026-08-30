@@ -1,6 +1,6 @@
-module Partir
-  ( someFunc
-  )
+module Partir (
+  someFunc,
+)
 where
 
 someFunc :: IO ()

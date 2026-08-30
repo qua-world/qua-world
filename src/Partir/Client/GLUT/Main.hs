@@ -1,12 +1,12 @@
 module Main where
 
-import           Control.Monad                  ( join )
-import           Data.StateVar                  ( ($=) )
-import           Debug.Trace                    ( traceIO )
-import qualified Graphics.UI.GLUT              as GLUT
-import           Options.Applicative
-import qualified Partir.Client.GLUT.Controls   as Controls
-import qualified Partir.Client.GLUT.Commands   as Commands
+import Control.Monad (join)
+import Data.StateVar (($=))
+import Debug.Trace (traceIO)
+import qualified Graphics.UI.GLUT as GLUT
+import Options.Applicative
+import qualified Partir.Client.GLUT.Commands as Commands
+import qualified Partir.Client.GLUT.Controls as Controls
 
 main :: IO ()
 main = do
@@ -47,5 +47,5 @@ display = do
 commands :: [String] -> IO ()
 commands = join . handleParseResult . execParserPure defaultPrefs info'
  where
-  info'     = info (commands' <**> helper) (fullDesc <> progDesc "partir.qua.world")
+  info' = info (commands' <**> helper) (fullDesc <> progDesc "partir.qua.world")
   commands' = subparser (command "observe" Commands.observe)

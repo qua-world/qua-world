@@ -1,4 +1,4 @@
-{-|
+{- |
 Module      : Partir.World.Event
 Description : Events produced by agents to mutate the shared scene
 Copyright   : (c) Alex Brandt, 2026
@@ -9,11 +9,11 @@ is stamped with the 'Tick' at which it occurs and the 'AgentId' that produced
 it, following the agent-produces-event decomposition of a multi-user 3D system.
 Events are @IO@-free values; "Partir.World.Scene" folds them into a scene.
 -}
-module Partir.World.Event
-  ( Event (..)
-  , eventTick
-  , eventAgent
-  )
+module Partir.World.Event (
+  Event (..),
+  eventTick,
+  eventAgent,
+)
 where
 
 import Data.Text (Text)

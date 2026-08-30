@@ -1,4 +1,4 @@
-{-|
+{- |
 Module      : Partir.World.Types
 Description : Scalar identifiers and spatial aliases for the world model
 Copyright   : (c) Alex Brandt, 2026
@@ -9,14 +9,14 @@ for agents, entities, and simulation ticks, aliases for the positional and
 rotational vectors supplied by "Linear", and the rigid-body 'Pose' that pairs
 them.
 -}
-module Partir.World.Types
-  ( AgentId (..)
-  , EntityId (..)
-  , Tick (..)
-  , Vec3
-  , Quat
-  , Pose (..)
-  )
+module Partir.World.Types (
+  AgentId (..),
+  EntityId (..),
+  Tick (..),
+  Vec3,
+  Quat,
+  Pose (..),
+)
 where
 
 import Data.Word (Word64)
@@ -41,11 +41,14 @@ type Vec3 = V3 Double
 -- | An orientation in world space.
 type Quat = Quaternion Double
 
--- | Where something is and which way it faces: a rigid-body pose, no scale.
--- Shared by the canonical scene ("Partir.World.Scene") and the interpolated
--- render output ("Partir.Sim.Interpolate").
+{- | Where something is and which way it faces: a rigid-body pose, no scale.
+Shared by the canonical scene ("Partir.World.Scene") and the interpolated
+render output ("Partir.Sim.Interpolate").
+-}
 data Pose = Pose
-  { posePosition :: Vec3    -- ^ Where it is.
-  , poseOrientation :: Quat -- ^ Which way it faces.
+  { posePosition :: Vec3
+  -- ^ Where it is.
+  , poseOrientation :: Quat
+  -- ^ Which way it faces.
   }
   deriving (Eq, Show)
