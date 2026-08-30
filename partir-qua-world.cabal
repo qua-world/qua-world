@@ -102,8 +102,7 @@ executable partir-glut
   main-is:             Partir/Client/GLUT/Main.hs
 
   other-modules:
-      Partir
-    , Partir.Client.GLUT.Commands
+      Partir.Client.GLUT.Commands
     , Partir.Client.GLUT.Controls
 
   build-depends:
@@ -113,5 +112,8 @@ executable partir-glut
     , partir-qua-world
     , StateVar >= 1.2 && < 1.3
 
+  -- Its own directory, not src: cabal makes every module under a target's
+  -- hs-source-dirs a home module, so sharing src recompiles the library
+  -- inside the executable, without the library's build-depends.
   hs-source-dirs:
-      src
+      app
