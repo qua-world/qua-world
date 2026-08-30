@@ -6,10 +6,10 @@ where
 import Debug.Trace (traceIO)
 import Options.Applicative
 
-import Partir.Agent.Observer (Observer (..))
+import Partir.Agent.Null (Null (..))
 
 observe :: ParserInfo (IO ())
 observe =
   info
-    (pure (traceIO ("becoming " ++ show Observer)))
+    (pure (traceIO ("agent: " ++ show Null)))
     (fullDesc <> progDesc "Become an observer in qua.world")

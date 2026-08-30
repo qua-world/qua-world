@@ -1,4 +1,4 @@
-module Partir.Agent.ObserverSpec (
+module Partir.Agent.NullSpec (
   spec,
 )
 where
@@ -9,7 +9,7 @@ import Test.Hspec
 
 import Partir.Agent.Class (step)
 import Partir.Agent.Input (Intent)
-import Partir.Agent.Observer (Observer (..))
+import Partir.Agent.Null (Null (..))
 import Partir.World.Event (Event (..))
 import Partir.World.Scene (Scene, apply, empty)
 import Partir.World.Types (AgentId (..), EntityId (..), Tick (..))
@@ -34,4 +34,4 @@ populated =
 -- Helpers
 
 intentsFrom :: Scene -> [Intent]
-intentsFrom scene = snd (step scene Observer)
+intentsFrom scene = snd (step scene Null)
