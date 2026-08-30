@@ -11,6 +11,9 @@ bucket; later `[Unreleased]` sections split by change type.
 
 ### Added
 
+* `Partir.Agent.*`: the abstraction every participant implements — `Input` (the
+  `Intent` vocabulary an agent emits), `Class` (the pure `step` over what the
+  agent perceives), and `Null` (an agent that emits nothing).
 * `Partir.Sim.Interpolate`: pure snapshot interpolation that smooths remote
   agents between buffered pose `Sample`s, sampling a fixed delay in the past and
   blending position linearly and orientation by `slerp`.
