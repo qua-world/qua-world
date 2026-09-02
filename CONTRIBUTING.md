@@ -6,8 +6,9 @@ covers what you need to build, test, and open a pull request.
 ## Your first contribution
 
 Issues tagged [good first issue] stay small and assume no prior context on the
-codebase. [help wanted] marks anything else open to a contributor. Neither is a
-prerequisite: a pull request for something not yet filed is equally welcome.
+codebase. The [help wanted] label marks anything else open to a contributor.
+Neither is a prerequisite: a pull request for something not yet filed is
+equally welcome.
 
 ## Getting started
 

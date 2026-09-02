@@ -13,8 +13,8 @@ executable.
 
 ## Reporting issues
 
-Report any issue you discover on [GitHub]. If you believe you've found an error
-or have a suggestion for a new feature, please file it.
+If you believe you've found an error or have a suggestion for a new feature,
+please file it on [GitHub].
 
 If you would like to contribute a fix or new feature, please submit a pull
 request. [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
