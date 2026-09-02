@@ -1,0 +1,13 @@
+# Terms Vale.Terms accepts, and the casing it then enforces. One regex
+# per line, case-sensitive; prefix (?i) to accept any casing. Add a term
+# when it recurs in linted prose, not for a one-off mention.
+
+(?i)agents?
+freeglut
+GHC
+GLU
+GLUT
+Hackage
+MIT
+partir
+subcommand

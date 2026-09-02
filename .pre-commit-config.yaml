@@ -1,3 +1,6 @@
+# `vale sync` vendors .vale/styles/; only config/ under it is ours.
+exclude: ^\.vale/styles/(?!config/)
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -29,6 +32,15 @@ repos:
     rev: v0.23.2
     hooks:
       - id: markdownlint-cli2
+
+  # The styles are vendored (see the top-level exclude), so this needs no
+  # `vale sync` hook ahead of it.
+  - repo: https://github.com/errata-ai/vale
+    rev: v3.19.0
+    hooks:
+      - id: vale
+        args: [--output=line, --minAlertLevel=error]
+        types: [markdown]
 
   # --strict also fails a config that merely needs migration, not only one
   # that errors. --no-global reads the file as repository configuration;
