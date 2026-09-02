@@ -2,28 +2,27 @@
 
 GUI Client and Client Interfaces for [qua.world]
 
-A GUI client for interacting with the qua.world MMO gaming environment and
-client interfaces for creating bots, automation, and other actors in the game
-world.
+A GUI client for interacting with the qua.world massively multiplayer online
+gaming environment and client interfaces for creating bots, automation, and
+other actors in the game world.
 
-## Getting Started
+## Getting started
 
 Usage is pretty straightforward and documented in the help output in the partir
 executable.
 
-## Reporting Issues
+## Reporting issues
 
-Any issues discovered should be recorded on [Github].  If you believe you've
-found an error or have a suggestion for a new feature, please ensure that it is
-reported.
+Report any issue you discover on [GitHub]. If you believe you've found an error
+or have a suggestion for a new feature, please file it.
 
 If you would like to contribute a fix or new feature, please submit a pull
-request.  [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
+request. [CONTRIBUTING.md](CONTRIBUTING.md) covers the conventions a review
 expects.
 
 ## License
 
-This project is released under the [MIT License](LICENSE).
+This project uses the [MIT License](LICENSE).
 
-[Github]: https://github.com/qua-world/partir.qua.world/issues
+[GitHub]: https://github.com/qua-world/partir.qua.world/issues
 [qua.world]: https://github.com/qua-world
