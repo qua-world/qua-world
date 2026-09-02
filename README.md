@@ -8,8 +8,7 @@ other actors in the game world.
 
 ## Getting started
 
-Usage is pretty straightforward and documented in the help output in the partir
-executable.
+The `partir-glut` executable documents its usage in its help output.
 
 ## Reporting issues
 
