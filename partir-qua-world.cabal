@@ -52,8 +52,7 @@ library
   import:              warnings, language, deps
 
   exposed-modules:
-      Partir
-    , Partir.Agent.Class
+      Partir.Agent.Class
     , Partir.Agent.Input
     , Partir.Agent.Null
     , Partir.Sim.Interpolate
