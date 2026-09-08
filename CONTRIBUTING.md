@@ -28,6 +28,21 @@ Run `cabal update` on a first checkout and after any gap between
 contributions. A stale Hackage index surfaces as a dependency resolution error
 that reads like a broken build.
 
+CI also fails a pull request that leaves dead code behind: a definition or an
+export nothing reaches from the executable or the test suite. That check reads
+the HIE files a build writes, which is why it runs from a built tree instead of
+a commit hook.
+
+```sh
+cabal install weeder
+weeder
+```
+
+[cabal.project](cabal.project) turns on the HIE output weeder reads, and
+[weeder.toml](weeder.toml) declares the roots it treats as alive. Cabal keeps
+the HIE file of a module you delete, and weeder still reads it, so clear
+`dist-newstyle` whenever it reports a definition the sources no longer hold.
+
 ## Before you commit
 
 [pre-commit] gates each commit on formatting, linting, and file hygiene, and

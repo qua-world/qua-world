@@ -79,6 +79,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    env:
+      # Weeder has no binary releases, so it is built here against the same
+      # GHC that writes the HIE files it reads.
+      #
+      # renovate: datasource=hackage depName=weeder versioning=loose
+      WEEDER_VERSION: "2.10.0"
+
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -116,11 +123,19 @@ jobs:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
         with:
           path: ${{ steps.setup.outputs.cabal-store }}
-          key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}
+          key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}-weeder-${{ env.WEEDER_VERSION }}
           restore-keys: ${{ env.key }}-
 
       - name: Install dependencies
         run: cabal build all --enable-tests --only-dependencies
+
+      # Ahead of the cache save so weeder's own dependency tree is stored with
+      # the project's, and keyed on the version above so a bump refreshes it.
+      - name: Install weeder
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cabal install "weeder-${WEEDER_VERSION}" --ignore-project --installdir="$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Save cabal store
         if: steps.cache.outputs.cache-hit != 'true'
@@ -134,3 +149,7 @@ jobs:
 
       - name: Test
         run: cabal test all --enable-tests --test-show-details=direct
+
+      # After the test run so a weed never masks a failing test.
+      - name: Check for dead code
+        run: weeder
