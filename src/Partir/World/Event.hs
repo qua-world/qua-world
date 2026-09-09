@@ -12,7 +12,6 @@ Events are @IO@-free values; "Partir.World.Scene" folds them into a scene.
 module Partir.World.Event (
   Event (..),
   eventTick,
-  eventAgent,
 )
 where
 
@@ -44,12 +43,3 @@ eventTick (Move t _ _ _) = t
 eventTick (Look t _ _ _) = t
 eventTick (Speak t _ _) = t
 eventTick (Interact t _ _) = t
-
--- | The agent that produced an event.
-eventAgent :: Event -> AgentId
-eventAgent (Spawn _ a _ _ _) = a
-eventAgent (Despawn _ a _) = a
-eventAgent (Move _ a _ _) = a
-eventAgent (Look _ a _ _) = a
-eventAgent (Speak _ a _) = a
-eventAgent (Interact _ a _) = a

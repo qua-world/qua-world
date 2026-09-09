@@ -23,7 +23,6 @@ module Partir.Sim.Interpolate (
   RemoteHistory,
   emptyHistory,
   record,
-  samples,
   interpolate,
 )
 where
@@ -67,10 +66,6 @@ re-sends never duplicate an instant.
 -}
 record :: Sample -> RemoteHistory -> RemoteHistory
 record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
-
--- | The buffered samples, oldest first.
-samples :: RemoteHistory -> [Sample]
-samples (RemoteHistory m) = uncurry Sample <$> Map.toAscList m
 
 {- | Interpolate a remote agent's pose for a render frame.
 
