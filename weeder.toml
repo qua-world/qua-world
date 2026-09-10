@@ -1,0 +1,9 @@
+# Nothing outside this repository depends on the library, so an export no
+# caller reaches is dead code rather than public API.
+roots = ["^Main.main$", "^Paths_.*"]
+
+# A derived Eq or Show instance is never named by its caller, so each one
+# reports as a weed with this off.
+type-class-roots = true
+
+unused-types = true

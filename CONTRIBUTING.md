@@ -28,6 +28,15 @@ Run `cabal update` on a first checkout and after any gap between
 contributions. A stale Hackage index surfaces as a dependency resolution error
 that reads like a broken build.
 
+CI fails a pull request that leaves dead code behind: a definition or an export
+nothing reaches from the executable or the test suite. Weeder reads the HIE
+files a build writes, so run it from a built tree.
+
+```sh
+cabal install weeder
+weeder
+```
+
 ## Before you commit
 
 [pre-commit] gates each commit on formatting, linting, and file hygiene, and
