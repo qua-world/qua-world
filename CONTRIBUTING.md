@@ -29,20 +29,13 @@ contributions. A stale Hackage index surfaces as a dependency resolution error
 that reads like a broken build.
 
 CI fails a pull request that leaves dead code behind: a definition or an export
-nothing reaches from the executable or the test suite. Weeder finds these in
-the HIE files a build writes, so run it from a built tree.
+nothing reaches from the executable or the test suite. Weeder reads the HIE
+files a build writes, so run it from a built tree.
 
 ```sh
 cabal install weeder
 weeder
 ```
-
-[cabal.project](cabal.project) turns on the HIE output weeder reads, and
-[weeder.toml](weeder.toml) declares the roots it treats as alive.
-
-Cabal keeps the HIE file of a module you delete, and weeder still reads it.
-Clear `dist-newstyle` whenever it reports a definition the sources no longer
-hold.
 
 ## Before you commit
 

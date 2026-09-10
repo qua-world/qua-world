@@ -3,5 +3,8 @@ packages: .
 -- Weeder reads the HIE files this writes. Keeping the flag here holds every
 -- cabal invocation to one configuration, so `cabal test` reuses what
 -- `cabal build` compiled.
+--
+-- Deleting a module leaves its HIE file behind, and weeder goes on reporting
+-- that module until dist-newstyle is cleared.
 program-options
   ghc-options: -fwrite-ide-info
