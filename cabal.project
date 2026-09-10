@@ -1,7 +1,7 @@
 packages: .
 
--- Weeder reads the HIE files this writes. Configuring it here rather than on
--- the CI command line keeps every invocation alike, so `cabal test` reuses
--- what `cabal build` compiled instead of reconfiguring and starting over.
+-- Weeder reads the HIE files this writes. Keeping the flag here holds every
+-- cabal invocation to one configuration, so `cabal test` reuses what
+-- `cabal build` compiled.
 program-options
   ghc-options: -fwrite-ide-info

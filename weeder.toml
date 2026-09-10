@@ -1,6 +1,5 @@
-# The library is alive only through what the executable and the test suite
-# reach. Nothing outside this repository depends on it, so an export no caller
-# uses is dead code rather than public API.
+# Nothing outside this repository depends on the library, so an export no
+# caller reaches is dead code rather than public API.
 roots = ["^Main.main$", "^Paths_.*"]
 
 # A derived Eq or Show instance is never named by its caller, so each one

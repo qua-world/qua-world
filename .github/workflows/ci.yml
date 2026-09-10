@@ -80,8 +80,8 @@ jobs:
     timeout-minutes: 30
 
     env:
-      # Weeder has no binary releases, so it is built here against the same
-      # GHC that writes the HIE files it reads.
+      # Weeder reads HIE files only from the GHC it was built against, and
+      # ships no binaries to download in place of building it.
       #
       # renovate: datasource=hackage depName=weeder versioning=loose
       WEEDER_VERSION: "2.10.0"
@@ -123,16 +123,15 @@ jobs:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
         with:
           path: ${{ steps.setup.outputs.cabal-store }}
-          # The store holds weeder's dependency tree as well as the project's,
-          # and a weeder bump moves no plan of ours, so its version joins the
-          # key to keep the two from drifting apart.
+          # The store holds weeder's dependency tree too, and a weeder bump
+          # moves nothing in the build plan.
           key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}-weeder-${{ env.WEEDER_VERSION }}
           restore-keys: ${{ env.key }}-
 
       - name: Install dependencies
         run: cabal build all --enable-tests --only-dependencies
 
-      # Ahead of the cache save so what this builds is stored with the rest.
+      # Before the cache save, so the store keeps what this builds.
       - name: Install weeder
         run: |
           cabal install "weeder-${WEEDER_VERSION}" --ignore-project --installdir="$HOME/.local/bin"
