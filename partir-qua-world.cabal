@@ -1,4 +1,6 @@
-cabal-version:       2.4
+cabal-version:       3.0
+-- ^ 3.0 is the floor for the `partir-qua-world:glut-client` dependency
+-- syntax, and it has to be the file's first line.
 
 name:                partir-qua-world
 version:             0.1.0.0
@@ -70,6 +72,28 @@ library
   hs-source-dirs:
       src
 
+-- The client's modules live here rather than in the executable so the test
+-- suite can import them; a target's `main-is` module is not importable.
+library glut-client
+  import:              warnings, language, deps
+
+  exposed-modules:
+      Partir.Client.GLUT.Commands
+    , Partir.Client.GLUT.Controls
+
+  build-depends:
+      GLUT >= 2.7 && < 2.8
+    , optparse-applicative >= 0.18 && < 0.20
+    , partir-qua-world
+    , StateVar >= 1.2 && < 1.3
+
+  -- Cabal treats every module under a target's hs-source-dirs as a home
+  -- module, so a target sharing a directory recompiles the modules there and
+  -- fails on dependencies only their own target declares. Hence `exe`, not
+  -- `app`, below.
+  hs-source-dirs:
+      app
+
 test-suite partir-qua-world-test
   import:              warnings, language, deps
 
@@ -100,19 +124,12 @@ executable partir-glut
 
   main-is:             Partir/Client/GLUT/Main.hs
 
-  other-modules:
-      Partir.Client.GLUT.Commands
-    , Partir.Client.GLUT.Controls
-
   build-depends:
       GLUT >= 2.7 && < 2.8
     , OpenGL >= 3.0 && < 3.1
     , optparse-applicative >= 0.18 && < 0.20
-    , partir-qua-world
+    , partir-qua-world:glut-client
     , StateVar >= 1.2 && < 1.3
 
-  -- Cabal treats every module under a target's hs-source-dirs as a home
-  -- module, so an executable sharing src recompiles the library there and
-  -- fails on dependencies only the library declares.
   hs-source-dirs:
-      app
+      exe
