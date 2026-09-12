@@ -30,3 +30,6 @@ bucket. Later `[Unreleased]` sections split by change type.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
+* GLUT keyboard input reaches the client as `Partir.Agent.Input.Intent`s:
+  escape becomes `Quit`, `WASD` become `Move`. Only `Quit` acts; the rest are
+  traced.
