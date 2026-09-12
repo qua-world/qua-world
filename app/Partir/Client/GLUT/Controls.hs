@@ -29,24 +29,33 @@ import Linear.V3 (V3 (..))
 import System.Exit (exitSuccess)
 
 import Partir.Agent.Input (Intent (..))
+import Partir.World.Types (Vec3)
 
 -- | Routes every keyboard and mouse event through the intent vocabulary.
 primary :: GLUT.KeyboardMouseCallback
 primary key keyState _modifiers _position =
   maybe (pure ()) perform (intent key keyState)
 
-{- | What the player asked for, if the event asks for anything. Movement keys
-map to a unit direction in the right-handed basis GLUT hands the client, with
-@-Z@ forward. #94 settles whether that vector is an absolute position or a
-displacement; only its direction is claimed here.
+{- | What the player asked for, if the event asks for anything. #94 settles
+whether a movement vector is an absolute position or a displacement; only its
+direction is claimed here.
 -}
 intent :: GLUT.Key -> GLUT.KeyState -> Maybe Intent
 intent (GLUT.Char '\ESC') GLUT.Down = Just Quit
-intent (GLUT.Char 'w') GLUT.Down = Just (Move (V3 0 0 (-1)))
-intent (GLUT.Char 'a') GLUT.Down = Just (Move (V3 (-1) 0 0))
-intent (GLUT.Char 's') GLUT.Down = Just (Move (V3 0 0 1))
-intent (GLUT.Char 'd') GLUT.Down = Just (Move (V3 1 0 0))
+intent (GLUT.Char 'w') GLUT.Down = Just (Move forward)
+intent (GLUT.Char 'a') GLUT.Down = Just (Move left)
+intent (GLUT.Char 's') GLUT.Down = Just (Move back)
+intent (GLUT.Char 'd') GLUT.Down = Just (Move right)
 intent _ _ = Nothing
+
+{- | The unit directions a movement key asks for, in the right-handed basis
+GLUT hands the client: @-Z@ ahead of the player, @+X@ to their right.
+-}
+forward, left, back, right :: Vec3
+forward = V3 0 0 (-1)
+left = V3 (-1) 0 0
+back = V3 0 0 1
+right = V3 1 0 0
 
 {- | Carries out an intent the player emitted. Only 'Quit' has an effect the
 client can give it today; the rest wait on a camera to move and a server to
