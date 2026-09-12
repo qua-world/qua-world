@@ -1,16 +1,14 @@
 {- |
 Module      : Partir.Client.GLUT.Controls
-Description : Adapts GLUT input events into the intents every agent speaks
+Description : Maps GLUT input events to agent intents
 Copyright   : (c) Alex Brandt, 2026
 License     : MIT
 
-The GUI player takes part in the world the same way a bot does: it emits
-'Partir.Agent.Input.Intent's. This module is the adapter that turns GLUT's
-keyboard and mouse events into them, so the layers below never learn which
-toolkit produced an input.
+GLUT delivers keys and mouse buttons; the rest of the client speaks
+'Partir.Agent.Input.Intent'. This module translates between them.
 
-'intent' is pure, which is what lets the mapping be tested without a window.
-'primary' is the GLUT callback that pairs it with the effect each intent has.
+Deciding is kept apart from acting so the mapping can be tested without a
+window: 'intent' decides, 'primary' acts.
 -}
 module Partir.Client.GLUT.Controls (
   -- * Primary Callback
@@ -31,7 +29,7 @@ import System.Exit (exitSuccess)
 import Partir.Agent.Input (Intent (..))
 import Partir.World.Types (Vec3)
 
--- | Routes every keyboard and mouse event through the intent vocabulary.
+-- | An event that maps to no intent does nothing.
 primary :: GLUT.KeyboardMouseCallback
 primary key keyState _modifiers _position =
   maybe (pure ()) perform (intent key keyState)
@@ -48,8 +46,8 @@ intent (GLUT.Char 's') GLUT.Down = Just (Move back)
 intent (GLUT.Char 'd') GLUT.Down = Just (Move right)
 intent _ _ = Nothing
 
-{- | The unit directions a movement key asks for, in the right-handed basis
-GLUT hands the client: @-Z@ ahead of the player, @+X@ to their right.
+{- | Unit directions in the client's right-handed basis: @-Z@ ahead of the
+player, @+X@ to their right.
 -}
 forward, left, back, right :: Vec3
 forward = V3 0 0 (-1)
@@ -57,10 +55,7 @@ left = V3 (-1) 0 0
 back = V3 0 0 1
 right = V3 1 0 0
 
-{- | Carries out an intent the player emitted. Only 'Quit' has an effect the
-client can give it today; the rest wait on a camera to move and a server to
-send to.
--}
+-- | Only 'Quit' can take effect: nothing the other intents reach exists yet.
 perform :: Intent -> IO ()
 perform Quit = quit
 perform i = traceIO $ "unhandled intent: " ++ show i
