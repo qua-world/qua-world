@@ -9,5 +9,6 @@ GLU
 GLUT
 Hackage
 MIT
+Nygard
 partir
 subcommand
