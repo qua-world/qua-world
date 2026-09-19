@@ -30,8 +30,8 @@ We will record architecturally significant decisions as Architecture Decision
 Records, following the format [Michael Nygard set out][nygard].
 
 Each record is one Markdown file under `docs/adr/`, named `NNNN-kebab-title.md`
-with a four-digit sequence number that increases by one per record. Each
-carries four sections: Status, Context, Decision, and Consequences.
+and numbered in sequence, carrying four sections: Status, Context, Decision, and
+Consequences.
 
 A record is warranted when a decision is both significant and hard to reverse:
 it sets a precedent others follow, locks in a dependency, shapes a public API,
@@ -54,8 +54,7 @@ that changes gets a new record superseding the old one, and the original stays
 in place as what was true at the time. A reader who wants current state reads
 the newest record on a topic, not the whole directory.
 
-The cost is the discipline of writing one when a decision qualifies, and the
-judgment to skip one when it doesn't. Recording too much dilutes the
-collection.
+The cost is the judgment of when a decision qualifies. Recording everything
+dilutes the collection.
 
 [nygard]: https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions

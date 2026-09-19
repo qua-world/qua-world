@@ -18,10 +18,10 @@ and the world-server will meet the same question. Haskell offers several shapes
 for reporting a failure, and choosing one per module leaves a caller learning a
 new convention at each boundary.
 
-The glTF loader in #24 raised the question first and settled on a shape during
-review, but the reasoning stayed in that pull request. The sibling loaders
-would each derive it again from nothing. #76 asked for the convention to be
-ratified here before more code sets it by precedent.
+The glTF loader in #24 raised the question first, and its answer lived only in
+the pull request that made it. The sibling loaders would each derive that answer
+again, so the convention is ratified here before more code sets it by
+precedent.
 
 Three shapes answer the question. Throwing a typed exception for every failure
 gives one mechanism to learn. A caller that wants to handle a malformed file
@@ -54,8 +54,7 @@ failure fatal can `throwIO` it. We won't report a failure as `String`, `Text`,
 or `userError`.
 
 **An anticipated failure is returned.** Decoding, parsing, and validation land
-here, and the signature says so:
-`loadAsset :: FilePath -> IO (Either GltfLoadError Mesh)`.
+here, in the `Left` of an `IO (Either ModuleError a)` the signature declares.
 
 **A genuine I/O failure stays an exception.** A missing file, an unreadable
 handle, or a closed socket already throws `IOError` from the operation that met
@@ -65,8 +64,7 @@ it, and we won't catch one to re-report it as a `Left`.
 between synchronous and asynchronous exceptions decides whether the catch is
 correct. Code that only throws needs nothing beyond `Control.Exception`.
 
-**`ExceptT` and `EitherT` over `IO` stay out.** The two channels above are the
-whole vocabulary.
+**`ExceptT` and `EitherT` over `IO` stay out.**
 
 ## Consequences
 
@@ -74,23 +72,18 @@ A caller reads a signature and knows which failures it has to handle. The
 compiler asks about the anticipated ones and stays quiet about the rest.
 
 Two mechanisms stay in play, and the test that picks between them is a judgment
-call at the margin. Cases that sit near the line get decided in review, and a
-decision that generalizes belongs back in this record.
+call at the margin. A ruling that generalizes belongs back in this record.
 
 Every module at an impure edge writes an error type before it writes its first
 failure path. For a loader that reports one kind of failure this looks like
 overhead, and it's what keeps a caller from matching on rendered text.
 
-`safe-exceptions` isn't a dependency yet, because nothing catches yet. Version
-0.1.7.4 resolves and builds against the GHC series `tested-with` pins, so the
-first catch site can add it without reopening this decision.
+`safe-exceptions` isn't a dependency, because nothing catches. The first catch
+site adds it.
 
-The first application is the glTF loader written in #64 against #24, where
-`GltfLoadError` carries the `Exception` instance and the client's startup turns
-a decode failure fatal with `either throwIO pure`. That pull request closed
-without merging, so the convention is ratified ahead of the code rather than
-read out of it, which is what #76 asked for. Whatever revives that work
-conforms to this record.
+The glTF loader in #64 is the first application: it names `GltfLoadError`, gives
+it the `Exception` instance, and turns a decode failure fatal at startup with
+`either throwIO pure`.
 
 This record assumes the impure layers are bare `IO`. The effect-system question
 in #43 covers that assumption, and a decision to adopt an effect system would
