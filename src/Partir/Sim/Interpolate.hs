@@ -23,6 +23,7 @@ module Partir.Sim.Interpolate (
   RemoteHistory,
   emptyHistory,
   record,
+  prune,
   interpolate,
 )
 where
@@ -67,6 +68,27 @@ re-sends never duplicate an instant.
 record :: Sample -> RemoteHistory -> RemoteHistory
 record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
+{- | Discard the samples the playback clock has passed.
+
+'interpolate' reads at most the two samples bracketing @now - delay@, and the
+clock only ever advances, so everything below the older of that pair is dead
+weight. Pruning keeps the newest sample at or before that instant along with
+every later one, which is what leaves 'interpolate' unchanged for every render
+time from here on. A history reaching no further back is already minimal and
+survives intact.
+
+Separate from 'record' deliberately: an insert stays an insert, and the render
+loop prunes at whatever cadence suits it.
+-}
+prune :: Tick -> RenderTime -> RemoteHistory -> RemoteHistory
+prune (Tick delay) (RenderTime now) history@(RemoteHistory m) =
+  case Map.lookupMax atOrBefore of
+    Just (t, p) -> RemoteHistory (Map.insert t p after)
+    Nothing -> history
+ where
+  target = now - fromIntegral delay
+  (atOrBefore, after) = splitAtHorizon target m
+
 {- | Interpolate a remote agent's pose for a render frame.
 
 The pose is sampled at @now - delay@: the two samples bracketing that instant
@@ -84,8 +106,16 @@ interpolate (Tick delay) (RenderTime now) (RemoteHistory m) =
     (Nothing, Nothing) -> Nothing
  where
   target = now - fromIntegral delay
-  (atOrBefore, after) = Map.spanAntitone (\t -> tickTime t <= target) m
+  (atOrBefore, after) = splitAtHorizon target m
   alpha t0 t1 = (target - tickTime t0) / (tickTime t1 - tickTime t0)
+
+{- | Split at the horizon: the samples at or before that instant, then those
+after. 'interpolate' blends across the boundary and 'prune' cuts below it, so
+both take the line from here — were they to disagree, pruning would drop a
+sample interpolation still reads.
+-}
+splitAtHorizon :: Double -> Map Tick Pose -> (Map Tick Pose, Map Tick Pose)
+splitAtHorizon target = Map.spanAntitone (\t -> tickTime t <= target)
 
 {- | Blend two poses at @alpha@ in @[0, 1]@: @alpha = 0@ is the first pose,
 @alpha = 1@ the second. Both 'lerp' (since linear 1.23) and 'slerp' run in
