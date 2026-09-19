@@ -95,7 +95,7 @@ prune :: Delay -> RenderTime -> RemoteHistory -> RemoteHistory
 prune delay now (RemoteHistory m) = RemoteHistory (Map.union reckonable after)
  where
   (atOrBefore, after) = splitAtPlayback (playbackInstant delay now) m
-  reckonable = Map.fromList (take 2 (Map.toDescList atOrBefore))
+  reckonable = Map.fromList (reckonFrom atOrBefore)
 
 {- | Interpolate a remote agent's pose for a render frame, extrapolating
 within a 'Horizon' when the next sample is late.
@@ -114,10 +114,10 @@ Before the oldest sample the oldest pose is held: there is no earlier motion
 to project from. An empty history yields 'Nothing'.
 -}
 interpolate :: Delay -> Horizon -> RenderTime -> RemoteHistory -> Maybe Pose
-interpolate delay (Horizon (Tick reach)) now (RemoteHistory m) =
+interpolate delay horizon now (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
     (Just (t0, p0), Just (t1, p1)) -> Just (blend (alphaAt target t0 t1) p0 p1)
-    (Just (t1, p1), Nothing) -> Just (project t1 p1)
+    (Just (_, newest), Nothing) -> Just (project newest)
     (Nothing, Just (_, p1)) -> Just p1
     (Nothing, Nothing) -> Nothing
  where
@@ -125,14 +125,23 @@ interpolate delay (Horizon (Tick reach)) now (RemoteHistory m) =
   (atOrBefore, after) = splitAtPlayback target m
   alphaAt t t0 t1 = (t - tickTime t0) / (tickTime t1 - tickTime t0)
 
-  project t1 p1 = case Map.lookupLT t1 atOrBefore of
-    Just (t0, p0) -> blend (alphaAt reached t0 t1) p0 p1
-    Nothing -> p1
-   where
-    reached = min target (tickTime t1 + fromIntegral reach)
+  project newest = case reckonFrom atOrBefore of
+    (t1, p1) : (t0, p0) : _ -> blend (alphaAt (reached t1) t0 t1) p0 p1
+    _ -> newest
+  reached t1 = min target (tickTime t1 + reachTicks horizon)
 
 playbackInstant :: Delay -> RenderTime -> Double
 playbackInstant (Delay (Tick delay)) (RenderTime now) = now - fromIntegral delay
+
+reachTicks :: Horizon -> Double
+reachTicks (Horizon (Tick n)) = fromIntegral n
+
+{- | The samples a projection reckons a velocity from, newest first: the last
+two at or before the playback instant. 'prune' keeps exactly these, so
+'interpolate' still finds a velocity in a history that has been cut.
+-}
+reckonFrom :: Map Tick Pose -> [(Tick, Pose)]
+reckonFrom = take 2 . Map.toDescList
 
 {- | 'interpolate' blends across this boundary and 'prune' cuts below it. Were
 the two to disagree on which side the boundary sample falls, pruning would drop
