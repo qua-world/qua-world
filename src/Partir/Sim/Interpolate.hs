@@ -67,29 +67,46 @@ re-sends never duplicate an instant.
 record :: Sample -> RemoteHistory -> RemoteHistory
 record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
-{- | Interpolate a remote agent's pose for a render frame.
+{- | Interpolate a remote agent's pose for a render frame, extrapolating up to
+@horizon@ ticks when the next sample is late.
 
 The pose is sampled at @now - delay@: the two samples bracketing that instant
 are blended, position by linear interpolation and orientation by 'slerp'.
-Outside that window the nearest boundary pose is held, not extrapolated —
-before the oldest sample there is no earlier motion to project from, and past
-the newest we hold rather than guess. An empty history yields 'Nothing'.
+
+Past the newest sample the same blend continues beyond the second of its two
+poses, projecting the agent along the velocity the last two samples imply —
+dead reckoning, as in Valve's @cl_extrapolate@. The projection stops @horizon@
+ticks past the newest sample, so a long gap settles on a fixed pose instead of
+drifting without bound; a @horizon@ of @'Tick' 0@ holds the newest pose
+outright. A history with one sample holds it, velocity being undefined.
+
+Before the oldest sample the oldest pose is held: there is no earlier motion
+to project from. An empty history yields 'Nothing'.
 -}
-interpolate :: Tick -> RenderTime -> RemoteHistory -> Maybe Pose
-interpolate (Tick delay) (RenderTime now) (RemoteHistory m) =
+interpolate :: Tick -> Tick -> RenderTime -> RemoteHistory -> Maybe Pose
+interpolate (Tick delay) (Tick horizon) (RenderTime now) (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
-    (Just (t0, p0), Just (t1, p1)) -> Just (blend (alpha t0 t1) p0 p1)
-    (Just (_, p0), Nothing) -> Just p0 -- past the newest; #66 extrapolates here
+    (Just (t0, p0), Just (t1, p1)) -> Just (blend (alphaAt target t0 t1) p0 p1)
+    (Just (t1, p1), Nothing) -> Just (project t1 p1)
     (Nothing, Just (_, p1)) -> Just p1
     (Nothing, Nothing) -> Nothing
  where
   target = now - fromIntegral delay
   (atOrBefore, after) = Map.spanAntitone (\t -> tickTime t <= target) m
-  alpha t0 t1 = (target - tickTime t0) / (tickTime t1 - tickTime t0)
+  alphaAt t t0 t1 = (t - tickTime t0) / (tickTime t1 - tickTime t0)
 
-{- | Blend two poses at @alpha@ in @[0, 1]@: @alpha = 0@ is the first pose,
-@alpha = 1@ the second. Both 'lerp' (since linear 1.23) and 'slerp' run in
-that direction.
+  -- Dead reckoning from the last two samples: dropping the newest leaves the
+  -- one before, and their blend runs on as far as the horizon reaches.
+  project t1 p1 = case Map.lookupMax (Map.delete t1 atOrBefore) of
+    Just (t0, p0) -> blend (alphaAt reached t0 t1) p0 p1
+    Nothing -> p1
+   where
+    reached = min target (tickTime t1 + fromIntegral horizon)
+
+{- | Blend two poses at @alpha@: @alpha = 0@ is the first pose, @alpha = 1@ the
+second. Both 'lerp' (since linear 1.23) and 'slerp' run in that direction, and
+both continue the straight line and the great-circle arc past @alpha = 1@,
+which is what extrapolation rides.
 -}
 blend :: Double -> Pose -> Pose -> Pose
 blend alpha a b =

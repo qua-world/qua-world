@@ -22,7 +22,9 @@ bucket. Later `[Unreleased]` sections split by change type.
   over what the agent perceives), and `Null` (an agent that emits nothing).
 * `Partir.Sim.Interpolate`: pure snapshot interpolation that smooths remote
   agents between buffered pose `Sample`s, sampling a fixed delay in the past and
-  blending position linearly and orientation by `slerp`.
+  blending position linearly and orientation by `slerp`. Past the newest sample
+  it projects the agent along the velocity the last two samples imply, for a
+  caller-supplied horizon in ticks, then holds.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its
