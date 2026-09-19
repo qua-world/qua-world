@@ -183,25 +183,24 @@ jobs:
       - name: Update Hackage index
         run: cabal update
 
-      # configure persists the flags to cabal.project.local, so the steps
-      # below share one instrumented configuration.
-      - name: Configure with coverage
-        run: cabal configure --enable-tests --enable-coverage
-
-      - name: Generate build plan
-        run: cabal build all --dry-run
-
-      # Restore without a matching save: instrumentation recompiles this
-      # package alone, so the store the build job writes already holds every
-      # dependency this job needs, and two jobs saving one key race.
+      # Restores what the build job saved and saves nothing back:
+      # instrumentation recompiles this package alone, so that job's store
+      # already holds every dependency, and a second job writing the same key
+      # would race it. Nothing is ever saved under the key below, so the
+      # prefix match is what lands the store and `key` repeats it.
       - name: Restore cabal store
         env:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ steps.setup.outputs.cabal-store }}
-          key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}
+          key: ${{ env.key }}-
           restore-keys: ${{ env.key }}-
+
+      # configure persists the flags to cabal.project.local, so the two steps
+      # below share one instrumented configuration.
+      - name: Configure with coverage
+        run: cabal configure --enable-tests --enable-coverage
 
       - name: Build
         run: cabal build all
