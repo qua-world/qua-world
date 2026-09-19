@@ -20,6 +20,8 @@ leaves the whole module @IO@-free and total.
 module Partir.Sim.Interpolate (
   Sample (..),
   RenderTime (..),
+  Delay (..),
+  Horizon (..),
   RemoteHistory,
   emptyHistory,
   record,
@@ -50,6 +52,17 @@ data Sample = Sample
 newtype RenderTime = RenderTime Double
   deriving (Eq, Ord, Show)
 
+{- | How far behind the present the playback clock runs. Wide enough and the
+samples bracketing the played instant have arrived; wider still and remote
+agents lag what the server knows.
+-}
+newtype Delay = Delay Tick
+  deriving (Eq, Ord, Show)
+
+-- | How far past the newest sample extrapolation carries before it gives up.
+newtype Horizon = Horizon Tick
+  deriving (Eq, Ord, Show)
+
 {- | A remote agent's samples, keyed by tick. Backing them with a
 'Data.Map.Strict.Map' gives the ascending order and one-pose-per-tick for
 free; build it with 'emptyHistory' and 'record'.
@@ -67,24 +80,25 @@ re-sends never duplicate an instant.
 record :: Sample -> RemoteHistory -> RemoteHistory
 record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
-{- | Interpolate a remote agent's pose for a render frame, extrapolating up to
-@horizon@ ticks when the next sample is late.
+{- | Interpolate a remote agent's pose for a render frame, extrapolating
+within a 'Horizon' when the next sample is late.
 
-The pose is sampled at @now - delay@: the two samples bracketing that instant
-are blended, position by linear interpolation and orientation by 'slerp'.
+The pose is sampled at @now@ less the 'Delay': the two samples bracketing that
+instant are blended, position by linear interpolation and orientation by
+'slerp'.
 
 Past the newest sample the same blend continues beyond the second of its two
 poses, projecting the agent along the velocity the last two samples imply —
-dead reckoning, as in Valve's @cl_extrapolate@. The projection stops @horizon@
-ticks past the newest sample, so a long gap settles on a fixed pose instead of
-drifting without bound; a @horizon@ of @'Tick' 0@ holds the newest pose
-outright. A history with one sample holds it, velocity being undefined.
+dead reckoning, as in Valve's @cl_extrapolate@. The projection stops a
+'Horizon' past the newest sample, so a long gap settles on a fixed pose
+instead of drifting without bound; a @'Horizon' ('Tick' 0)@ holds the newest
+pose outright. A history with one sample holds it, velocity being undefined.
 
 Before the oldest sample the oldest pose is held: there is no earlier motion
 to project from. An empty history yields 'Nothing'.
 -}
-interpolate :: Tick -> Tick -> RenderTime -> RemoteHistory -> Maybe Pose
-interpolate (Tick delay) (Tick horizon) (RenderTime now) (RemoteHistory m) =
+interpolate :: Delay -> Horizon -> RenderTime -> RemoteHistory -> Maybe Pose
+interpolate (Delay (Tick delay)) (Horizon (Tick horizon)) (RenderTime now) (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
     (Just (t0, p0), Just (t1, p1)) -> Just (blend (alphaAt target t0 t1) p0 p1)
     (Just (t1, p1), Nothing) -> Just (project t1 p1)
@@ -95,9 +109,7 @@ interpolate (Tick delay) (Tick horizon) (RenderTime now) (RemoteHistory m) =
   (atOrBefore, after) = Map.spanAntitone (\t -> tickTime t <= target) m
   alphaAt t t0 t1 = (t - tickTime t0) / (tickTime t1 - tickTime t0)
 
-  -- Dead reckoning from the last two samples: dropping the newest leaves the
-  -- one before, and their blend runs on as far as the horizon reaches.
-  project t1 p1 = case Map.lookupMax (Map.delete t1 atOrBefore) of
+  project t1 p1 = case Map.lookupLT t1 atOrBefore of
     Just (t0, p0) -> blend (alphaAt reached t0 t1) p0 p1
     Nothing -> p1
    where

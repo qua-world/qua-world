@@ -3,14 +3,17 @@ module Partir.Sim.InterpolateSpec (
 )
 where
 
+import Data.Maybe (fromMaybe)
 import Linear.Metric (dot, normalize, quadrance)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck (Gen, choose, forAll, suchThat)
+import Test.QuickCheck (Gen, Property, choose, forAll, suchThat)
 
 import Partir.Sim.Interpolate (
+  Delay (..),
+  Horizon (..),
   RemoteHistory,
   RenderTime (..),
   Sample (..),
@@ -24,7 +27,7 @@ spec :: Spec
 spec = do
   describe "interpolate" $ do
     it "returns nothing for an empty history" $
-      interpolate (Tick 0) noExtrapolation (RenderTime 5) emptyHistory `shouldBe` Nothing
+      interpolate noDelay noExtrapolation (RenderTime 5) emptyHistory `shouldBe` Nothing
 
     it "yields each sample's pose exactly at its tick" $ do
       posAt noExtrapolation 0 line `closeTo` origin
@@ -35,7 +38,7 @@ spec = do
 
     it "shifts the sampled instant back by the delay" $
       -- delay 5, now 10 -> target 5 -> the midpoint.
-      fmap posePosition (interpolate (Tick 5) noExtrapolation (RenderTime 10) line)
+      fmap posePosition (interpolate (Delay (Tick 5)) noExtrapolation (RenderTime 10) line)
         `shouldSatisfy` closeToJust (V3 5 10 15)
 
     it "holds the oldest pose before the buffer begins" $
@@ -46,10 +49,10 @@ spec = do
 
     it "advances along the last observed velocity within the horizon" $
       -- line runs V3 1 2 3 per tick; three ticks past the newest sample.
-      posAt (Tick 5) 13 line `closeTo` V3 13 26 39
+      posAt shortHorizon 13 line `closeTo` V3 13 26 39
 
     it "settles at the horizon rather than drifting on" $
-      posAt (Tick 5) 1000 line `closeTo` V3 15 30 45
+      posAt shortHorizon 1000 line `closeTo` V3 15 30 45
 
     it "carries the turn on past the newest sample" $
       -- A quarter turn over the span, projected for a second span.
@@ -57,7 +60,7 @@ spec = do
         `sameRotationAs` turnZ (pi / 2)
 
     it "holds a lone sample, having no velocity to project" $
-      posAt (Tick 5) 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
+      posAt shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
         `closeTo` far
 
     prop "position moves monotonically toward the next sample" $
@@ -70,22 +73,27 @@ spec = do
              in movesToward (p1 ^-^ p0) (b ^-^ a)
 
     prop "orientation rotates monotonically away from the start" $
-      forAll genUnitQuat $ \q0 ->
-        forAll (genUnitQuat `suchThat` notAntipodalTo q0) $ \q1 ->
-          forAll orderedFractions $ \(lo, hi) ->
-            let hist = poses origin q0 origin q1
-                near = dot q0 (orientation noExtrapolation lo hist)
-                farr = dot q0 (orientation noExtrapolation hi hist)
-             in near >= farr - epsilon
+      turnsOneWay noExtrapolation 0
 
     prop "orientation keeps turning the same way past the newest sample" $
-      forAll genUnitQuat $ \q0 ->
-        forAll (genUnitQuat `suchThat` notAntipodalTo q0) $ \q1 ->
-          forAll orderedFractions $ \(lo, hi) ->
-            let hist = poses origin q0 origin q1
-                near = dot q0 (orientation oneSpan (1 + lo) hist)
-                farr = dot q0 (orientation oneSpan (1 + hi) hist)
-             in near >= farr - epsilon
+      turnsOneWay oneSpan 1
+
+-- Properties
+
+{- A turn that never reverses: over a window @from@ spans wide, a later
+instant sits no closer to the starting orientation than an earlier one. At
+@from = 0@ the window is the gap between the samples; at @from = 1@ it is the
+extrapolated window just past the newest.
+-}
+turnsOneWay :: Horizon -> Double -> Property
+turnsOneWay horizon from =
+  forAll genUnitQuat $ \q0 ->
+    forAll (genUnitQuat `suchThat` notAntipodalTo q0) $ \q1 ->
+      forAll orderedFractions $ \(lo, hi) ->
+        let hist = poses origin q0 origin q1
+            earlier = dot q0 (orientation horizon (from + lo) hist)
+            later = dot q0 (orientation horizon (from + hi) hist)
+         in earlier >= later - epsilon
 
 -- Fixtures
 
@@ -98,14 +106,28 @@ far = V3 10 20 30
 noRotation :: Quat
 noRotation = Quaternion 1 (V3 0 0 0)
 
--- The horizon that reproduces the pre-extrapolation clamp.
-noExtrapolation :: Tick
-noExtrapolation = Tick 0
+-- Playback of the live instant, so a render time reads as itself.
+noDelay :: Delay
+noDelay = Delay (Tick 0)
 
--- A horizon as wide as the gap between the two `poses` samples, so a
--- fraction in [1, 2] maps onto the whole extrapolated window.
-oneSpan :: Tick
-oneSpan = Tick 1000
+-- The horizon that reproduces the pre-extrapolation clamp.
+noExtrapolation :: Horizon
+noExtrapolation = Horizon (Tick 0)
+
+-- A horizon narrower than the `line` fixture's own span, so a render time
+-- can land inside it or past it.
+shortHorizon :: Horizon
+shortHorizon = Horizon (Tick 5)
+
+-- The ticks a `poses` history covers, which turns a fraction of that history
+-- into a render time.
+spanTicks :: Double
+spanTicks = 1000
+
+-- A horizon as wide as a `poses` history, so a fraction in [1, 2] maps onto
+-- the whole extrapolated window.
+oneSpan :: Horizon
+oneSpan = Horizon (Tick (round spanTicks))
 
 turnZ :: Double -> Quat
 turnZ theta = Quaternion (cos (theta / 2)) (V3 0 0 (sin (theta / 2)))
@@ -116,27 +138,28 @@ line =
   record (Sample (Tick 10) (Pose far noRotation)) $
     record (Sample (Tick 0) (Pose origin noRotation)) emptyHistory
 
--- A two-sample history at ticks 0 and 1000, so a fraction in [0, 1] maps
--- onto a render time in [0, 1000].
+-- A two-sample history spanning `spanTicks`, so a fraction in [0, 1] maps
+-- onto a render time inside it.
 poses :: Vec3 -> Quat -> Vec3 -> Quat -> RemoteHistory
 poses p0 q0 p1 q1 =
-  record (Sample (Tick 1000) (Pose p1 q1)) $
+  record (Sample (Tick (round spanTicks)) (Pose p1 q1)) $
     record (Sample (Tick 0) (Pose p0 q0)) emptyHistory
 
 -- Helpers
 
--- Position at a render time, with no delay.
-posAt :: Tick -> Double -> RemoteHistory -> Vec3
-posAt horizon t =
-  maybe (error "posAt: empty") posePosition . interpolate (Tick 0) horizon (RenderTime t)
+-- Pose at a render time, with no delay.
+poseAt :: Horizon -> Double -> RemoteHistory -> Pose
+poseAt horizon t =
+  fromMaybe (error "poseAt: empty history") . interpolate noDelay horizon (RenderTime t)
+
+posAt :: Horizon -> Double -> RemoteHistory -> Vec3
+posAt horizon t = posePosition . poseAt horizon t
 
 sample :: Double -> RemoteHistory -> Vec3
-sample frac = posAt noExtrapolation (frac * 1000)
+sample frac = posAt noExtrapolation (frac * spanTicks)
 
-orientation :: Tick -> Double -> RemoteHistory -> Quat
-orientation horizon frac =
-  maybe (error "orientation: empty") poseOrientation
-    . interpolate (Tick 0) horizon (RenderTime (frac * 1000))
+orientation :: Horizon -> Double -> RemoteHistory -> Quat
+orientation horizon frac = poseOrientation . poseAt horizon (frac * spanTicks)
 
 orderedFractions :: Gen (Double, Double)
 orderedFractions = do
@@ -164,17 +187,28 @@ movesToward dir d = and ((\x y -> x * y >= negate epsilon) <$> dir <*> d)
 notAntipodalTo :: Quat -> Quat -> Bool
 notAntipodalTo q0 q1 = dot q0 q1 >= 0
 
+-- Slack for a property comparing two blends, which accumulate error the
+-- exact-value expectations below do not.
 epsilon :: Double
 epsilon = 1e-6
 
+-- What an exact-value expectation allows between a blend and the arithmetic
+-- it should reproduce.
+tolerance :: Double
+tolerance = 1e-9
+
+-- The widest a pair of vectors or quaternions differ on any one component.
+gap :: (Applicative f, Foldable f) => f Double -> f Double -> Double
+gap a b = maximum (abs <$> ((-) <$> a <*> b))
+
 closeTo :: Vec3 -> Vec3 -> Expectation
-closeTo a b = maximum (abs <$> (a ^-^ b)) `shouldSatisfy` (< 1e-9)
+closeTo a b = gap a b `shouldSatisfy` (< tolerance)
 
 sameRotationAs :: Quat -> Quat -> Expectation
-sameRotationAs a b = maximum (abs <$> (a - b)) `shouldSatisfy` (< 1e-9)
+sameRotationAs a b = gap a b `shouldSatisfy` (< tolerance)
 
 closeToJust :: Vec3 -> Maybe Vec3 -> Bool
-closeToJust want = maybe False (\got -> maximum (abs <$> (want ^-^ got)) < 1e-9)
+closeToJust want = maybe False ((< tolerance) . gap want)
 
 (^-^) :: Vec3 -> Vec3 -> Vec3
 (^-^) = (-)
