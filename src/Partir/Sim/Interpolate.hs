@@ -70,12 +70,11 @@ record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
 {- | Discard the samples the playback clock has passed.
 
-'interpolate' reads at most the two samples bracketing @now - delay@ and the
-clock only advances, so everything below the older of that pair is dead weight.
-Keeping that sample along with every later one is what leaves 'interpolate'
-unchanged from this horizon on.
+The clock only advances, so everything below the older of the two samples
+bracketing @now - delay@ is dead weight. Keeping that sample and its successors
+is what leaves 'interpolate' unchanged from that horizon on.
 
-The render loop calls this at its own cadence; 'record' stays a plain insert.
+Recording does not prune; the render loop calls this at its own cadence.
 -}
 prune :: Tick -> RenderTime -> RemoteHistory -> RemoteHistory
 prune delay now history@(RemoteHistory m) =
@@ -105,13 +104,12 @@ interpolate delay now (RemoteHistory m) =
   (atOrBefore, after) = splitAtHorizon target m
   alpha t0 t1 = (target - tickTime t0) / (tickTime t1 - tickTime t0)
 
--- | The instant the client renders: the clock held @delay@ ticks in the past.
 horizon :: Tick -> RenderTime -> Double
 horizon (Tick delay) (RenderTime now) = now - fromIntegral delay
 
-{- | Split a history at the horizon. 'interpolate' blends across that boundary
-and 'prune' cuts below it, so were the two to disagree on which side the
-boundary sample falls, pruning would drop a sample interpolation still reads.
+{- | 'interpolate' blends across this boundary and 'prune' cuts below it. Were
+the two to disagree on which side the boundary sample falls, pruning would drop
+a sample interpolation still reads.
 -}
 splitAtHorizon :: Double -> Map Tick Pose -> (Map Tick Pose, Map Tick Pose)
 splitAtHorizon target = Map.spanAntitone (\t -> tickTime t <= target)

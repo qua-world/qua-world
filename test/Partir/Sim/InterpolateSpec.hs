@@ -85,8 +85,8 @@ spec = do
       let advance h n = prune (Tick 2) (RenderTime (fromIntegral n)) (record (marker n) h)
        in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [997 .. 999]
 
-    -- The range overhangs the ramp at both ends, so the clamped poses either
-    -- side of the buffer are covered too.
+    -- The range overhangs the ramp at both ends, so the poses clamped outside
+    -- the buffer are covered too.
     prop "leaves interpolate unchanged at or past the horizon" $
       forAll (orderedPair (-2, 14)) $ \(horizon, t) ->
         let pruned = prune (Tick 0) (RenderTime horizon) ramp
@@ -116,22 +116,21 @@ poses p0 q0 p1 q1 =
   record (Sample (Tick 1000) (Pose p1 q1)) $
     record (Sample (Tick 0) (Pose p0 q0)) emptyHistory
 
--- A sample whose position names its tick, so equality on a pruned history
--- says which samples survived.
+-- A sample whose position names its tick, so equality says which samples
+-- survived a prune.
 marker :: Word64 -> Sample
 marker n = Sample (Tick n) (Pose (V3 (fromIntegral n) 0 0) noRotation)
 
--- A history holding exactly the given ticks.
 samplesAt :: [Word64] -> RemoteHistory
 samplesAt = foldl' (flip record) emptyHistory . fmap marker
 
--- The buffer the prune examples cut into: one sample per tick, 0 through 10.
+-- The buffer the prune examples cut into.
 ramp :: RemoteHistory
 ramp = samplesAt [0 .. 10]
 
 -- Helpers
 
--- The whole interpolated pose at a render time, with no delay.
+-- The pose at a render time, with no delay.
 renderedAt :: Double -> RemoteHistory -> Maybe Pose
 renderedAt t = interpolate (Tick 0) (RenderTime t)
 
