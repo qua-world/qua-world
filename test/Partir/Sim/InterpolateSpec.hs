@@ -3,7 +3,8 @@
 -- SPDX-License-Identifier: MIT
 
 module Partir.Sim.InterpolateSpec (
-  spec,
+  test_interpolate,
+  test_prune,
 )
 where
 
@@ -13,9 +14,10 @@ import Data.Word (Word64)
 import Linear.Metric (dot, normalize, quadrance)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
-import Test.Hspec
-import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (Gen, Property, choose, forAll, suchThat)
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (Assertion, assertBool, testCase, (@?=))
+import Test.Tasty.QuickCheck (testProperty)
 
 import Partir.Sim.Interpolate (
   Delay (..),
@@ -30,86 +32,71 @@ import Partir.Sim.Interpolate (
  )
 import Partir.World.Types (Pose (..), Quat, Tick (..), Vec3)
 
-spec :: Spec
-spec = do
-  describe "interpolate" $ do
-    it "returns nothing for an empty history" $
-      interpolate noDelay noExtrapolation (RenderTime 5) emptyHistory `shouldBe` Nothing
+test_interpolate :: TestTree
+test_interpolate =
+  testGroup
+    "interpolate"
+    [ testCase "returns nothing for an empty history" $
+        interpolate noDelay noExtrapolation (RenderTime 5) emptyHistory @?= Nothing
+    , testCase "yields each sample's pose exactly at its tick" $ do
+        posAt noDelay noExtrapolation 0 line `closeTo` origin
+        posAt noDelay noExtrapolation 10 line `closeTo` far
+    , testCase "tracks the linear midpoint between two samples" $
+        posAt noDelay noExtrapolation 5 line `closeTo` V3 5 10 15
+    , testCase "shifts the sampled instant back by the delay" $
+        posAt (Delay (Tick 5)) noExtrapolation 10 line `closeTo` V3 5 10 15
+    , testCase "holds the oldest pose before the buffer begins" $
+        posAt noDelay noExtrapolation (-3) line `closeTo` origin
+    , testCase "holds the newest pose past the buffer's end with no horizon" $
+        posAt noDelay noExtrapolation 1000 line `closeTo` far
+    , -- The line runs V3 1 2 3 per tick; three ticks past the newest sample.
+      testCase "advances along the last observed velocity within the horizon" $
+        posAt noDelay shortHorizon 13 line `closeTo` V3 13 26 39
+    , testCase "settles at the horizon rather than drifting on" $
+        posAt noDelay shortHorizon 1000 line `closeTo` V3 15 30 45
+    , -- A quarter turn over the span, projected for a second span.
+      testCase "carries the turn on past the newest sample" $
+        orientation oneSpan 2 (poses origin noRotation origin (turnZ (pi / 4)))
+          `sameRotationAs` turnZ (pi / 2)
+    , testCase "holds a lone sample, having no velocity to project" $
+        posAt noDelay shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
+          `closeTo` far
+    , testProperty "position moves monotonically toward the next sample" $
+        forAll genVec3 $ \p0 ->
+          forAll genVec3 $ \p1 ->
+            forAll orderedFractions $ \(lo, hi) ->
+              let hist = poses p0 noRotation p1 noRotation
+                  a = sample lo hist
+                  b = sample hi hist
+               in movesToward (p1 ^-^ p0) (b ^-^ a)
+    , testProperty "orientation rotates monotonically away from the start" $
+        turnsOneWay noExtrapolation 0
+    , testProperty "orientation keeps turning the same way past the newest sample" $
+        turnsOneWay oneSpan 1
+    ]
 
-    it "yields each sample's pose exactly at its tick" $ do
-      posAt noExtrapolation 0 line `closeTo` origin
-      posAt noExtrapolation 10 line `closeTo` far
-
-    it "tracks the linear midpoint between two samples" $
-      posAt noExtrapolation 5 line `closeTo` V3 5 10 15
-
-    it "shifts the sampled instant back by the delay" $
-      -- delay 5, now 10 -> target 5 -> the midpoint.
-      fmap posePosition (interpolate (Delay (Tick 5)) noExtrapolation (RenderTime 10) line)
-        `shouldSatisfy` closeToJust (V3 5 10 15)
-
-    it "holds the oldest pose before the buffer begins" $
-      posAt noExtrapolation (-3) line `closeTo` origin
-
-    it "holds the newest pose past the buffer's end with no horizon" $
-      posAt noExtrapolation 1000 line `closeTo` far
-
-    it "advances along the last observed velocity within the horizon" $
-      -- line runs V3 1 2 3 per tick; three ticks past the newest sample.
-      posAt shortHorizon 13 line `closeTo` V3 13 26 39
-
-    it "settles at the horizon rather than drifting on" $
-      posAt shortHorizon 1000 line `closeTo` V3 15 30 45
-
-    it "carries the turn on past the newest sample" $
-      -- A quarter turn over the span, projected for a second span.
-      orientation oneSpan 2 (poses origin noRotation origin (turnZ (pi / 4)))
-        `sameRotationAs` turnZ (pi / 2)
-
-    it "holds a lone sample, having no velocity to project" $
-      posAt shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
-        `closeTo` far
-
-    prop "position moves monotonically toward the next sample" $
-      forAll genVec3 $ \p0 ->
-        forAll genVec3 $ \p1 ->
-          forAll orderedFractions $ \(lo, hi) ->
-            let hist = poses p0 noRotation p1 noRotation
-                a = sample lo hist
-                b = sample hi hist
-             in movesToward (p1 ^-^ p0) (b ^-^ a)
-
-    prop "orientation rotates monotonically away from the start" $
-      turnsOneWay noExtrapolation 0
-
-    prop "orientation keeps turning the same way past the newest sample" $
-      turnsOneWay oneSpan 1
-
-  describe "prune" $ do
-    it "leaves an empty history empty" $
-      prune noDelay (RenderTime 5) emptyHistory `shouldBe` emptyHistory
-
-    it "drops the samples below the pair bracketing the playback instant" $
-      prune noDelay (RenderTime 5) ramp `shouldBe` samplesAt [4 .. 10]
-
-    it "shifts the playback instant back by the delay" $
-      prune (Delay (Tick 3)) (RenderTime 8) ramp `shouldBe` samplesAt [4 .. 10]
-
-    it "keeps the sample the playback instant falls after" $
-      prune noDelay (RenderTime 5.5) ramp `shouldBe` samplesAt [4 .. 10]
-
-    it "holds a history that reaches no further back than the playback instant" $
-      prune (Delay (Tick 4)) (RenderTime 2) ramp `shouldBe` ramp
-
-    it "stays bounded under sustained recording" $
-      let advance h n = prune (Delay (Tick 2)) (RenderTime (fromIntegral n)) (record (marker n) h)
-       in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [996 .. 999]
-
-    prop "leaves interpolate unchanged at or past the playback instant" $
-      prunePreserves noExtrapolation
-
-    prop "keeps the pair extrapolation reckons from" $
-      prunePreserves shortHorizon
+test_prune :: TestTree
+test_prune =
+  testGroup
+    "prune"
+    [ testCase "leaves an empty history empty" $
+        prune noDelay (RenderTime 5) emptyHistory @?= emptyHistory
+    , testCase "drops the samples below the pair bracketing the playback instant" $
+        prune noDelay (RenderTime 5) ramp @?= samplesAt [4 .. 10]
+    , testCase "shifts the playback instant back by the delay" $
+        prune (Delay (Tick 3)) (RenderTime 8) ramp @?= samplesAt [4 .. 10]
+    , testCase "keeps the sample the playback instant falls after" $
+        prune noDelay (RenderTime 5.5) ramp @?= samplesAt [4 .. 10]
+    , testCase "holds a history that reaches no further back than the playback instant" $
+        prune (Delay (Tick 4)) (RenderTime 2) ramp @?= ramp
+    , testCase "stays bounded under sustained recording" $
+        let advance h n = prune (Delay (Tick 2)) (RenderTime (fromIntegral n)) (record (marker n) h)
+         in foldl' advance emptyHistory [0 .. 999] @?= samplesAt [996 .. 999]
+    , testProperty "leaves interpolate unchanged at or past the playback instant" $
+        prunePreserves noExtrapolation
+    , testProperty "keeps the pair extrapolation reckons from" $
+        prunePreserves shortHorizon
+    ]
 
 -- Properties
 
@@ -120,7 +107,7 @@ prunePreserves :: Horizon -> Property
 prunePreserves horizon =
   forAll (orderedPair (-2, 14)) $ \(cut, t) ->
     let pruned = prune noDelay (RenderTime cut) ramp
-     in renderedAt horizon t pruned == renderedAt horizon t ramp
+     in renderedAt noDelay horizon t pruned == renderedAt noDelay horizon t ramp
 
 -- A turn that never reverses: across a one-span window, a later instant sits
 -- no closer to the starting orientation than an earlier one. The window opens
@@ -200,21 +187,20 @@ ramp = samplesAt [0 .. 10]
 
 -- Helpers
 
--- The pose at a render time, with no delay.
-renderedAt :: Horizon -> Double -> RemoteHistory -> Maybe Pose
-renderedAt horizon t = interpolate noDelay horizon (RenderTime t)
+renderedAt :: Delay -> Horizon -> Double -> RemoteHistory -> Maybe Pose
+renderedAt delay horizon t = interpolate delay horizon (RenderTime t)
 
-poseAt :: Horizon -> Double -> RemoteHistory -> Pose
-poseAt horizon t = fromMaybe (error "poseAt: empty history") . renderedAt horizon t
+poseAt :: Delay -> Horizon -> Double -> RemoteHistory -> Pose
+poseAt delay horizon t = fromMaybe (error "poseAt: empty history") . renderedAt delay horizon t
 
-posAt :: Horizon -> Double -> RemoteHistory -> Vec3
-posAt horizon t = posePosition . poseAt horizon t
+posAt :: Delay -> Horizon -> Double -> RemoteHistory -> Vec3
+posAt delay horizon t = posePosition . poseAt delay horizon t
 
 sample :: Double -> RemoteHistory -> Vec3
-sample frac = posAt noExtrapolation (frac * spanTicks)
+sample frac = posAt noDelay noExtrapolation (frac * spanTicks)
 
 orientation :: Horizon -> Double -> RemoteHistory -> Quat
-orientation horizon frac = poseOrientation . poseAt horizon (frac * spanTicks)
+orientation horizon frac = poseOrientation . poseAt noDelay horizon (frac * spanTicks)
 
 orderedFractions :: Gen (Double, Double)
 orderedFractions = orderedPair (0, 1)
@@ -251,7 +237,7 @@ notAntipodalTo q0 q1 = dot q0 q1 >= 0
 epsilon :: Double
 epsilon = 1e-6
 
--- Slack for an expectation, where one blend must match stated arithmetic.
+-- Slack for an example, where one blend must match stated arithmetic.
 tolerance :: Double
 tolerance = 1e-9
 
@@ -260,14 +246,17 @@ tolerance = 1e-9
 gap :: (Applicative f, Foldable f) => f Double -> f Double -> Double
 gap a b = maximum (abs <$> ((-) <$> a <*> b))
 
-closeTo :: Vec3 -> Vec3 -> Expectation
-closeTo a b = gap a b `shouldSatisfy` (< tolerance)
+closeTo :: Vec3 -> Vec3 -> Assertion
+closeTo = within "close to"
 
-sameRotationAs :: Quat -> Quat -> Expectation
-sameRotationAs a b = gap a b `shouldSatisfy` (< tolerance)
+sameRotationAs :: Quat -> Quat -> Assertion
+sameRotationAs = within "the same rotation as"
 
-closeToJust :: Vec3 -> Maybe Vec3 -> Bool
-closeToJust want = maybe False ((< tolerance) . gap want)
+within :: (Applicative f, Foldable f, Show (f Double)) => String -> f Double -> f Double -> Assertion
+within relation a b =
+  assertBool
+    (show a <> " is not " <> relation <> " " <> show b <> " (gap " <> show (gap a b) <> ")")
+    (gap a b < tolerance)
 
 (^-^) :: Vec3 -> Vec3 -> Vec3
 (^-^) = (-)
