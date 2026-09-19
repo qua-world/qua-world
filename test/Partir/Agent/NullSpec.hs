@@ -1,11 +1,12 @@
 module Partir.Agent.NullSpec (
-  spec,
+  test_step,
 )
 where
 
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
-import Test.Hspec
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase, (@?=))
 
 import Partir.Agent.Class (step)
 import Partir.Agent.Input (Intent)
@@ -14,14 +15,15 @@ import Partir.World.Event (Event (..))
 import Partir.World.Scene (Scene, apply, empty)
 import Partir.World.Types (AgentId (..), EntityId (..), Tick (..))
 
-spec :: Spec
-spec =
-  describe "step" $ do
-    it "emits no intents when there is nothing to see" $
-      intentsFrom empty `shouldBe` []
-
-    it "emits no intents when the scene holds entities" $
-      intentsFrom populated `shouldBe` []
+test_step :: TestTree
+test_step =
+  testGroup
+    "step"
+    [ testCase "emits no intents when there is nothing to see" $
+        intentsFrom empty @?= []
+    , testCase "emits no intents when the scene holds entities" $
+        intentsFrom populated @?= []
+    ]
 
 -- Fixtures
 
