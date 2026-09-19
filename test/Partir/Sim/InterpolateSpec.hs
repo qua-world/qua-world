@@ -122,10 +122,9 @@ prunePreserves horizon =
         renderedAt noDelay horizon t (prune noDelay (RenderTime cut) ramp)
           == renderedAt noDelay horizon t ramp
 
-{- | Hold the generated range to the regions it claims to reach. Nothing else
-says whether a range still spans the branches under it: before this ran, the
-range stopped at 14, a tick short of `shortHorizon`, so the settle past the
-horizon never executed and the property passed anyway.
+{- | Hold the generated range to the regions it claims to reach. A range that
+stops short of a branch leaves that branch untested while the property goes on
+passing, and nothing else in the suite reports it.
 -}
 coveringRegions :: Testable prop => Horizon -> Double -> prop -> Property
 coveringRegions horizon t =
@@ -230,7 +229,7 @@ samplesAt = foldl' (flip record) emptyHistory . fmap marker
 ramp :: RemoteHistory
 ramp = samplesAt [0 .. rampEnd]
 
--- The newest tick in `ramp`. `regionOf` measures a playback instant against it.
+-- The newest tick in `ramp`.
 rampEnd :: Word64
 rampEnd = 10
 

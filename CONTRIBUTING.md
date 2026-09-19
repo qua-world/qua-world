@@ -57,12 +57,12 @@ candidate back to unit length, and `Position` holds coordinates inside a bound.
 
 A property whose subject branches on its input carries a coverage assertion
 naming those partitions, under `checkCoverage`. Without one a generator can
-drift to where a branch never runs while the property goes on passing, which is
-what `prunePreserves` in the interpolation spec had been doing.
+drift to where a branch never runs while the property goes on passing.
+`prunePreserves` in the interpolation spec shows the shape.
 
 Stateful modules get a model: an independent account of what the state should
 hold, compared against the real one over a generated sequence. `test_model` in
-the scene spec is the first of these.
+the scene spec is the example to copy.
 
 SmallCheck is deliberately absent. Exhaustive enumeration suits finite discrete
 domains, and the simulation blends positions and orientations over continuous

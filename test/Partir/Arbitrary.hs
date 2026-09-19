@@ -15,7 +15,7 @@ library's own dependencies.
 
 Every instance defines 'shrink'. The default, @const []@, reports the first
 failing case whole, and a failing case here is a pose of six unrounded
-'Double's or an event sequence hundreds long — unreadable as a bug report.
+'Double's or an event sequence hundreds long.
 -}
 module Partir.Arbitrary (
   Position (..),
@@ -61,9 +61,8 @@ newtype Position = Position {unPosition :: Vec3}
 instance Arbitrary Position where
   arbitrary = Position <$> coordinates
 
-  -- Shrinking the tuple walks one coordinate at a time, and 'shrink' on a
-  -- 'Double' only ever reduces magnitude, so a shrunk coordinate stays inside
-  -- a bound centred on zero.
+  -- 'shrink' on a 'Double' only ever reduces magnitude, so a shrunk coordinate
+  -- stays inside a bound centred on zero.
   shrink (Position (V3 x y z)) =
     [Position (V3 x' y' z') | (x', y', z') <- shrink (x, y, z)]
 
@@ -103,9 +102,8 @@ instance Arbitrary Window where
 
 Drawing the upper bound uniformly and the lower beneath it leaves the upper
 uniform over the whole range. Taking the smaller and larger of two uniform
-draws instead — the obvious way to write this — biases the upper toward the
-top, which starves whichever partition sits at the bottom of the range: over
-@(-2, 14)@ it reaches below zero in under two runs per hundred.
+draws instead biases the upper toward the top, starving whichever partition
+sits at the bottom of the range.
 -}
 orderedBelow :: (Double, Double) -> Gen (Double, Double)
 orderedBelow (lo, hi) = do
@@ -156,9 +154,6 @@ instance Arbitrary Event where
     position = unPosition <$> arbitrary
     orientation = unUnitQuat <$> arbitrary
 
-  -- Shrinking through the tuple instances walks one field at a time, which is
-  -- what makes the reported counterexample the smallest failing event rather
-  -- than the first.
   shrink (Spawn t a e p q) =
     [ Spawn t' a' e' (unPosition p') (unUnitQuat q')
     | (t', a', e', p', q') <- shrink (t, a, e, Position p, UnitQuat q)

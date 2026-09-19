@@ -82,11 +82,7 @@ read off its own events alone.
 
 `apply` carries the whole scene through every event; `entityHistory` replays
 one entity and ignores the rest. Agreement is what says an event touches only
-its subject and leaves nothing behind for the next one — the guarantee
-`Partir.Sim.Prediction` (#17) and `Partir.Sim.Reconcile` (#19) rest on when
-they replay a command buffer after a correction. Those modules will want the
-same shape against a richer model: a command sequence, a reference
-implementation, and a comparison after each step.
+its subject and leaves nothing behind for the next one.
 -}
 test_model :: TestTree
 test_model =
