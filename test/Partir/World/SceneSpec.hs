@@ -12,6 +12,7 @@ where
 import Data.List (foldl', nub)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Maybe (mapMaybe)
 import Data.Text (pack)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
@@ -101,22 +102,22 @@ model :: [Event] -> Map EntityId Pose
 model events =
   Map.fromList
     [ (eid, pose)
-    | eid <- nub (concatMap subject events)
+    | eid <- nub (mapMaybe subject events)
     , Just pose <- [entityHistory eid events]
     ]
 
 -- The entity an event acts on. `Speak` addresses the world, not an entity.
-subject :: Event -> [EntityId]
-subject (Spawn _ _ eid _ _) = [eid]
-subject (Despawn _ _ eid) = [eid]
-subject (Move _ _ eid _) = [eid]
-subject (Look _ _ eid _) = [eid]
-subject Speak{} = []
-subject (Interact _ _ eid) = [eid]
+subject :: Event -> Maybe EntityId
+subject (Spawn _ _ eid _ _) = Just eid
+subject (Despawn _ _ eid) = Just eid
+subject (Move _ _ eid _) = Just eid
+subject (Look _ _ eid _) = Just eid
+subject Speak{} = Nothing
+subject (Interact _ _ eid) = Just eid
 
 -- Where one entity ends up, reading only the events naming it.
 entityHistory :: EntityId -> [Event] -> Maybe Pose
-entityHistory eid = foldl' step Nothing . filter ((== [eid]) . subject)
+entityHistory eid = foldl' step Nothing . filter ((== Just eid) . subject)
  where
   step _ (Spawn _ _ _ p q) = Just (Pose p q)
   step _ Despawn{} = Nothing

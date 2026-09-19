@@ -59,15 +59,13 @@ newtype Position = Position {unPosition :: Vec3}
   deriving (Eq, Show)
 
 instance Arbitrary Position where
-  arbitrary = Position <$> (V3 <$> coordinate <*> coordinate <*> coordinate)
+  arbitrary = Position <$> coordinates
 
-  -- 'shrink' on a 'Double' only ever reduces magnitude, so a shrunk
-  -- coordinate stays inside a bound centred on zero.
+  -- Shrinking the tuple walks one coordinate at a time, and 'shrink' on a
+  -- 'Double' only ever reduces magnitude, so a shrunk coordinate stays inside
+  -- a bound centred on zero.
   shrink (Position (V3 x y z)) =
-    Position
-      <$> [V3 x' y z | x' <- shrink x]
-        <> [V3 x y' z | y' <- shrink y]
-        <> [V3 x y z' | z' <- shrink z]
+    [Position (V3 x' y' z') | (x', y', z') <- shrink (x, y, z)]
 
 {- | A normalized, non-degenerate orientation. Shrinking renormalizes, so every
 candidate still names a rotation; shrinking the components alone would walk
@@ -80,16 +78,13 @@ instance Arbitrary UnitQuat where
   arbitrary = UnitQuat . normalize <$> nondegenerate
    where
     nondegenerate =
-      (Quaternion <$> coordinate <*> (V3 <$> coordinate <*> coordinate <*> coordinate))
+      (Quaternion <$> coordinate <*> coordinates)
         `suchThat` ((> degenerate) . quadrance)
 
   shrink (UnitQuat (Quaternion w (V3 x y z))) =
     [ UnitQuat (normalize q)
-    | q <-
-        [Quaternion w' (V3 x y z) | w' <- shrink w]
-          <> [Quaternion w (V3 x' y z) | x' <- shrink x]
-          <> [Quaternion w (V3 x y' z) | y' <- shrink y]
-          <> [Quaternion w (V3 x y z') | z' <- shrink z]
+    | (w', x', y', z') <- shrink (w, x, y, z)
+    , let q = Quaternion w' (V3 x' y' z')
     , quadrance q > degenerate
     ]
 
@@ -196,6 +191,10 @@ instance Arbitrary Scene where
 -- | How far a generated coordinate reaches from the origin, on any one axis.
 coordinate :: Gen Double
 coordinate = choose (-100, 100)
+
+-- | Three coordinates, the shape both a position and a quaternion's axis take.
+coordinates :: Gen Vec3
+coordinates = V3 <$> coordinate <*> coordinate <*> coordinate
 
 {- | The squared length below which a quaternion is too short to normalize into
 a meaningful rotation.

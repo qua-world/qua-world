@@ -162,9 +162,11 @@ data Region = BeforeBuffer | Interior | Extrapolating | PastHorizon
 regionOf :: Horizon -> Double -> Region
 regionOf (Horizon (Tick reach)) t
   | t < 0 = BeforeBuffer
-  | t <= fromIntegral rampEnd = Interior
-  | t <= fromIntegral (rampEnd + reach) = Extrapolating
+  | t <= newest = Interior
+  | t <= newest + fromIntegral reach = Extrapolating
   | otherwise = PastHorizon
+ where
+  newest = fromIntegral rampEnd
 
 -- Fixtures
 
