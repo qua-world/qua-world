@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2020 Alex Brandt
+
+SPDX-License-Identifier: MIT
+-->
+
 # Revision history for partir-qua-world
 
 <!-- The Keep a Changelog preamble, quoted verbatim. -->

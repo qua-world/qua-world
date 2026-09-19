@@ -1,6 +1,10 @@
 cabal-version:       3.0
 -- 3.0 is the floor for the `partir-qua-world:glut-client` dependency syntax.
 
+-- SPDX-FileCopyrightText: 2020 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 name:                partir-qua-world
 version:             0.1.0.0
 

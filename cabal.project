@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 packages: .
 
 -- Weeder reads the HIE files this writes. Keeping the flag here holds every

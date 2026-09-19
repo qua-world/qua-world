@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.World.Event
 Description : Events produced by agents to mutate the shared scene
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 An 'Event' is the sole vocabulary by which agents change the world. Every event
 is stamped with the 'Tick' at which it occurs and the 'AgentId' that produced

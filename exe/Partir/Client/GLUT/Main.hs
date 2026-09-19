@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2020 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 module Main where
 
 import Control.Monad (join)

@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2020 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.Client.GLUT.Controls
 Description : Maps GLUT input events to agent intents
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 GLUT delivers keys and mouse buttons; the rest of the client speaks
 'Partir.Agent.Input.Intent'. This module translates between them.

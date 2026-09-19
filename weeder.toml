@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
 # Nothing outside this repository depends on the library, so an export no
 # caller reaches is dead code rather than public API.
 roots = ["^Main.main$", "^Paths_.*"]

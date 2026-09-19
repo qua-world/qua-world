@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.World.Types
 Description : Scalar identifiers and spatial aliases for the world model
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 Foundational, @IO@-free types shared across the simulation: opaque identifiers
 for agents, entities, and simulation ticks, aliases for the positional and

@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
 #
 # Compare the GHC series declared in the cabal tested-with against the
 # compiler actually in use.

@@ -1,5 +1,9 @@
 #!/usr/bin/env bats
 
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
 setup() {
     script="$BATS_TEST_DIRNAME/check-tested-with.sh"
     cd "$BATS_TEST_TMPDIR"

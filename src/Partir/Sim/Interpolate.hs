@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.Sim.Interpolate
 Description : Smooth remote agents by interpolating buffered pose samples
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 Remote agents arrive as a sparse, jittery stream of pose 'Sample's. Rendering
 them at the latest sample makes them teleport; rendering a continuously
