@@ -35,31 +35,28 @@ test_interpolate =
     [ testCase "returns nothing for an empty history" $
         interpolate noDelay noExtrapolation (RenderTime 5) emptyHistory @?= Nothing
     , testCase "yields each sample's pose exactly at its tick" $ do
-        posAt noExtrapolation 0 line `closeTo` origin
-        posAt noExtrapolation 10 line `closeTo` far
+        posAt noDelay noExtrapolation 0 line `closeTo` origin
+        posAt noDelay noExtrapolation 10 line `closeTo` far
     , testCase "tracks the linear midpoint between two samples" $
-        posAt noExtrapolation 5 line `closeTo` V3 5 10 15
-    , testCase "shifts the sampled instant back by the delay" $
-        -- delay 5, now 10 -> target 5 -> the midpoint.
-        assertBool "not close to the midpoint" $
-          closeToJust
-            (V3 5 10 15)
-            (fmap posePosition (interpolate (Delay (Tick 5)) noExtrapolation (RenderTime 10) line))
+        posAt noDelay noExtrapolation 5 line `closeTo` V3 5 10 15
+    , -- Delay 5 at render time 10 targets tick 5, the midpoint.
+      testCase "shifts the sampled instant back by the delay" $
+        posAt (Delay (Tick 5)) noExtrapolation 10 line `closeTo` V3 5 10 15
     , testCase "holds the oldest pose before the buffer begins" $
-        posAt noExtrapolation (-3) line `closeTo` origin
+        posAt noDelay noExtrapolation (-3) line `closeTo` origin
     , testCase "holds the newest pose past the buffer's end with no horizon" $
-        posAt noExtrapolation 1000 line `closeTo` far
-    , testCase "advances along the last observed velocity within the horizon" $
-        -- line runs V3 1 2 3 per tick; three ticks past the newest sample.
-        posAt shortHorizon 13 line `closeTo` V3 13 26 39
+        posAt noDelay noExtrapolation 1000 line `closeTo` far
+    , -- The line runs V3 1 2 3 per tick; three ticks past the newest sample.
+      testCase "advances along the last observed velocity within the horizon" $
+        posAt noDelay shortHorizon 13 line `closeTo` V3 13 26 39
     , testCase "settles at the horizon rather than drifting on" $
-        posAt shortHorizon 1000 line `closeTo` V3 15 30 45
-    , testCase "carries the turn on past the newest sample" $
-        -- A quarter turn over the span, projected for a second span.
+        posAt noDelay shortHorizon 1000 line `closeTo` V3 15 30 45
+    , -- A quarter turn over the span, projected for a second span.
+      testCase "carries the turn on past the newest sample" $
         orientation oneSpan 2 (poses origin noRotation origin (turnZ (pi / 4)))
           `sameRotationAs` turnZ (pi / 2)
     , testCase "holds a lone sample, having no velocity to project" $
-        posAt shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
+        posAt noDelay shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
           `closeTo` far
     , testProperty "position moves monotonically toward the next sample" $
         forAll genVec3 $ \p0 ->
@@ -107,7 +104,7 @@ prunePreserves :: Horizon -> Property
 prunePreserves horizon =
   forAll (orderedPair (-2, 14)) $ \(cut, t) ->
     let pruned = prune noDelay (RenderTime cut) ramp
-     in renderedAt horizon t pruned == renderedAt horizon t ramp
+     in renderedAt noDelay horizon t pruned == renderedAt noDelay horizon t ramp
 
 -- A turn that never reverses: across a one-span window, a later instant sits
 -- no closer to the starting orientation than an earlier one. The window opens
@@ -187,21 +184,21 @@ ramp = samplesAt [0 .. 10]
 
 -- Helpers
 
--- The pose at a render time, with no delay.
-renderedAt :: Horizon -> Double -> RemoteHistory -> Maybe Pose
-renderedAt horizon t = interpolate noDelay horizon (RenderTime t)
+-- The pose a client renders at an instant, sampling `delay` ticks behind it.
+renderedAt :: Delay -> Horizon -> Double -> RemoteHistory -> Maybe Pose
+renderedAt delay horizon t = interpolate delay horizon (RenderTime t)
 
-poseAt :: Horizon -> Double -> RemoteHistory -> Pose
-poseAt horizon t = fromMaybe (error "poseAt: empty history") . renderedAt horizon t
+poseAt :: Delay -> Horizon -> Double -> RemoteHistory -> Pose
+poseAt delay horizon t = fromMaybe (error "poseAt: empty history") . renderedAt delay horizon t
 
-posAt :: Horizon -> Double -> RemoteHistory -> Vec3
-posAt horizon t = posePosition . poseAt horizon t
+posAt :: Delay -> Horizon -> Double -> RemoteHistory -> Vec3
+posAt delay horizon t = posePosition . poseAt delay horizon t
 
 sample :: Double -> RemoteHistory -> Vec3
-sample frac = posAt noExtrapolation (frac * spanTicks)
+sample frac = posAt noDelay noExtrapolation (frac * spanTicks)
 
 orientation :: Horizon -> Double -> RemoteHistory -> Quat
-orientation horizon frac = poseOrientation . poseAt horizon (frac * spanTicks)
+orientation horizon frac = poseOrientation . poseAt noDelay horizon (frac * spanTicks)
 
 orderedFractions :: Gen (Double, Double)
 orderedFractions = orderedPair (0, 1)
@@ -258,9 +255,6 @@ within relation a b =
   assertBool
     (show a <> " is not " <> relation <> " " <> show b <> " (gap " <> show (gap a b) <> ")")
     (gap a b < tolerance)
-
-closeToJust :: Vec3 -> Maybe Vec3 -> Bool
-closeToJust want = maybe False ((< tolerance) . gap want)
 
 (^-^) :: Vec3 -> Vec3 -> Vec3
 (^-^) = (-)
