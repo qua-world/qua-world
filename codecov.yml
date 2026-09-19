@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+# hpc-codecov reports the test modules alongside the library's.
+# "test/**/*" would compile to a regex requiring a further slash, missing
+# test/Spec.hs.
+ignore:
+  - "test/**"
+
+coverage:
+  status:
+    project:
+      default:
+        threshold: 1%
+    patch:
+      default:
+        threshold: 1%
