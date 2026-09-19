@@ -24,7 +24,7 @@ bucket. Later `[Unreleased]` sections split by change type.
   agents between buffered pose `Sample`s, sampling a fixed `Delay` in the past
   and blending position linearly and orientation by `slerp`. Past the newest
   sample it projects the agent along the velocity the last two samples imply,
-  as far as a caller-supplied `Horizon`, then holds.
+  as far as a `Horizon`, then holds.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its

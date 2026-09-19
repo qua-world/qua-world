@@ -52,14 +52,14 @@ data Sample = Sample
 newtype RenderTime = RenderTime Double
   deriving (Eq, Ord, Show)
 
-{- | How far behind the present the playback clock runs. Wide enough and the
-samples bracketing the played instant have arrived; wider still and remote
-agents lag what the server knows.
+{- | How far behind the present the playback clock runs. A wider delay gives
+late samples more time to arrive, and leaves remote agents further behind
+what the server knows.
 -}
 newtype Delay = Delay Tick
   deriving (Eq, Ord, Show)
 
--- | How far past the newest sample extrapolation carries before it gives up.
+-- | How far past the newest sample extrapolation projects before it holds.
 newtype Horizon = Horizon Tick
   deriving (Eq, Ord, Show)
 
@@ -83,16 +83,15 @@ record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 {- | Interpolate a remote agent's pose for a render frame, extrapolating
 within a 'Horizon' when the next sample is late.
 
-The pose is sampled at @now@ less the 'Delay': the two samples bracketing that
+The pose is sampled at @now@ less the 'Delay'. The two samples bracketing that
 instant are blended, position by linear interpolation and orientation by
 'slerp'.
 
-Past the newest sample the same blend continues beyond the second of its two
-poses, projecting the agent along the velocity the last two samples imply —
-dead reckoning, as in Valve's @cl_extrapolate@. The projection stops a
-'Horizon' past the newest sample, so a long gap settles on a fixed pose
-instead of drifting without bound; a @'Horizon' ('Tick' 0)@ holds the newest
-pose outright. A history with one sample holds it, velocity being undefined.
+Past the newest sample the agent carries on along the velocity the last two
+samples imply, which is dead reckoning, as in Valve's @cl_extrapolate@. That
+projection runs for a 'Horizon' and then holds, so error stays bounded however
+long the gap. A @'Horizon' ('Tick' 0)@ holds the newest pose outright, and so
+does a history of one sample, which implies no velocity.
 
 Before the oldest sample the oldest pose is held: there is no earlier motion
 to project from. An empty history yields 'Nothing'.
@@ -117,8 +116,7 @@ interpolate (Delay (Tick delay)) (Horizon (Tick horizon)) (RenderTime now) (Remo
 
 {- | Blend two poses at @alpha@: @alpha = 0@ is the first pose, @alpha = 1@ the
 second. Both 'lerp' (since linear 1.23) and 'slerp' run in that direction, and
-both continue the straight line and the great-circle arc past @alpha = 1@,
-which is what extrapolation rides.
+both extend past @alpha = 1@: 'lerp' along the line, 'slerp' along the arc.
 -}
 blend :: Double -> Pose -> Pose -> Pose
 blend alpha a b =

@@ -80,11 +80,10 @@ spec = do
 
 -- Properties
 
-{- A turn that never reverses: over a window @from@ spans wide, a later
-instant sits no closer to the starting orientation than an earlier one. At
-@from = 0@ the window is the gap between the samples; at @from = 1@ it is the
-extrapolated window just past the newest.
--}
+-- A turn that never reverses: across a one-span window, a later instant sits
+-- no closer to the starting orientation than an earlier one. The window opens
+-- @from@ spans in, so 0 covers the gap between the samples and 1 the
+-- extrapolated stretch past the newest.
 turnsOneWay :: Horizon -> Double -> Property
 turnsOneWay horizon from =
   forAll genUnitQuat $ \q0 ->
@@ -106,21 +105,21 @@ far = V3 10 20 30
 noRotation :: Quat
 noRotation = Quaternion 1 (V3 0 0 0)
 
--- Playback of the live instant, so a render time reads as itself.
+-- Playback with no lag, so a render time reads as the tick of that number.
 noDelay :: Delay
 noDelay = Delay (Tick 0)
 
--- The horizon that reproduces the pre-extrapolation clamp.
+-- The horizon that holds the newest pose rather than projecting from it.
 noExtrapolation :: Horizon
 noExtrapolation = Horizon (Tick 0)
 
--- A horizon narrower than the `line` fixture's own span, so a render time
--- can land inside it or past it.
+-- Narrower than the `line` fixture's span, so a render time can land inside
+-- the horizon or past it.
 shortHorizon :: Horizon
 shortHorizon = Horizon (Tick 5)
 
--- The ticks a `poses` history covers, which turns a fraction of that history
--- into a render time.
+-- The ticks a `poses` history covers, so a fraction of it scales to a render
+-- time.
 spanTicks :: Double
 spanTicks = 1000
 
@@ -147,7 +146,7 @@ poses p0 q0 p1 q1 =
 
 -- Helpers
 
--- Pose at a render time, with no delay.
+-- Pose at a render time.
 poseAt :: Horizon -> Double -> RemoteHistory -> Pose
 poseAt horizon t =
   fromMaybe (error "poseAt: empty history") . interpolate noDelay horizon (RenderTime t)
@@ -187,17 +186,17 @@ movesToward dir d = and ((\x y -> x * y >= negate epsilon) <$> dir <*> d)
 notAntipodalTo :: Quat -> Quat -> Bool
 notAntipodalTo q0 q1 = dot q0 q1 >= 0
 
--- Slack for a property comparing two blends, which accumulate error the
--- exact-value expectations below do not.
+-- Slack for a property, which compares two blends and so carries the error
+-- of both.
 epsilon :: Double
 epsilon = 1e-6
 
--- What an exact-value expectation allows between a blend and the arithmetic
--- it should reproduce.
+-- Slack for an expectation, where one blend must match stated arithmetic.
 tolerance :: Double
 tolerance = 1e-9
 
--- The widest a pair of vectors or quaternions differ on any one component.
+-- The largest difference between two vectors or quaternions on any one
+-- component.
 gap :: (Applicative f, Foldable f) => f Double -> f Double -> Double
 gap a b = maximum (abs <$> ((-) <$> a <*> b))
 
