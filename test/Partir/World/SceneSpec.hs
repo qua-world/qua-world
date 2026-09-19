@@ -89,7 +89,6 @@ facing = Quaternion 1 (V3 0 0 0)
 turned :: Quat
 turned = Quaternion 0 (V3 0 1 0)
 
--- The scene every `apply` example below starts from.
 spawned :: Scene
 spawned = apply (Spawn (Tick 1) anAgent anEntity here facing) empty
 

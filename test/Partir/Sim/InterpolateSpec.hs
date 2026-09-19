@@ -39,8 +39,7 @@ test_interpolate =
         posAt noDelay noExtrapolation 10 line `closeTo` far
     , testCase "tracks the linear midpoint between two samples" $
         posAt noDelay noExtrapolation 5 line `closeTo` V3 5 10 15
-    , -- Delay 5 at render time 10 targets tick 5, the midpoint.
-      testCase "shifts the sampled instant back by the delay" $
+    , testCase "shifts the sampled instant back by the delay" $
         posAt (Delay (Tick 5)) noExtrapolation 10 line `closeTo` V3 5 10 15
     , testCase "holds the oldest pose before the buffer begins" $
         posAt noDelay noExtrapolation (-3) line `closeTo` origin
@@ -184,7 +183,6 @@ ramp = samplesAt [0 .. 10]
 
 -- Helpers
 
--- The pose a client renders at an instant, sampling `delay` ticks behind it.
 renderedAt :: Delay -> Horizon -> Double -> RemoteHistory -> Maybe Pose
 renderedAt delay horizon t = interpolate delay horizon (RenderTime t)
 
@@ -235,7 +233,7 @@ notAntipodalTo q0 q1 = dot q0 q1 >= 0
 epsilon :: Double
 epsilon = 1e-6
 
--- Slack for an expectation, where one blend must match stated arithmetic.
+-- Slack for an example, where one blend must match stated arithmetic.
 tolerance :: Double
 tolerance = 1e-9
 
