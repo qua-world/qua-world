@@ -43,6 +43,31 @@ cabal install weeder
 weeder
 ```
 
+## Tests
+
+Property tests use QuickCheck through `tasty-quickcheck`; examples use
+`tasty-hunit`.
+
+Generators live in [test/Partir/Arbitrary.hs](test/Partir/Arbitrary.hs) rather
+than in the spec that first needs one. Every instance there defines `shrink`,
+because QuickCheck's default reports the first failing case whole and a pose of
+six unrounded doubles says nothing. A generator carrying an invariant gets a
+wrapper type of its own, so shrinking can't break it: `UnitQuat` scales each
+candidate back to unit length, and `Position` holds coordinates inside a bound.
+
+A property whose subject branches on its input carries a coverage assertion
+naming those partitions, under `checkCoverage`. Without one a generator can
+drift to where a branch never runs while the property goes on passing, which is
+what `prunePreserves` in the interpolation spec had been doing.
+
+Stateful modules get a model: an independent account of what the state should
+hold, compared against the real one over a generated sequence. `test_model` in
+the scene spec is the first of these.
+
+SmallCheck is deliberately absent. Exhaustive enumeration suits finite discrete
+domains, and the simulation blends positions and orientations over continuous
+time, where random doubles reach further.
+
 ## Before you commit
 
 [pre-commit] gates each commit on formatting, linting, and file hygiene, and
