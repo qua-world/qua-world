@@ -70,27 +70,27 @@ spec = do
       prune (Tick 0) (RenderTime 5) emptyHistory `shouldBe` emptyHistory
 
     it "drops the samples below the one bracketing the horizon" $
-      prune (Tick 0) (RenderTime 5) (ramp [0 .. 10]) `shouldBe` ramp [5 .. 10]
+      prune (Tick 0) (RenderTime 5) ramp `shouldBe` samplesAt [5 .. 10]
 
     it "shifts the horizon back by the delay" $
-      prune (Tick 3) (RenderTime 8) (ramp [0 .. 10]) `shouldBe` ramp [5 .. 10]
+      prune (Tick 3) (RenderTime 8) ramp `shouldBe` samplesAt [5 .. 10]
 
     it "keeps the sample the horizon falls after" $
-      prune (Tick 0) (RenderTime 5.5) (ramp [0 .. 10]) `shouldBe` ramp [5 .. 10]
+      prune (Tick 0) (RenderTime 5.5) ramp `shouldBe` samplesAt [5 .. 10]
 
     it "holds a history that reaches no further back than the horizon" $
-      prune (Tick 4) (RenderTime 2) (ramp [0 .. 10]) `shouldBe` ramp [0 .. 10]
+      prune (Tick 4) (RenderTime 2) ramp `shouldBe` ramp
 
     it "stays bounded under sustained recording" $
       let advance h n = prune (Tick 2) (RenderTime (fromIntegral n)) (record (marker n) h)
-       in foldl' advance emptyHistory [0 .. 999] `shouldBe` ramp [997 .. 999]
+       in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [997 .. 999]
 
     -- The range overhangs the ramp at both ends, so the clamped poses either
     -- side of the buffer are covered too.
     prop "leaves interpolate unchanged at or past the horizon" $
       forAll (orderedPair (-2, 14)) $ \(horizon, t) ->
-        let pruned = prune (Tick 0) (RenderTime horizon) (ramp [0 .. 10])
-         in renderedAt t pruned == renderedAt t (ramp [0 .. 10])
+        let pruned = prune (Tick 0) (RenderTime horizon) ramp
+         in renderedAt t pruned == renderedAt t ramp
 
 -- Fixtures
 
@@ -122,8 +122,12 @@ marker :: Word64 -> Sample
 marker n = Sample (Tick n) (Pose (V3 (fromIntegral n) 0 0) noRotation)
 
 -- A history holding exactly the given ticks.
-ramp :: [Word64] -> RemoteHistory
-ramp = foldl' (flip record) emptyHistory . fmap marker
+samplesAt :: [Word64] -> RemoteHistory
+samplesAt = foldl' (flip record) emptyHistory . fmap marker
+
+-- The buffer the prune examples cut into: one sample per tick, 0 through 10.
+ramp :: RemoteHistory
+ramp = samplesAt [0 .. 10]
 
 -- Helpers
 
@@ -133,7 +137,7 @@ renderedAt t = interpolate (Tick 0) (RenderTime t)
 
 -- Interpolated position at a render time, with no delay.
 posAt :: Double -> RemoteHistory -> Vec3
-posAt t = maybe (error "posAt: empty") posePosition . interpolate (Tick 0) (RenderTime t)
+posAt t = maybe (error "posAt: empty") posePosition . renderedAt t
 
 sample :: Double -> RemoteHistory -> Vec3
 sample frac = posAt (frac * 1000)
@@ -141,7 +145,7 @@ sample frac = posAt (frac * 1000)
 orientation :: Double -> RemoteHistory -> Quat
 orientation frac =
   maybe (error "orientation: empty") poseOrientation
-    . interpolate (Tick 0) (RenderTime (frac * 1000))
+    . renderedAt (frac * 1000)
 
 orderedFractions :: Gen (Double, Double)
 orderedFractions = orderedPair (0, 1)
