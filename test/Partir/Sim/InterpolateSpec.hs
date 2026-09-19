@@ -85,30 +85,38 @@ spec = do
     it "leaves an empty history empty" $
       prune noDelay (RenderTime 5) emptyHistory `shouldBe` emptyHistory
 
-    it "drops the samples below the one bracketing the horizon" $
-      prune noDelay (RenderTime 5) ramp `shouldBe` samplesAt [5 .. 10]
+    it "drops the samples below the pair bracketing the playback instant" $
+      prune noDelay (RenderTime 5) ramp `shouldBe` samplesAt [4 .. 10]
 
-    it "shifts the horizon back by the delay" $
-      prune (Delay (Tick 3)) (RenderTime 8) ramp `shouldBe` samplesAt [5 .. 10]
+    it "shifts the playback instant back by the delay" $
+      prune (Delay (Tick 3)) (RenderTime 8) ramp `shouldBe` samplesAt [4 .. 10]
 
-    it "keeps the sample the horizon falls after" $
-      prune noDelay (RenderTime 5.5) ramp `shouldBe` samplesAt [5 .. 10]
+    it "keeps the sample the playback instant falls after" $
+      prune noDelay (RenderTime 5.5) ramp `shouldBe` samplesAt [4 .. 10]
 
-    it "holds a history that reaches no further back than the horizon" $
+    it "holds a history that reaches no further back than the playback instant" $
       prune (Delay (Tick 4)) (RenderTime 2) ramp `shouldBe` ramp
 
     it "stays bounded under sustained recording" $
       let advance h n = prune (Delay (Tick 2)) (RenderTime (fromIntegral n)) (record (marker n) h)
-       in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [997 .. 999]
+       in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [996 .. 999]
 
-    -- The range overhangs the ramp at both ends, so the poses clamped outside
-    -- the buffer are covered too.
-    prop "leaves interpolate unchanged at or past the horizon" $
-      forAll (orderedPair (-2, 14)) $ \(cut, t) ->
-        let pruned = prune noDelay (RenderTime cut) ramp
-         in renderedAt noExtrapolation t pruned == renderedAt noExtrapolation t ramp
+    prop "leaves interpolate unchanged at or past the playback instant" $
+      prunePreserves noExtrapolation
+
+    prop "keeps the pair extrapolation reckons from" $
+      prunePreserves shortHorizon
 
 -- Properties
+
+-- Pruning is invisible to a render time at or past where it cut. The range
+-- overhangs the ramp at both ends, so the poses clamped outside the buffer
+-- are covered too.
+prunePreserves :: Horizon -> Property
+prunePreserves horizon =
+  forAll (orderedPair (-2, 14)) $ \(cut, t) ->
+    let pruned = prune noDelay (RenderTime cut) ramp
+     in renderedAt horizon t pruned == renderedAt horizon t ramp
 
 -- A turn that never reverses: across a one-span window, a later instant sits
 -- no closer to the starting orientation than an earlier one. The window opens
