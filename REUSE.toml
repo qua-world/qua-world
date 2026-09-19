@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+version = 1
+
+# Vale reads every line of a vocabulary as a regex, leaving nowhere to put a
+# comment.
+[[annotations]]
+path = ".vale/styles/config/vocabularies/**"
+SPDX-FileCopyrightText = "2026 Alex Brandt"
+SPDX-License-Identifier = "MIT"
+
+# `vale sync` rewrites the package trees below from upstream, so a header
+# written into one is gone after the next sync.
+#
+# Three of these files carry a copyright notice of their own, which under the
+# default precedence displaces the package's instead of joining it. `reuse
+# lint` passes either way, so only `reuse spdx` shows the loss.
+
+[[annotations]]
+path = ".vale/styles/Microsoft/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2018 - 2019 Joseph Kato"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ".vale/styles/alex/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["2020 errata.ai", "2015 Titus Wormer <tituswormer@gmail.com>"]
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ".vale/styles/proselint/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = [
+  "2019 errata.ai",
+  "2014 - 2015 Jordan Suchow, Michael Pacer, and Lara A. Ross",
+]
+SPDX-License-Identifier = "BSD-3-Clause"
+
+# The Contributor Covenant 2.1, quoted verbatim; a header would edit the
+# quote. Upstream published that release under CC BY 4.0 and relicensed in
+# the 2025 site rewrite, so its current terms do not govern this copy.
+[[annotations]]
+path = "CODE_OF_CONDUCT.md"
+SPDX-FileCopyrightText = "Organization for Ethical Source"
+SPDX-License-Identifier = "CC-BY-4.0"

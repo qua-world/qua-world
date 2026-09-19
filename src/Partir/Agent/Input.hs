@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.Agent.Input
 Description : The intents an agent asks the world to carry out
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 An 'Intent' is what an agent asks for on a step, before the simulation decides
 whether and when it happens. It is the unstamped counterpart of

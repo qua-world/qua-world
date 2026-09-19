@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2020 Alex Brandt
+
+SPDX-License-Identifier: MIT
+-->
+
 # Description
 
 GUI Client and Client Interfaces for [qua.world]

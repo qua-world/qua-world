@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.World.Scene
 Description : The shared, pure scene and its event fold
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 A 'Scene' is the shared world state: the current 'Tick' and the set of live
 entities. It evolves only through 'apply', which folds a single 'Event' into a

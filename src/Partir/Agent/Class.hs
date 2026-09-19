@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.Agent.Class
 Description : The abstraction every participant in the world implements
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 A player, a bot, and an NPC all take part in the world the same way: each
 perceives it and emits 'Intent's. 'Agent' is that shared abstraction.

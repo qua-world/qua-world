@@ -1,8 +1,10 @@
+-- SPDX-FileCopyrightText: 2026 Alex Brandt
+--
+-- SPDX-License-Identifier: MIT
+
 {- |
 Module      : Partir.Agent.Null
 Description : The agent that takes part in the world without acting on it
-Copyright   : (c) Alex Brandt, 2026
-License     : MIT
 
 'Null' is the base case of the 'Agent' class: whatever scene it is stepped
 against, it emits no 'Partir.Agent.Input.Intent'. It stands in wherever the

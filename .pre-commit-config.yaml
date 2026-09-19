@@ -1,5 +1,10 @@
-# `vale sync` vendors .vale/styles/; only config/ under it is ours.
-exclude: ^\.vale/styles/(?!config/)
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+# `vale sync` vendors .vale/styles/, of which only config/ is ours, and
+# LICENSES/ has to stay byte-identical to what `reuse download` fetches.
+exclude: ^(\.vale/styles/(?!config/)|LICENSES/)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -42,8 +47,8 @@ repos:
         args: [--output=line, --minAlertLevel=error]
         types: [markdown]
 
-  # reuse-tool develops on Codeberg; this mirror carries the same tags and is
-  # the one Renovate's pre-commit manager can resolve a version from.
+  # reuse-tool develops on Codeberg. Renovate's pre-commit manager resolves a
+  # version only from this mirror, which carries the same tags.
   - repo: https://github.com/fsfe/reuse-tool
     rev: v6.2.0
     hooks:
