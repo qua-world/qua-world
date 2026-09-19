@@ -43,6 +43,17 @@ cabal install weeder
 weeder
 ```
 
+## Tests
+
+Generators live in [test/Partir/Arbitrary.hs](test/Partir/Arbitrary.hs) rather
+than in the spec that first needs one, and every instance there defines
+`shrink`.
+
+A property whose subject branches on its input carries a coverage assertion
+naming those partitions, under `checkCoverage`. A stateful module gets a model
+to compare against over a generated sequence. `prunePreserves` and `test_model`
+show both shapes.
+
 ## Before you commit
 
 [pre-commit] gates each commit on formatting, linting, and file hygiene, and

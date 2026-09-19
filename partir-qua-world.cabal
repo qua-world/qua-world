@@ -107,12 +107,14 @@ test-suite partir-qua-world-test
 
   other-modules:
       Partir.Agent.NullSpec
+    , Partir.Arbitrary
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
 
   build-depends:
-      GLUT >= 2.7 && < 2.8
+      containers >= 0.7 && < 0.9
+    , GLUT >= 2.7 && < 2.8
     , linear >= 1.23 && < 1.24
     , partir-qua-world
     , partir-qua-world:glut-client

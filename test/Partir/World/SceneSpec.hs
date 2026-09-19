@@ -1,21 +1,26 @@
 -- SPDX-FileCopyrightText: 2026 Alex Brandt
 --
 -- SPDX-License-Identifier: MIT
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Partir.World.SceneSpec (
   test_empty,
   test_apply,
+  test_model,
 )
 where
 
+import Data.List (foldl', nub)
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import Data.Maybe (mapMaybe)
 import Data.Text (pack)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
+
+import Partir.Arbitrary ()
 
 import Partir.World.Event (Event (..), eventTick)
 import Partir.World.Scene (
@@ -72,6 +77,50 @@ test_apply =
         sceneTick (apply event scene) == max (sceneTick scene) (eventTick event)
     ]
 
+{- | The scene folded forward one event at a time, against each entity's pose
+read off its own events alone.
+
+`apply` carries the whole scene through every event; `entityHistory` replays
+one entity and ignores the rest. Agreement is what says an event touches only
+its subject and leaves nothing behind for the next one.
+-}
+test_model :: TestTree
+test_model =
+  testGroup
+    "against a model"
+    [ testProperty "holds the pose each entity's own events imply" $ \events ->
+        sceneEntities (foldl' (flip apply) empty events) == model events
+    ]
+
+-- Model
+
+model :: [Event] -> Map EntityId Pose
+model events =
+  Map.fromList
+    [ (eid, pose)
+    | eid <- nub (mapMaybe subject events)
+    , Just pose <- [entityHistory eid events]
+    ]
+
+-- The entity an event acts on. `Speak` addresses the world, not an entity.
+subject :: Event -> Maybe EntityId
+subject (Spawn _ _ eid _ _) = Just eid
+subject (Despawn _ _ eid) = Just eid
+subject (Move _ _ eid _) = Just eid
+subject (Look _ _ eid _) = Just eid
+subject Speak{} = Nothing
+subject (Interact _ _ eid) = Just eid
+
+-- Where one entity ends up, reading only the events naming it.
+entityHistory :: EntityId -> [Event] -> Maybe Pose
+entityHistory eid = foldl' step Nothing . filter ((== Just eid) . subject)
+ where
+  step _ (Spawn _ _ _ p q) = Just (Pose p q)
+  step _ Despawn{} = Nothing
+  step acc (Move _ _ _ p) = fmap (\pose -> pose{posePosition = p}) acc
+  step acc (Look _ _ _ q) = fmap (\pose -> pose{poseOrientation = q}) acc
+  step acc _ = acc
+
 -- Fixtures
 
 anAgent :: AgentId
@@ -94,34 +143,3 @@ turned = Quaternion 0 (V3 0 1 0)
 
 spawned :: Scene
 spawned = apply (Spawn (Tick 1) anAgent anEntity here facing) empty
-
--- Generators
-
-instance Arbitrary AgentId where
-  arbitrary = AgentId <$> arbitrary
-
-instance Arbitrary EntityId where
-  arbitrary = EntityId <$> arbitrary
-
-instance Arbitrary Tick where
-  arbitrary = Tick <$> arbitrary
-
-instance Arbitrary Event where
-  arbitrary =
-    oneof
-      [ Spawn <$> arbitrary <*> arbitrary <*> arbitrary <*> genVec3 <*> genQuat
-      , Despawn <$> arbitrary <*> arbitrary <*> arbitrary
-      , Move <$> arbitrary <*> arbitrary <*> arbitrary <*> genVec3
-      , Look <$> arbitrary <*> arbitrary <*> arbitrary <*> genQuat
-      , Speak <$> arbitrary <*> arbitrary <*> (pack <$> arbitrary)
-      , Interact <$> arbitrary <*> arbitrary <*> arbitrary
-      ]
-
-instance Arbitrary Scene where
-  arbitrary = foldr apply empty <$> (arbitrary :: Gen [Event])
-
-genVec3 :: Gen Vec3
-genVec3 = V3 <$> arbitrary <*> arbitrary <*> arbitrary
-
-genQuat :: Gen Quat
-genQuat = Quaternion <$> arbitrary <*> genVec3

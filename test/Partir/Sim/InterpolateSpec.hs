@@ -11,13 +11,28 @@ where
 import Data.List (foldl')
 import Data.Maybe (fromMaybe)
 import Data.Word (Word64)
-import Linear.Metric (dot, normalize, quadrance)
+import Linear.Metric (dot)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
-import Test.QuickCheck (Gen, Property, choose, forAll, suchThat)
+import Test.QuickCheck (
+  Property,
+  Testable,
+  checkCoverage,
+  cover,
+  forAllShrink,
+  property,
+ )
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, assertBool, testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
+
+import Partir.Arbitrary (
+  Position (..),
+  UnitQuat (..),
+  Window (..),
+  orderedBelow,
+  shrinkOrderedBelow,
+ )
 
 import Partir.Sim.Interpolate (
   Delay (..),
@@ -62,13 +77,11 @@ test_interpolate =
         posAt noDelay shortHorizon 100 (record (Sample (Tick 0) (Pose far noRotation)) emptyHistory)
           `closeTo` far
     , testProperty "position moves monotonically toward the next sample" $
-        forAll genVec3 $ \p0 ->
-          forAll genVec3 $ \p1 ->
-            forAll orderedFractions $ \(lo, hi) ->
-              let hist = poses p0 noRotation p1 noRotation
-                  a = sample lo hist
-                  b = sample hi hist
-               in movesToward (p1 ^-^ p0) (b ^-^ a)
+        \(Position p0) (Position p1) (Window (lo, hi)) ->
+          let hist = poses p0 noRotation p1 noRotation
+              a = sample lo hist
+              b = sample hi hist
+           in movesToward (p1 ^-^ p0) (b ^-^ a)
     , testProperty "orientation rotates monotonically away from the start" $
         turnsOneWay noExtrapolation 0
     , testProperty "orientation keeps turning the same way past the newest sample" $
@@ -100,28 +113,59 @@ test_prune =
 
 -- Properties
 
--- Pruning is invisible to a render time at or past where it cut. The range
--- overhangs the ramp at both ends, so the poses clamped outside the buffer
--- are covered too.
+-- Pruning is invisible to a render time at or past where it cut.
 prunePreserves :: Horizon -> Property
 prunePreserves horizon =
-  forAll (orderedPair (-2, 14)) $ \(cut, t) ->
-    let pruned = prune noDelay (RenderTime cut) ramp
-     in renderedAt noDelay horizon t pruned == renderedAt noDelay horizon t ramp
+  checkCoverage $
+    forAllShrink (orderedBelow playbackRange) (shrinkOrderedBelow playbackRange) $ \(cut, t) ->
+      coveringRegions horizon t $
+        renderedAt noDelay horizon t (prune noDelay (RenderTime cut) ramp)
+          == renderedAt noDelay horizon t ramp
+
+{- | Hold the generated range to the regions it claims to reach. A range that
+stops short of a branch leaves that branch untested while the property goes on
+passing, and nothing else in the suite reports it.
+-}
+coveringRegions :: Testable prop => Horizon -> Double -> prop -> Property
+coveringRegions horizon t =
+  cover 5 (region == BeforeBuffer) "before the buffer"
+    . cover 20 (region == Interior) "inside the buffer"
+    . cover 5 (region == PastHorizon) "past the horizon"
+    . withinHorizon
+ where
+  region = regionOf horizon t
+
+  -- A horizon of zero holds at the newest sample instead of projecting, so it
+  -- has no region between the two to ask for.
+  withinHorizon
+    | horizon == noExtrapolation = property
+    | otherwise = cover 5 (region == Extrapolating) "within the horizon"
 
 -- A turn that never reverses: across a one-span window, a later instant sits
 -- no closer to the starting orientation than an earlier one. The window opens
 -- @from@ spans in, so 0 covers the gap between the samples and 1 the
 -- extrapolated stretch past the newest.
-turnsOneWay :: Horizon -> Double -> Property
-turnsOneWay horizon from =
-  forAll genUnitQuat $ \q0 ->
-    forAll (genUnitQuat `suchThat` notAntipodalTo q0) $ \q1 ->
-      forAll orderedFractions $ \(lo, hi) ->
-        let hist = poses origin q0 origin q1
-            earlier = dot q0 (orientation horizon (from + lo) hist)
-            later = dot q0 (orientation horizon (from + hi) hist)
-         in earlier >= later - epsilon
+turnsOneWay :: Horizon -> Double -> UnitQuat -> UnitQuat -> Window -> Bool
+turnsOneWay horizon from (UnitQuat q0) (UnitQuat q1) (Window (lo, hi)) =
+  let hist = poses origin q0 origin (alignedWith q0 q1)
+      earlier = dot q0 (orientation horizon (from + lo) hist)
+      later = dot q0 (orientation horizon (from + hi) hist)
+   in earlier >= later - epsilon
+
+-- Where a playback instant falls relative to `ramp`. `interpolate` serves each
+-- region from a different branch: the oldest pose held, a blend between two
+-- samples, a projection along the last velocity, or that projection settled.
+data Region = BeforeBuffer | Interior | Extrapolating | PastHorizon
+  deriving (Eq, Show)
+
+regionOf :: Horizon -> Double -> Region
+regionOf (Horizon (Tick reach)) t
+  | t < 0 = BeforeBuffer
+  | t <= newest = Interior
+  | t <= newest + fromIntegral reach = Extrapolating
+  | otherwise = PastHorizon
+ where
+  newest = fromIntegral rampEnd
 
 -- Fixtures
 
@@ -183,7 +227,17 @@ samplesAt = foldl' (flip record) emptyHistory . fmap marker
 
 -- The buffer the prune examples cut into.
 ramp :: RemoteHistory
-ramp = samplesAt [0 .. 10]
+ramp = samplesAt [0 .. rampEnd]
+
+-- The newest tick in `ramp`.
+rampEnd :: Word64
+rampEnd = 10
+
+-- The playback instants `prunePreserves` samples. It overhangs `ramp` at both
+-- ends and reaches past `shortHorizon`, so each region of the buffer comes up;
+-- `coveringRegions` fails the property if it stops short of any of them.
+playbackRange :: (Double, Double)
+playbackRange = (-2, 20)
 
 -- Helpers
 
@@ -202,35 +256,19 @@ sample frac = posAt noDelay noExtrapolation (frac * spanTicks)
 orientation :: Horizon -> Double -> RemoteHistory -> Quat
 orientation horizon frac = poseOrientation . poseAt noDelay horizon (frac * spanTicks)
 
-orderedFractions :: Gen (Double, Double)
-orderedFractions = orderedPair (0, 1)
-
--- Two values from the range, smaller first.
-orderedPair :: (Double, Double) -> Gen (Double, Double)
-orderedPair range = do
-  a <- choose range
-  b <- choose range
-  pure (min a b, max a b)
-
-genVec3 :: Gen Vec3
-genVec3 = V3 <$> coord <*> coord <*> coord
- where
-  coord = choose (-100, 100)
-
-genUnitQuat :: Gen Quat
-genUnitQuat =
-  normalize
-    <$> (Quaternion <$> coord <*> genVec3) `suchThat` ((> 1e-3) . quadrance)
- where
-  coord = choose (-100, 100)
-
 -- A step @d@ moves toward direction @dir@ when it does not oppose it on any
 -- axis: linear interpolation can only carry each component toward the target.
 movesToward :: Vec3 -> Vec3 -> Bool
 movesToward dir d = and ((\x y -> x * y >= negate epsilon) <$> dir <*> d)
 
-notAntipodalTo :: Quat -> Quat -> Bool
-notAntipodalTo q0 q1 = dot q0 q1 >= 0
+-- The quaternion naming the same rotation as @q1@ but on the near side of
+-- @q0@, so the shortest arc between them does not cross the antipode.
+-- Negating is exact and total; rejecting the far half instead would throw
+-- away half of every generated pair and shrink through a filter.
+alignedWith :: Quat -> Quat -> Quat
+alignedWith q0 q1
+  | dot q0 q1 >= 0 = q1
+  | otherwise = negate q1
 
 -- Slack for a property, which compares two blends and so carries the error
 -- of both.
