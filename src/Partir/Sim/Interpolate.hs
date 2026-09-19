@@ -20,6 +20,8 @@ leaves the whole module @IO@-free and total.
 module Partir.Sim.Interpolate (
   Sample (..),
   RenderTime (..),
+  Delay (..),
+  Horizon (..),
   RemoteHistory,
   emptyHistory,
   record,
@@ -51,6 +53,20 @@ data Sample = Sample
 newtype RenderTime = RenderTime Double
   deriving (Eq, Ord, Show)
 
+{- | How far behind the present the playback clock runs. A wider delay gives
+late samples more time to arrive, and leaves remote agents further behind
+what the server knows.
+-}
+newtype Delay = Delay Tick
+  deriving (Eq, Ord, Show)
+
+{- | How far past the newest sample extrapolation projects before it holds.
+@'Horizon' ('Tick' 0)@ holds at once, and any horizon bounds how far a long
+gap carries the pose from where the agent really is.
+-}
+newtype Horizon = Horizon Tick
+  deriving (Eq, Ord, Show)
+
 {- | A remote agent's samples, keyed by tick. Backing them with a
 'Data.Map.Strict.Map' gives the ascending order and one-pose-per-tick for
 free; build it with 'emptyHistory' and 'record'.
@@ -70,53 +86,68 @@ record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
 {- | Discard the samples the playback clock has passed.
 
-The clock only advances, so everything below the older of the two samples
-bracketing @now - delay@ is dead weight. Keeping that sample and its successors
-is what leaves 'interpolate' unchanged from that horizon on.
+The clock only advances, so samples below the pair 'reckonFrom' names are
+dead weight. Keeping that pair and its successors leaves 'interpolate'
+unchanged from @now - delay@ on.
 
 Recording does not prune; the render loop calls this at its own cadence.
 -}
-prune :: Tick -> RenderTime -> RemoteHistory -> RemoteHistory
-prune delay now history@(RemoteHistory m) =
-  case Map.lookupMax atOrBefore of
-    Just (t, p) -> RemoteHistory (Map.insert t p after)
-    Nothing -> history
+prune :: Delay -> RenderTime -> RemoteHistory -> RemoteHistory
+prune delay now (RemoteHistory m) = RemoteHistory (Map.union reckonable after)
  where
-  (atOrBefore, after) = splitAtHorizon (horizon delay now) m
+  (atOrBefore, after) = splitAtPlayback (playbackInstant delay now) m
+  reckonable = Map.fromList (reckonFrom atOrBefore)
 
-{- | Interpolate a remote agent's pose for a render frame.
+{- | The pose to draw a remote agent at, sampled at @now@ less the 'Delay'.
+An empty history yields 'Nothing'.
 
-The pose is sampled at @now - delay@: the two samples bracketing that instant
-are blended, position by linear interpolation and orientation by 'slerp'.
-Outside that window the nearest boundary pose is held, not extrapolated —
-before the oldest sample there is no earlier motion to project from, and past
-the newest we hold rather than guess. An empty history yields 'Nothing'.
+Samples bracketing that instant are blended, position linearly and orientation
+by 'slerp'. Before the oldest sample the oldest pose is held.
+
+Past the newest, the agent is projected along the velocity the last two
+samples imply — dead reckoning, as in Valve's @cl_extrapolate@ — and holds
+once the 'Horizon' runs out, or at once given a single sample.
 -}
-interpolate :: Tick -> RenderTime -> RemoteHistory -> Maybe Pose
-interpolate delay now (RemoteHistory m) =
+interpolate :: Delay -> Horizon -> RenderTime -> RemoteHistory -> Maybe Pose
+interpolate delay horizon now (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
-    (Just (t0, p0), Just (t1, p1)) -> Just (blend (alpha t0 t1) p0 p1)
-    (Just (_, p0), Nothing) -> Just p0 -- past the newest; #66 extrapolates here
+    (Just (t0, p0), Just (t1, p1)) -> Just (blend (alphaAt target t0 t1) p0 p1)
+    (Just (_, newest), Nothing) -> Just (project newest)
     (Nothing, Just (_, p1)) -> Just p1
     (Nothing, Nothing) -> Nothing
  where
-  target = horizon delay now
-  (atOrBefore, after) = splitAtHorizon target m
-  alpha t0 t1 = (target - tickTime t0) / (tickTime t1 - tickTime t0)
+  target = playbackInstant delay now
+  (atOrBefore, after) = splitAtPlayback target m
+  alphaAt t t0 t1 = (t - tickTime t0) / (tickTime t1 - tickTime t0)
 
-horizon :: Tick -> RenderTime -> Double
-horizon (Tick delay) (RenderTime now) = now - fromIntegral delay
+  project newest = case reckonFrom atOrBefore of
+    (t1, p1) : (t0, p0) : _ -> blend (alphaAt (reached t1) t0 t1) p0 p1
+    _ -> newest
+  reached t1 = min target (tickTime t1 + reachTicks horizon)
+
+playbackInstant :: Delay -> RenderTime -> Double
+playbackInstant (Delay (Tick delay)) (RenderTime now) = now - fromIntegral delay
+
+reachTicks :: Horizon -> Double
+reachTicks (Horizon (Tick n)) = fromIntegral n
+
+{- | The last two samples at or before the playback instant, newest first:
+what a projection past the newest reckons its velocity from. 'prune' keeps
+exactly these, so a pruned history still carries one.
+-}
+reckonFrom :: Map Tick Pose -> [(Tick, Pose)]
+reckonFrom = take 2 . Map.toDescList
 
 {- | 'interpolate' blends across this boundary and 'prune' cuts below it. Were
 the two to disagree on which side the boundary sample falls, pruning would drop
 a sample interpolation still reads.
 -}
-splitAtHorizon :: Double -> Map Tick Pose -> (Map Tick Pose, Map Tick Pose)
-splitAtHorizon target = Map.spanAntitone (\t -> tickTime t <= target)
+splitAtPlayback :: Double -> Map Tick Pose -> (Map Tick Pose, Map Tick Pose)
+splitAtPlayback target = Map.spanAntitone (\t -> tickTime t <= target)
 
-{- | Blend two poses at @alpha@ in @[0, 1]@: @alpha = 0@ is the first pose,
-@alpha = 1@ the second. Both 'lerp' (since linear 1.23) and 'slerp' run in
-that direction.
+{- | Blend two poses at @alpha@: @alpha = 0@ is the first pose, @alpha = 1@ the
+second. Both 'lerp' (since linear 1.23) and 'slerp' run in that direction, and
+both extend past @alpha = 1@: 'lerp' along the line, 'slerp' along the arc.
 -}
 blend :: Double -> Pose -> Pose -> Pose
 blend alpha a b =
