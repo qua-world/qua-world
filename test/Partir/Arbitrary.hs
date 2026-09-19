@@ -97,7 +97,7 @@ instance Arbitrary UnitQuat where
 shape a property needs to ask whether a blend moved one way between two
 instants.
 -}
-newtype Window = Window {unWindow :: (Double, Double)}
+newtype Window = Window (Double, Double)
   deriving (Eq, Show)
 
 instance Arbitrary Window where
