@@ -60,7 +60,10 @@ what the server knows.
 newtype Delay = Delay Tick
   deriving (Eq, Ord, Show)
 
--- | How far past the newest sample extrapolation projects before it holds.
+{- | How far past the newest sample extrapolation projects before it holds.
+@'Horizon' ('Tick' 0)@ holds at once, and any horizon bounds how far a long
+gap carries the pose from where the agent really is.
+-}
 newtype Horizon = Horizon Tick
   deriving (Eq, Ord, Show)
 
@@ -83,11 +86,9 @@ record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
 {- | Discard the samples the playback clock has passed.
 
-The clock only advances, so samples below the last two at or before
-@now - delay@ are dead weight. Keeping that pair and its successors leaves
-'interpolate' unchanged from that instant on. The pair, rather than the single
-bracketing sample: past the newest sample 'interpolate' reckons a velocity
-from the last two, and one sample yields none.
+The clock only advances, so samples below the pair 'reckonFrom' names are
+dead weight. Keeping that pair and its successors leaves 'interpolate'
+unchanged from @now - delay@ on.
 
 Recording does not prune; the render loop calls this at its own cadence.
 -}
@@ -97,21 +98,15 @@ prune delay now (RemoteHistory m) = RemoteHistory (Map.union reckonable after)
   (atOrBefore, after) = splitAtPlayback (playbackInstant delay now) m
   reckonable = Map.fromList (reckonFrom atOrBefore)
 
-{- | Interpolate a remote agent's pose for a render frame, extrapolating
-within a 'Horizon' when the next sample is late.
+{- | The pose to draw a remote agent at, sampled at @now@ less the 'Delay'.
+An empty history yields 'Nothing'.
 
-The pose is sampled at @now@ less the 'Delay'. The two samples bracketing that
-instant are blended, position by linear interpolation and orientation by
-'slerp'.
+Samples bracketing that instant are blended, position linearly and orientation
+by 'slerp'. Before the oldest sample the oldest pose is held.
 
-Past the newest sample the agent carries on along the velocity the last two
-samples imply, which is dead reckoning, as in Valve's @cl_extrapolate@. That
-projection runs for a 'Horizon' and then holds, so error stays bounded however
-long the gap. A @'Horizon' ('Tick' 0)@ holds the newest pose outright, and so
-does a history of one sample, which implies no velocity.
-
-Before the oldest sample the oldest pose is held: there is no earlier motion
-to project from. An empty history yields 'Nothing'.
+Past the newest, the agent is projected along the velocity the last two
+samples imply — dead reckoning, as in Valve's @cl_extrapolate@ — and holds
+once the 'Horizon' runs out, or at once given a single sample.
 -}
 interpolate :: Delay -> Horizon -> RenderTime -> RemoteHistory -> Maybe Pose
 interpolate delay horizon now (RemoteHistory m) =
@@ -136,9 +131,9 @@ playbackInstant (Delay (Tick delay)) (RenderTime now) = now - fromIntegral delay
 reachTicks :: Horizon -> Double
 reachTicks (Horizon (Tick n)) = fromIntegral n
 
-{- | The samples a projection reckons a velocity from, newest first: the last
-two at or before the playback instant. 'prune' keeps exactly these, so
-'interpolate' still finds a velocity in a history that has been cut.
+{- | The last two samples at or before the playback instant, newest first:
+what a projection past the newest reckons its velocity from. 'prune' keeps
+exactly these, so a pruned history still carries one.
 -}
 reckonFrom :: Map Tick Pose -> [(Tick, Pose)]
 reckonFrom = take 2 . Map.toDescList
