@@ -5,9 +5,13 @@
 module Partir.World.SceneSpec (
   test_empty,
   test_apply,
+  test_model,
 )
 where
 
+import Data.List (foldl', nub)
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Text (pack)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
@@ -71,6 +75,54 @@ test_apply =
     , testProperty "advances the tick to the max of the scene and event" $ \event scene ->
         sceneTick (apply event scene) == max (sceneTick scene) (eventTick event)
     ]
+
+{- | The scene folded forward one event at a time, against each entity's pose
+read off its own events alone.
+
+`apply` carries the whole scene through every event; `entityHistory` replays
+one entity and ignores the rest. Agreement is what says an event touches only
+its subject and leaves nothing behind for the next one — the guarantee
+`Partir.Sim.Prediction` (#17) and `Partir.Sim.Reconcile` (#19) rest on when
+they replay a command buffer after a correction. Those modules will want the
+same shape against a richer model: a command sequence, a reference
+implementation, and a comparison after each step.
+-}
+test_model :: TestTree
+test_model =
+  testGroup
+    "against a model"
+    [ testProperty "holds the pose each entity's own events imply" $ \events ->
+        sceneEntities (foldl' (flip apply) empty events) == model events
+    ]
+
+-- Model
+
+model :: [Event] -> Map EntityId Pose
+model events =
+  Map.fromList
+    [ (eid, pose)
+    | eid <- nub (concatMap subject events)
+    , Just pose <- [entityHistory eid events]
+    ]
+
+-- The entity an event acts on. `Speak` addresses the world, not an entity.
+subject :: Event -> [EntityId]
+subject (Spawn _ _ eid _ _) = [eid]
+subject (Despawn _ _ eid) = [eid]
+subject (Move _ _ eid _) = [eid]
+subject (Look _ _ eid _) = [eid]
+subject Speak{} = []
+subject (Interact _ _ eid) = [eid]
+
+-- Where one entity ends up, reading only the events naming it.
+entityHistory :: EntityId -> [Event] -> Maybe Pose
+entityHistory eid = foldl' step Nothing . filter ((== [eid]) . subject)
+ where
+  step _ (Spawn _ _ _ p q) = Just (Pose p q)
+  step _ Despawn{} = Nothing
+  step acc (Move _ _ _ p) = fmap (\pose -> pose{posePosition = p}) acc
+  step acc (Look _ _ _ q) = fmap (\pose -> pose{poseOrientation = q}) acc
+  step acc _ = acc
 
 -- Fixtures
 
