@@ -25,6 +25,7 @@ module Partir.Sim.Interpolate (
   RemoteHistory,
   emptyHistory,
   record,
+  prune,
   interpolate,
 )
 where
@@ -80,6 +81,22 @@ re-sends never duplicate an instant.
 record :: Sample -> RemoteHistory -> RemoteHistory
 record (Sample t p) (RemoteHistory m) = RemoteHistory (Map.insert t p m)
 
+{- | Discard the samples the playback clock has passed.
+
+The clock only advances, so everything below the older of the two samples
+bracketing @now - delay@ is dead weight. Keeping that sample and its successors
+is what leaves 'interpolate' unchanged from that horizon on.
+
+Recording does not prune; the render loop calls this at its own cadence.
+-}
+prune :: Delay -> RenderTime -> RemoteHistory -> RemoteHistory
+prune delay now history@(RemoteHistory m) =
+  case Map.lookupMax atOrBefore of
+    Just (t, p) -> RemoteHistory (Map.insert t p after)
+    Nothing -> history
+ where
+  (atOrBefore, after) = splitAtHorizon (horizon delay now) m
+
 {- | Interpolate a remote agent's pose for a render frame, extrapolating
 within a 'Horizon' when the next sample is late.
 
@@ -97,22 +114,32 @@ Before the oldest sample the oldest pose is held: there is no earlier motion
 to project from. An empty history yields 'Nothing'.
 -}
 interpolate :: Delay -> Horizon -> RenderTime -> RemoteHistory -> Maybe Pose
-interpolate (Delay (Tick delay)) (Horizon (Tick horizon)) (RenderTime now) (RemoteHistory m) =
+interpolate delay (Horizon (Tick reach)) now (RemoteHistory m) =
   case (Map.lookupMax atOrBefore, Map.lookupMin after) of
     (Just (t0, p0), Just (t1, p1)) -> Just (blend (alphaAt target t0 t1) p0 p1)
     (Just (t1, p1), Nothing) -> Just (project t1 p1)
     (Nothing, Just (_, p1)) -> Just p1
     (Nothing, Nothing) -> Nothing
  where
-  target = now - fromIntegral delay
-  (atOrBefore, after) = Map.spanAntitone (\t -> tickTime t <= target) m
+  target = horizon delay now
+  (atOrBefore, after) = splitAtHorizon target m
   alphaAt t t0 t1 = (t - tickTime t0) / (tickTime t1 - tickTime t0)
 
   project t1 p1 = case Map.lookupLT t1 atOrBefore of
     Just (t0, p0) -> blend (alphaAt reached t0 t1) p0 p1
     Nothing -> p1
    where
-    reached = min target (tickTime t1 + fromIntegral horizon)
+    reached = min target (tickTime t1 + fromIntegral reach)
+
+horizon :: Delay -> RenderTime -> Double
+horizon (Delay (Tick delay)) (RenderTime now) = now - fromIntegral delay
+
+{- | 'interpolate' blends across this boundary and 'prune' cuts below it. Were
+the two to disagree on which side the boundary sample falls, pruning would drop
+a sample interpolation still reads.
+-}
+splitAtHorizon :: Double -> Map Tick Pose -> (Map Tick Pose, Map Tick Pose)
+splitAtHorizon target = Map.spanAntitone (\t -> tickTime t <= target)
 
 {- | Blend two poses at @alpha@: @alpha = 0@ is the first pose, @alpha = 1@ the
 second. Both 'lerp' (since linear 1.23) and 'slerp' run in that direction, and

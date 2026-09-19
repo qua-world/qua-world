@@ -3,7 +3,9 @@ module Partir.Sim.InterpolateSpec (
 )
 where
 
+import Data.List (foldl')
 import Data.Maybe (fromMaybe)
+import Data.Word (Word64)
 import Linear.Metric (dot, normalize, quadrance)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
@@ -19,6 +21,7 @@ import Partir.Sim.Interpolate (
   Sample (..),
   emptyHistory,
   interpolate,
+  prune,
   record,
  )
 import Partir.World.Types (Pose (..), Quat, Tick (..), Vec3)
@@ -77,6 +80,33 @@ spec = do
 
     prop "orientation keeps turning the same way past the newest sample" $
       turnsOneWay oneSpan 1
+
+  describe "prune" $ do
+    it "leaves an empty history empty" $
+      prune noDelay (RenderTime 5) emptyHistory `shouldBe` emptyHistory
+
+    it "drops the samples below the one bracketing the horizon" $
+      prune noDelay (RenderTime 5) ramp `shouldBe` samplesAt [5 .. 10]
+
+    it "shifts the horizon back by the delay" $
+      prune (Delay (Tick 3)) (RenderTime 8) ramp `shouldBe` samplesAt [5 .. 10]
+
+    it "keeps the sample the horizon falls after" $
+      prune noDelay (RenderTime 5.5) ramp `shouldBe` samplesAt [5 .. 10]
+
+    it "holds a history that reaches no further back than the horizon" $
+      prune (Delay (Tick 4)) (RenderTime 2) ramp `shouldBe` ramp
+
+    it "stays bounded under sustained recording" $
+      let advance h n = prune (Delay (Tick 2)) (RenderTime (fromIntegral n)) (record (marker n) h)
+       in foldl' advance emptyHistory [0 .. 999] `shouldBe` samplesAt [997 .. 999]
+
+    -- The range overhangs the ramp at both ends, so the poses clamped outside
+    -- the buffer are covered too.
+    prop "leaves interpolate unchanged at or past the horizon" $
+      forAll (orderedPair (-2, 14)) $ \(cut, t) ->
+        let pruned = prune noDelay (RenderTime cut) ramp
+         in renderedAt noExtrapolation t pruned == renderedAt noExtrapolation t ramp
 
 -- Properties
 
@@ -144,12 +174,26 @@ poses p0 q0 p1 q1 =
   record (Sample (Tick (round spanTicks)) (Pose p1 q1)) $
     record (Sample (Tick 0) (Pose p0 q0)) emptyHistory
 
+-- A sample whose position names its tick, so equality says which samples
+-- survived a prune.
+marker :: Word64 -> Sample
+marker n = Sample (Tick n) (Pose (V3 (fromIntegral n) 0 0) noRotation)
+
+samplesAt :: [Word64] -> RemoteHistory
+samplesAt = foldl' (flip record) emptyHistory . fmap marker
+
+-- The buffer the prune examples cut into.
+ramp :: RemoteHistory
+ramp = samplesAt [0 .. 10]
+
 -- Helpers
 
--- Pose at a render time.
+-- The pose at a render time, with no delay.
+renderedAt :: Horizon -> Double -> RemoteHistory -> Maybe Pose
+renderedAt horizon t = interpolate noDelay horizon (RenderTime t)
+
 poseAt :: Horizon -> Double -> RemoteHistory -> Pose
-poseAt horizon t =
-  fromMaybe (error "poseAt: empty history") . interpolate noDelay horizon (RenderTime t)
+poseAt horizon t = fromMaybe (error "poseAt: empty history") . renderedAt horizon t
 
 posAt :: Horizon -> Double -> RemoteHistory -> Vec3
 posAt horizon t = posePosition . poseAt horizon t
@@ -161,9 +205,13 @@ orientation :: Horizon -> Double -> RemoteHistory -> Quat
 orientation horizon frac = poseOrientation . poseAt horizon (frac * spanTicks)
 
 orderedFractions :: Gen (Double, Double)
-orderedFractions = do
-  a <- choose (0, 1)
-  b <- choose (0, 1)
+orderedFractions = orderedPair (0, 1)
+
+-- Two values from the range, smaller first.
+orderedPair :: (Double, Double) -> Gen (Double, Double)
+orderedPair range = do
+  a <- choose range
+  b <- choose range
   pure (min a b, max a b)
 
 genVec3 :: Gen Vec3
