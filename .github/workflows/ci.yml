@@ -157,3 +157,70 @@ jobs:
       # After the test run so a weed never masks a failing test.
       - name: Check for dead code
         run: weeder
+
+  coverage:
+    name: Measure test coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y freeglut3-dev libglu1-mesa-dev
+
+      - name: Set up GHC
+        id: setup
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          # renovate: datasource=endoflife-date depName=ghc versioning=loose
+          ghc-version: "9.10"
+          cabal-version: latest
+
+      - name: Update Hackage index
+        run: cabal update
+
+      # configure persists the flags to cabal.project.local, so the steps
+      # below share one instrumented configuration.
+      - name: Configure with coverage
+        run: cabal configure --enable-tests --enable-coverage
+
+      - name: Generate build plan
+        run: cabal build all --dry-run
+
+      # Restore without a matching save: instrumentation recompiles this
+      # package alone, so the store the build job writes already holds every
+      # dependency this job needs, and two jobs saving one key race.
+      - name: Restore cabal store
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}
+          restore-keys: ${{ env.key }}-
+
+      - name: Build
+        run: cabal build all
+
+      - name: Test
+        run: cabal test all --test-show-details=direct
+
+      # The .tix names the test modules alongside the library's, and
+      # hpc-codecov excludes only exact module names. The ignore glob in
+      # codecov.yml drops them instead, so adding a spec needs no edit here.
+      - name: Generate coverage report
+        id: report
+        uses: 8c6794b6/hpc-codecov-action@f943f40733e5390825b12d72165cad991e44340c # v4.3.0
+        with:
+          target: cabal:partir-qua-world-test
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ steps.report.outputs.report }}
+          fail_ci_if_error: true
