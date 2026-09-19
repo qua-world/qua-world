@@ -1,7 +1,6 @@
 -- SPDX-FileCopyrightText: 2026 Alex Brandt
 --
 -- SPDX-License-Identifier: MIT
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Partir.World.SceneSpec (
   test_empty,
@@ -12,10 +11,11 @@ where
 import Data.Text (pack)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
+
+import Partir.Arbitrary ()
 
 import Partir.World.Event (Event (..), eventTick)
 import Partir.World.Scene (
@@ -94,34 +94,3 @@ turned = Quaternion 0 (V3 0 1 0)
 
 spawned :: Scene
 spawned = apply (Spawn (Tick 1) anAgent anEntity here facing) empty
-
--- Generators
-
-instance Arbitrary AgentId where
-  arbitrary = AgentId <$> arbitrary
-
-instance Arbitrary EntityId where
-  arbitrary = EntityId <$> arbitrary
-
-instance Arbitrary Tick where
-  arbitrary = Tick <$> arbitrary
-
-instance Arbitrary Event where
-  arbitrary =
-    oneof
-      [ Spawn <$> arbitrary <*> arbitrary <*> arbitrary <*> genVec3 <*> genQuat
-      , Despawn <$> arbitrary <*> arbitrary <*> arbitrary
-      , Move <$> arbitrary <*> arbitrary <*> arbitrary <*> genVec3
-      , Look <$> arbitrary <*> arbitrary <*> arbitrary <*> genQuat
-      , Speak <$> arbitrary <*> arbitrary <*> (pack <$> arbitrary)
-      , Interact <$> arbitrary <*> arbitrary <*> arbitrary
-      ]
-
-instance Arbitrary Scene where
-  arbitrary = foldr apply empty <$> (arbitrary :: Gen [Event])
-
-genVec3 :: Gen Vec3
-genVec3 = V3 <$> arbitrary <*> arbitrary <*> arbitrary
-
-genQuat :: Gen Quat
-genQuat = Quaternion <$> arbitrary <*> genVec3
