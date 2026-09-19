@@ -44,25 +44,25 @@ test_apply =
   testGroup
     "apply"
     [ testCase "spawns an entity at its position and orientation" $
-        entityAt anEntity (spawned empty)
+        entityAt anEntity spawned
           @?= Just (Pose here facing)
     , testCase "despawns a previously spawned entity" $
-        entityAt anEntity (apply (Despawn (Tick 2) anAgent anEntity) (spawned empty))
+        entityAt anEntity (apply (Despawn (Tick 2) anAgent anEntity) spawned)
           @?= Nothing
     , testCase "moves a spawned entity, leaving its orientation" $
-        entityAt anEntity (apply (Move (Tick 2) anAgent anEntity there) (spawned empty))
+        entityAt anEntity (apply (Move (Tick 2) anAgent anEntity there) spawned)
           @?= Just (Pose there facing)
     , testCase "reorients a spawned entity, leaving its position" $
-        entityAt anEntity (apply (Look (Tick 2) anAgent anEntity turned) (spawned empty))
+        entityAt anEntity (apply (Look (Tick 2) anAgent anEntity turned) spawned)
           @?= Just (Pose here turned)
     , testCase "ignores moves that target an absent entity" $
         sceneEntities (apply (Move (Tick 1) anAgent anEntity there) empty)
           @?= sceneEntities empty
     , testCase "leaves entities untouched for Speak and Interact" $ do
-        sceneEntities (apply (Speak (Tick 1) anAgent (pack "hi")) (spawned empty))
-          @?= sceneEntities (spawned empty)
-        sceneEntities (apply (Interact (Tick 1) anAgent anEntity) (spawned empty))
-          @?= sceneEntities (spawned empty)
+        sceneEntities (apply (Speak (Tick 1) anAgent (pack "hi")) spawned)
+          @?= sceneEntities spawned
+        sceneEntities (apply (Interact (Tick 1) anAgent anEntity) spawned)
+          @?= sceneEntities spawned
     , testProperty "never decreases the scene tick" $ \event scene ->
         sceneTick (apply event scene) >= sceneTick scene
     , testProperty "advances the tick to the max of the scene and event" $ \event scene ->
@@ -89,8 +89,9 @@ facing = Quaternion 1 (V3 0 0 0)
 turned :: Quat
 turned = Quaternion 0 (V3 0 1 0)
 
-spawned :: Scene -> Scene
-spawned = apply (Spawn (Tick 1) anAgent anEntity here facing)
+-- The scene every `apply` example below starts from.
+spawned :: Scene
+spawned = apply (Spawn (Tick 1) anAgent anEntity here facing) empty
 
 -- Generators
 
