@@ -183,11 +183,10 @@ jobs:
       - name: Update Hackage index
         run: cabal update
 
-      # Restores what the build job saved and saves nothing back:
-      # instrumentation recompiles this package alone, so that job's store
-      # already holds every dependency, and a second job writing the same key
-      # would race it. Nothing is ever saved under the key below, so the
-      # prefix match is what lands the store and `key` repeats it.
+      # Instrumentation recompiles this package alone, so the store the build
+      # job saves already holds every dependency, and a second job writing
+      # that key would race it. Nothing is saved under the key below, leaving
+      # the prefix to land the store and `key` to repeat it.
       - name: Restore cabal store
         env:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
@@ -197,8 +196,8 @@ jobs:
           key: ${{ env.key }}-
           restore-keys: ${{ env.key }}-
 
-      # configure persists the flags to cabal.project.local, so the two steps
-      # below share one instrumented configuration.
+      # configure persists the flags to cabal.project.local, so the steps
+      # below inherit the instrumentation.
       - name: Configure with coverage
         run: cabal configure --enable-tests --enable-coverage
 
@@ -208,9 +207,9 @@ jobs:
       - name: Test
         run: cabal test all --test-show-details=direct
 
-      # The .tix names the test modules alongside the library's, and
-      # hpc-codecov excludes only exact module names. The ignore glob in
-      # codecov.yml drops them instead, so adding a spec needs no edit here.
+      # hpc-codecov excludes only exact module names, so dropping the specs
+      # here would mean naming each one. The glob in codecov.yml drops them
+      # instead, and adding a spec needs no edit.
       - name: Generate coverage report
         id: report
         uses: 8c6794b6/hpc-codecov-action@f943f40733e5390825b12d72165cad991e44340c # v4.3.0

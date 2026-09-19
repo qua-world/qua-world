@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-# hpc-codecov reports every module the .tix names, the test suite included.
+# hpc-codecov reports the test modules alongside the library's.
 # "test/**/*" would compile to a regex requiring a further slash, missing
 # test/Spec.hs.
 ignore:
