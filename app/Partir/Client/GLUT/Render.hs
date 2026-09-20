@@ -21,6 +21,9 @@ module Partir.Client.GLUT.Render (
   Renderer,
   upload,
   draw,
+
+  -- * Viewpoint
+  camera,
 )
 where
 
@@ -28,9 +31,10 @@ import Control.Monad (unless, when)
 import qualified Data.ByteString.Char8 as ByteString
 import Data.Foldable (toList, traverse_)
 import qualified Data.Vector as Vector
+import Data.Word (Word32)
 import Foreign.Marshal.Array (withArray)
 import Foreign.Ptr (nullPtr)
-import Foreign.Storable (sizeOf)
+import Foreign.Storable (Storable, sizeOf)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44, (!*!))
@@ -77,63 +81,77 @@ uploadPrimitive prim = do
   GL.bindVertexArrayObject $= Just vao
 
   bindVectorAttribute positionAttribute (primitivePositions prim)
-
-  -- An asset that ships no normals leaves the array disabled, and the shader
-  -- then reads this one generic value for every vertex. Lighting it evenly
-  -- beats reading an undefined attribute.
-  let normals = primitiveNormals prim
-  if Vector.null normals
-    then GL.vertexAttrib GL.ToFloat normalAttribute (GL.Vertex3 (0 :: GL.GLfloat) 0 1)
-    else bindVectorAttribute normalAttribute normals
-
-  let indices = primitiveIndices prim
-      indexed = not (Vector.null indices)
-  when indexed $ do
-    buffer <- GL.genObjectName
-    GL.bindBuffer GL.ElementArrayBuffer $= Just buffer
-    let values = map fromIntegral (Vector.toList indices) :: [GL.GLuint]
-    withArray values $ \ptr ->
-      GL.bufferData GL.ElementArrayBuffer
-        $= (fromIntegral (length values * sizeOf (undefined :: GL.GLuint)), ptr, GL.StaticDraw)
+  bindNormals (primitiveNormals prim)
+  when indexed $ bindIndices (primitiveIndices prim)
 
   GL.bindVertexArrayObject $= Nothing
-  pure
-    Draw
-      { drawArray = vao
-      , drawCount =
-          fromIntegral $
-            if indexed then Vector.length indices else Vector.length (primitivePositions prim)
-      , drawIndexed = indexed
-      }
+  pure Draw{drawArray = vao, drawCount = elementCount prim, drawIndexed = indexed}
+ where
+  indexed = not (Vector.null (primitiveIndices prim))
+
+{- | How many elements one draw call issues: the indices when the primitive
+has them, otherwise its vertices.
+-}
+elementCount :: Primitive -> GL.GLsizei
+elementCount prim
+  | Vector.null indices = fromIntegral (Vector.length (primitivePositions prim))
+  | otherwise = fromIntegral (Vector.length indices)
+ where
+  indices = primitiveIndices prim
+
+{- | Feed the normal attribute. An asset that ships no normals leaves the
+array disabled, and the shader then reads one generic value for every vertex.
+Lighting it evenly beats reading an undefined attribute.
+-}
+bindNormals :: Vector.Vector (V3 Float) -> IO ()
+bindNormals normals
+  | Vector.null normals = GL.vertexAttrib GL.ToFloat normalAttribute facingViewer
+  | otherwise = bindVectorAttribute normalAttribute normals
+ where
+  facingViewer = GL.Vertex3 (0 :: GL.GLfloat) 0 1
+
+-- | Record the triangle indices in the bound vertex array object.
+bindIndices :: Vector.Vector Word32 -> IO ()
+bindIndices indices =
+  fillBuffer GL.ElementArrayBuffer (sizeOf (undefined :: GL.GLuint)) values
+ where
+  values = map fromIntegral (Vector.toList indices) :: [GL.GLuint]
 
 -- | Copy three-component vectors into a fresh buffer feeding one attribute.
 bindVectorAttribute :: GL.AttribLocation -> Vector.Vector (V3 Float) -> IO ()
 bindVectorAttribute location values = do
-  buffer <- GL.genObjectName
-  GL.bindBuffer GL.ArrayBuffer $= Just buffer
-  let components = concatMap toList (Vector.toList values) :: [GL.GLfloat]
-  withArray components $ \ptr ->
-    GL.bufferData GL.ArrayBuffer
-      $= (fromIntegral (length components * sizeOf (undefined :: GL.GLfloat)), ptr, GL.StaticDraw)
+  fillBuffer GL.ArrayBuffer (sizeOf (undefined :: GL.GLfloat)) components
   GL.vertexAttribPointer location
     $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float 0 nullPtr)
   GL.vertexAttribArray location $= GL.Enabled
+ where
+  components = concatMap toList (Vector.toList values) :: [GL.GLfloat]
+
+{- | Fill a fresh buffer object, bound to the given target, from a list. The
+buffer stays bound, which is what records it in the bound vertex array
+object.
+
+The caller passes the size of one element. Deriving it here instead would put
+the element type in a signature this module cannot write under Haskell2010,
+and the repository adds no language extensions.
+-}
+fillBuffer :: Storable a => GL.BufferTarget -> Int -> [a] -> IO ()
+fillBuffer bufferTarget elementBytes values = do
+  buffer <- GL.genObjectName
+  GL.bindBuffer bufferTarget $= Just buffer
+  withArray values $ \ptr ->
+    GL.bufferData bufferTarget
+      $= (fromIntegral (length values * elementBytes), ptr, GL.StaticDraw)
 
 {- | Clear and draw the mesh in front of a fixed camera, sized to the window.
 The caller presents the frame.
 -}
 draw :: Renderer -> GL.Size -> IO ()
-draw renderer size@(GL.Size width height) = do
+draw renderer size = do
   GL.viewport $= (GL.Position 0 0, size)
   GL.clear [GL.ColorBuffer, GL.DepthBuffer]
   GL.currentProgram $= Just (rendererProgram renderer)
-
-  -- Off the axes rather than square on, so an asset reads as a solid instead
-  -- of as its own silhouette.
-  let aspect = fromIntegral width / fromIntegral (max 1 height)
-      view = lookAt (V3 2.2 1.6 2.6) (V3 0 0 0) (V3 0 1 0)
-      projection = perspective (pi / 4) aspect 0.1 100
-  setMatrix (rendererProgram renderer) "modelViewProjection" (projection !*! view)
+  setMatrix (rendererProgram renderer) "modelViewProjection" (camera size)
 
   traverse_ issue (rendererDraws renderer)
   GL.bindVertexArrayObject $= Nothing
@@ -143,6 +161,32 @@ draw renderer size@(GL.Size width height) = do
     if drawIndexed d
       then GL.drawElements GL.Triangles (drawCount d) GL.UnsignedInt nullPtr
       else GL.drawArrays GL.Triangles 0 (drawCount d)
+
+{- | The transform from model space to clip space, for a window of the given
+size: a fixed viewpoint, and a projection matched to the window's aspect
+ratio.
+
+Pure, so what the client points at is checkable without a context.
+-}
+camera :: GL.Size -> M44 Float
+camera (GL.Size width height) =
+  perspective verticalFieldOfView aspect nearPlane farPlane !*! lookAt eye target up
+ where
+  aspect = fromIntegral width / fromIntegral (max 1 height)
+
+{- | Where the client watches the world from. The viewpoint sits off all three
+axes so an asset reads as a solid rather than as its own silhouette.
+-}
+eye, target, up :: V3 Float
+eye = V3 2.2 1.6 2.6
+target = V3 0 0 0
+up = V3 0 1 0
+
+-- | The visible depth range, and how much of the world fits across it.
+verticalFieldOfView, nearPlane, farPlane :: Float
+verticalFieldOfView = pi / 4
+nearPlane = 0.1
+farPlane = 100
 
 {- | Upload a "Linear" matrix to a @mat4@ uniform. @linear@ nests rows, which
 is what 'GL.RowMajor' names, so the flattened elements transfer as they are.

@@ -125,6 +125,7 @@ test-suite partir-qua-world-test
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
     , Partir.Client.GLUT.ControlsSpec
+    , Partir.Client.GLUT.RenderSpec
     , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
     , Paths_partir_qua_world
@@ -137,6 +138,7 @@ test-suite partir-qua-world-test
     , containers >= 0.7 && < 0.9
     , GLUT >= 2.7 && < 2.8
     , linear >= 1.23 && < 1.24
+    , OpenGL >= 3.0 && < 3.1
     , partir-qua-world
     , partir-qua-world:glut-client
     , QuickCheck >= 2.14 && < 2.19
