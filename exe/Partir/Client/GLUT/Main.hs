@@ -4,13 +4,19 @@
 
 module Main where
 
+import Control.Exception (throwIO)
 import Control.Monad (join)
-import Data.StateVar (($=))
+import Data.StateVar (get, ($=))
 import Debug.Trace (traceIO)
 import qualified Graphics.UI.GLUT as GLUT
 import Options.Applicative
 import qualified Partir.Client.GLUT.Commands as Commands
 import qualified Partir.Client.GLUT.Controls as Controls
+import qualified Partir.Client.GLUT.Render as Render
+
+import qualified Partir.Asset as Asset
+import qualified Partir.Asset.GLTF as GLTF
+import Paths_partir_qua_world (getDataFileName)
 
 main :: IO ()
 main = do
@@ -19,16 +25,24 @@ main = do
 
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
 
+  -- The profile the context is created with is fixed for its lifetime, and
+  -- Partir.Client.GLUT.Render needs the core one.
+  GLUT.initialContextVersion $= (3, 3)
+  GLUT.initialContextProfile $= [GLUT.CoreProfile]
+
   _ <- GLUT.createWindow "Qua World"
+
+  -- Uploading needs the context the window just created.
+  renderer <- Render.upload =<< avatar
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
   GLUT.idleCallback $= Nothing
 
   -- Window Callbacks
-  GLUT.displayCallback $= display
+  GLUT.displayCallback $= display renderer
   GLUT.overlayDisplayCallback $= Nothing
-  GLUT.reshapeCallback $= Nothing
+  GLUT.reshapeCallback $= Just (const (GLUT.postRedisplay Nothing))
   GLUT.positionCallback $= Nothing
   GLUT.windowStateCallback $= Nothing
   GLUT.closeCallback $= Nothing
@@ -41,12 +55,17 @@ main = do
 
   GLUT.mainLoop
 
-display :: GLUT.DisplayCallback
-display = do
-  traceIO "starting display"
-  GLUT.clear [GLUT.ColorBuffer, GLUT.DepthBuffer]
+{- | The only asset the client draws. A document that will not decode is
+fatal: there is nothing else to put on screen.
+-}
+avatar :: IO Asset.Mesh
+avatar = getDataFileName "examples/avatar.glb" >>= GLTF.loadAsset >>= either throwIO pure
+
+display :: Render.Renderer -> GLUT.DisplayCallback
+display renderer = do
+  size <- get GLUT.windowSize
+  Render.draw renderer size
   GLUT.swapBuffers
-  traceIO "stopping display"
 
 commands :: [String] -> IO ()
 commands = join . handleParseResult . execParserPure defaultPrefs info'

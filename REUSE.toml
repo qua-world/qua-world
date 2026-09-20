@@ -4,6 +4,13 @@
 
 version = 1
 
+# A GLB is a binary container whose header is fixed by the glTF specification,
+# so a comment cannot go in the file.
+[[annotations]]
+path = "examples/**.glb"
+SPDX-FileCopyrightText = "2026 Alex Brandt"
+SPDX-License-Identifier = "MIT"
+
 # Vale reads every line of a vocabulary as a regex, leaving nowhere to put a
 # comment.
 [[annotations]]
