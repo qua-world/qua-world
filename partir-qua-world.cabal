@@ -38,9 +38,8 @@ extra-doc-files:
 extra-source-files:
     LICENSE
 
--- Installed alongside the binary and found through `Paths_partir_qua_world`,
--- so the client locates it wherever it runs from rather than only in a source
--- checkout.
+-- Reached through `Paths_partir_qua_world`, so the client finds it wherever
+-- it runs from and not only in a source checkout.
 data-files:
     examples/avatar.glb
 

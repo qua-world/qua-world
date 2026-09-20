@@ -25,14 +25,14 @@ main = do
 
   GLUT.initialDisplayMode $= [GLUT.WithDepthBuffer, GLUT.DoubleBuffered, GLUT.RGBAMode]
 
-  -- Render takes the core profile, where the fixed-function pipeline this
-  -- client started on no longer exists.
+  -- The profile the context is created with is fixed for its lifetime, and
+  -- Partir.Client.GLUT.Render needs the core one.
   GLUT.initialContextVersion $= (3, 3)
   GLUT.initialContextProfile $= [GLUT.CoreProfile]
 
   _ <- GLUT.createWindow "Qua World"
 
-  -- After the context exists: uploading a mesh needs one.
+  -- Uploading needs the context the window just created.
   renderer <- Render.upload =<< avatar
 
   -- Global Callbacks
@@ -55,9 +55,8 @@ main = do
 
   GLUT.mainLoop
 
-{- | The placeholder avatar that stands in until the world serves its own
-content. A document that will not decode is fatal here: the client has nothing
-else to draw.
+{- | The only asset the client draws. A document that will not decode is
+fatal: there is nothing else to put on screen.
 -}
 avatar :: IO Asset.Mesh
 avatar = getDataFileName "examples/avatar.glb" >>= GLTF.loadAsset >>= either throwIO pure

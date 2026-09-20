@@ -35,15 +35,13 @@ bucket. Later `[Unreleased]` sections split by change type.
 * `Partir.Asset`: a renderer-ready mesh naming no source format, filled by
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
-  as a typed `GltfLoadError` rather than throwing.
+  as a typed `GltfLoadError`.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its
   `apply` fold).
-* The client draws a loaded mesh instead of clearing to an empty window: it
-  asks for an OpenGL 3.3 core-profile context, uploads each primitive once,
-  and renders `examples/avatar.glb` lit by its own normals in front of the
-  camera.
+* The client renders `examples/avatar.glb` in front of the camera, lit by the
+  asset's own normals, in an OpenGL 3.3 core-profile context.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.

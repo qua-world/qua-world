@@ -19,9 +19,8 @@ import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 import Partir.Asset (Primitive (..))
 import Partir.Client.GLUT.View (camera, elementCount)
 
-{- | "In front of the camera" is the acceptance criterion the screenshot
-checks by eye. These hold it without a context: an asset modelled about the
-origin lands in the middle of the window, whatever shape the window is.
+{- | An asset modelled about the origin lands in the middle of the window,
+whatever shape the window is.
 -}
 test_camera :: TestTree
 test_camera =
@@ -41,10 +40,7 @@ test_camera =
           (depth (project landscape (V4 4.4 3.2 5.2 1)) < 0)
     ]
 
-{- | A draw call reads indices when the primitive carries them, and the
-vertices themselves when it does not. Counting the wrong one draws part of a
-mesh or runs off the end of it.
--}
+-- | Counting the wrong one draws part of a mesh, or runs off the end of it.
 test_elementCount :: TestTree
 test_elementCount =
   testGroup
@@ -78,9 +74,7 @@ project size point = camera size !* point
 depth :: V4 Float -> Float
 depth (V4 _ _ _ w) = w
 
-{- | A projected point sits at the centre of the window when dividing by the
-homogeneous coordinate leaves it at the origin of normalised device space.
--}
+-- | The centre of the window is the origin of normalised device space.
 assertCentred :: V4 Float -> IO ()
 assertCentred clip@(V4 x y _ w) =
   assertBool

@@ -6,13 +6,9 @@
 Module      : Partir.Client.GLUT.View
 Description : What the renderer draws and how it is framed, decided without a context
 
-The decisions "Partir.Client.GLUT.Render" makes before it issues a single
-OpenGL call: where the client watches the world from, and how many elements a
-primitive draws. Separated because none of it needs a live context, so all of
-it is checkable in the test suite, which "Partir.Client.GLUT.Render" is not.
-
-OpenGL types appear here as the vocabulary the renderer speaks. Naming them
-binds no context.
+What "Partir.Client.GLUT.Render" settles before it issues an OpenGL call:
+where the client watches the world from, and how many elements a primitive
+draws. None of it needs a live context, so the test suite reaches all of it.
 -}
 module Partir.Client.GLUT.View (
   camera,
@@ -38,8 +34,8 @@ camera (GL.Size width height) =
  where
   aspect = fromIntegral width / fromIntegral (max 1 height)
 
-{- | Where the client watches the world from. The viewpoint sits off all three
-axes so an asset reads as a solid rather than as its own silhouette.
+{- | Where the client watches the world from. Off all three axes, so an asset
+reads as a solid rather than as a flat silhouette.
 -}
 eye, target, up :: V3 Float
 eye = V3 2.2 1.6 2.6

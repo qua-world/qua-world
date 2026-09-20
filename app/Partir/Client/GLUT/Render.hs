@@ -6,15 +6,13 @@
 Module      : Partir.Client.GLUT.Render
 Description : Draw a loaded 'Mesh' through the core-profile OpenGL pipeline
 
-The minimum needed to see an asset on screen: each 'Primitive' uploaded once
-into a vertex array object, and a frame that sets a camera and issues one draw
-call per primitive.
+Each 'Primitive' is uploaded once into a vertex array object, and every frame
+issues one draw call per primitive.
 
-Everything here is core profile. @renderPrimitive@, @vertex@, and the
-@GLU.perspective@ \/ @GLU.lookAt@ matrix stack are absent from a core context,
-so transforms come from "Linear" and reach the shader as a uniform.
+The context is core profile, which has no matrix stack, so transforms are
+"Linear" matrices reaching the shader as uniforms.
 
-Only geometry is read from the asset. A material binding selects nothing yet:
+Only geometry is read from the asset. A material binding selects nothing:
 every primitive draws in one placeholder color.
 -}
 module Partir.Client.GLUT.Render (
@@ -61,9 +59,8 @@ positionAttribute = GL.AttribLocation 0
 normalAttribute :: GL.AttribLocation
 normalAttribute = GL.AttribLocation 1
 
-{- | Compile the shader program and copy every primitive into GPU buffers.
-Call once: a 'Renderer' holds names that stay valid for the life of the
-context, and 'draw' allocates nothing.
+{- | Call once per context: a 'Renderer' holds names valid for that context's
+lifetime, and 'draw' allocates nothing.
 -}
 upload :: Mesh -> IO Renderer
 upload mesh = do
@@ -97,14 +94,12 @@ bindNormals normals
  where
   facingViewer = GL.Vertex3 (0 :: GL.GLfloat) 0 1
 
--- | Record the triangle indices in the bound vertex array object.
 bindIndices :: Vector.Vector Word32 -> IO ()
 bindIndices indices =
   fillBuffer GL.ElementArrayBuffer (sizeOf (undefined :: GL.GLuint)) values
  where
   values = map fromIntegral (Vector.toList indices) :: [GL.GLuint]
 
--- | Copy three-component vectors into a fresh buffer feeding one attribute.
 bindVectorAttribute :: GL.AttribLocation -> Vector.Vector (V3 Float) -> IO ()
 bindVectorAttribute location values = do
   fillBuffer GL.ArrayBuffer (sizeOf (undefined :: GL.GLfloat)) components
@@ -114,13 +109,11 @@ bindVectorAttribute location values = do
  where
   components = concatMap toList (Vector.toList values) :: [GL.GLfloat]
 
-{- | Fill a fresh buffer object, bound to the given target, from a list. The
-buffer stays bound, which is what records it in the bound vertex array
-object.
+{- | Fill a fresh buffer object from a list, leaving it bound, which is what
+records it in the bound vertex array object.
 
-The caller passes the size of one element. Deriving it here instead would put
-the element type in a signature this module cannot write under Haskell2010,
-and the repository adds no language extensions.
+The element size is a parameter because deriving it from the list needs
+@ScopedTypeVariables@, and nothing here enables an extension.
 -}
 fillBuffer :: Storable a => GL.BufferTarget -> Int -> [a] -> IO ()
 fillBuffer bufferTarget elementBytes values = do
@@ -130,9 +123,7 @@ fillBuffer bufferTarget elementBytes values = do
     GL.bufferData bufferTarget
       $= (fromIntegral (length values * elementBytes), ptr, GL.StaticDraw)
 
-{- | Clear and draw the mesh in front of a fixed camera, sized to the window.
-The caller presents the frame.
--}
+-- | Draws one frame. The caller presents it.
 draw :: Renderer -> GL.Size -> IO ()
 draw renderer size = do
   GL.viewport $= (GL.Position 0 0, size)
@@ -193,8 +184,7 @@ vertexSource =
     , "}"
     ]
 
--- A fixed headlamp rather than a light in the world: enough shading to read
--- the asset's shape on screen, and nothing the scene has to own yet.
+-- The light is fixed to the viewer, not placed in the scene.
 fragmentSource :: String
 fragmentSource =
   unlines

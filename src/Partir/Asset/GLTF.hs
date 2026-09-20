@@ -6,10 +6,10 @@
 Module      : Partir.Asset.GLTF
 Description : Load glTF 2.0 / GLB documents into a renderer-ready 'Asset.Mesh'
 
-Reads binary glTF (@.glb@), the format Blockbench and most modelling tools
-export, and flattens it into the format-neutral 'Asset.Mesh' the renderer
-consumes. The @gltf-loader@ dependency and its @rio@ prelude are confined to
-this module: none of it appears in the returned type.
+Reads binary glTF (@.glb@) and flattens it into the format-neutral
+'Asset.Mesh' the renderer consumes. The @gltf-loader@ dependency and its
+@rio@ prelude are confined to this module: none of it appears in the returned
+type.
 
 Node transforms are not applied, so a document whose parts are placed by node
 draws them all at the origin (#67).

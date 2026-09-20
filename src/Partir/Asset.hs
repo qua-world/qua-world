@@ -8,9 +8,8 @@ Description : Renderer-ready mesh geometry, independent of any source format
 
 A 'Mesh' is the geometry a client draws: 'Primitive's, each a triangle list of
 positions with optional indices, normals, and a material binding. The type
-names no source format, so "Partir.Asset.GLTF" fills it from glTF today and an
-OBJ or sprite loader can fill the same shape later, leaving the renderer to
-depend on one vocabulary rather than on each loader's types.
+names no source format, so the renderer depends on this vocabulary and each
+loader converts into it.
 
 Coordinates are 'Float' rather than the 'Partir.World.Types.Vec3' the
 simulation uses: this side of the boundary feeds vertex buffers, and OpenGL
