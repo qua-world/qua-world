@@ -37,7 +37,12 @@ extra-doc-files:
 
 extra-source-files:
     LICENSE
-  , examples/avatar.glb
+
+-- Installed alongside the binary and found through `Paths_partir_qua_world`,
+-- so the client locates it wherever it runs from rather than only in a source
+-- checkout.
+data-files:
+    examples/avatar.glb
 
 source-repository head
   type:              git
@@ -90,13 +95,17 @@ library glut-client
   exposed-modules:
       Partir.Client.GLUT.Commands
     , Partir.Client.GLUT.Controls
+    , Partir.Client.GLUT.Render
 
   build-depends:
-      GLUT >= 2.7 && < 2.8
+      bytestring >= 0.12 && < 0.13
+    , GLUT >= 2.7 && < 2.8
     , linear >= 1.23 && < 1.24
+    , OpenGL >= 3.0 && < 3.1
     , optparse-applicative >= 0.18 && < 0.20
     , partir-qua-world
     , StateVar >= 1.2 && < 1.3
+    , vector >= 0.13 && < 0.14
 
   hs-source-dirs:
       app
@@ -118,6 +127,10 @@ test-suite partir-qua-world-test
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
+    , Paths_partir_qua_world
+
+  autogen-modules:
+      Paths_partir_qua_world
 
   build-depends:
       bytestring >= 0.12 && < 0.13
@@ -141,10 +154,16 @@ executable partir-glut
 
   main-is:             Partir/Client/GLUT/Main.hs
 
+  other-modules:
+      Paths_partir_qua_world
+
+  autogen-modules:
+      Paths_partir_qua_world
+
   build-depends:
       GLUT >= 2.7 && < 2.8
-    , OpenGL >= 3.0 && < 3.1
     , optparse-applicative >= 0.18 && < 0.20
+    , partir-qua-world
     , partir-qua-world:glut-client
     , StateVar >= 1.2 && < 1.3
 

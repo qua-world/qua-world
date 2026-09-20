@@ -20,6 +20,7 @@ import Partir.Asset (
   vertexCount,
  )
 import Partir.Asset.GLTF (GltfLoadError, loadAsset, loadAssetBytes)
+import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/avatar.glb@ is a placeholder unit cube standing in for real
 Blockbench content: 6 faces * 4 corners = 24 vertices, 6 faces * 2 triangles *
@@ -66,7 +67,10 @@ test_loadAssetBytes =
 
 -- | Load the example cube, failing the test case with the decode error.
 loadCube :: IO Mesh
-loadCube = loadAsset "examples/avatar.glb" >>= either (assertFailure . show) pure
+loadCube =
+  getDataFileName "examples/avatar.glb"
+    >>= loadAsset
+    >>= either (assertFailure . show) pure
 
 onlyPrimitive :: Mesh -> IO Primitive
 onlyPrimitive mesh =

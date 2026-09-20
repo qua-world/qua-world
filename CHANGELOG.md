@@ -40,6 +40,10 @@ bucket. Later `[Unreleased]` sections split by change type.
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its
   `apply` fold).
+* The client draws a loaded mesh instead of clearing to an empty window: it
+  asks for an OpenGL 3.3 core-profile context, uploads each primitive once,
+  and renders `examples/avatar.glb` lit by its own normals in front of the
+  camera.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
