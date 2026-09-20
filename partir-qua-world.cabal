@@ -96,6 +96,7 @@ library glut-client
       Partir.Client.GLUT.Commands
     , Partir.Client.GLUT.Controls
     , Partir.Client.GLUT.Render
+    , Partir.Client.GLUT.View
 
   build-depends:
       bytestring >= 0.12 && < 0.13
@@ -125,7 +126,7 @@ test-suite partir-qua-world-test
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
     , Partir.Client.GLUT.ControlsSpec
-    , Partir.Client.GLUT.RenderSpec
+    , Partir.Client.GLUT.ViewSpec
     , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
     , Paths_partir_qua_world

@@ -21,9 +21,6 @@ module Partir.Client.GLUT.Render (
   Renderer,
   upload,
   draw,
-
-  -- * Viewpoint
-  camera,
 )
 where
 
@@ -37,11 +34,11 @@ import Foreign.Ptr (nullPtr)
 import Foreign.Storable (Storable, sizeOf)
 import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
-import Linear.Matrix (M44, (!*!))
-import Linear.Projection (lookAt, perspective)
+import Linear.Matrix (M44)
 import Linear.V3 (V3 (..))
 
 import Partir.Asset (Mesh (..), Primitive (..))
+import Partir.Client.GLUT.View (camera, elementCount)
 
 -- | A mesh resident on the GPU, ready to draw.
 data Renderer = Renderer
@@ -88,16 +85,6 @@ uploadPrimitive prim = do
   pure Draw{drawArray = vao, drawCount = elementCount prim, drawIndexed = indexed}
  where
   indexed = not (Vector.null (primitiveIndices prim))
-
-{- | How many elements one draw call issues: the indices when the primitive
-has them, otherwise its vertices.
--}
-elementCount :: Primitive -> GL.GLsizei
-elementCount prim
-  | Vector.null indices = fromIntegral (Vector.length (primitivePositions prim))
-  | otherwise = fromIntegral (Vector.length indices)
- where
-  indices = primitiveIndices prim
 
 {- | Feed the normal attribute. An asset that ships no normals leaves the
 array disabled, and the shader then reads one generic value for every vertex.
@@ -161,32 +148,6 @@ draw renderer size = do
     if drawIndexed d
       then GL.drawElements GL.Triangles (drawCount d) GL.UnsignedInt nullPtr
       else GL.drawArrays GL.Triangles 0 (drawCount d)
-
-{- | The transform from model space to clip space, for a window of the given
-size: a fixed viewpoint, and a projection matched to the window's aspect
-ratio.
-
-Pure, so what the client points at is checkable without a context.
--}
-camera :: GL.Size -> M44 Float
-camera (GL.Size width height) =
-  perspective verticalFieldOfView aspect nearPlane farPlane !*! lookAt eye target up
- where
-  aspect = fromIntegral width / fromIntegral (max 1 height)
-
-{- | Where the client watches the world from. The viewpoint sits off all three
-axes so an asset reads as a solid rather than as its own silhouette.
--}
-eye, target, up :: V3 Float
-eye = V3 2.2 1.6 2.6
-target = V3 0 0 0
-up = V3 0 1 0
-
--- | The visible depth range, and how much of the world fits across it.
-verticalFieldOfView, nearPlane, farPlane :: Float
-verticalFieldOfView = pi / 4
-nearPlane = 0.1
-farPlane = 100
 
 {- | Upload a "Linear" matrix to a @mat4@ uniform. @linear@ nests rows, which
 is what 'GL.RowMajor' names, so the flattened elements transfer as they are.

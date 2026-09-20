@@ -7,6 +7,11 @@
 # test/Spec.hs.
 ignore:
   - "test/**"
+  # Every line of this module is an OpenGL call, which needs a live context
+  # the test suite has none of. What the renderer decides before it reaches
+  # one lives in Partir.Client.GLUT.View and is measured there. #95 brings
+  # the check a renderer can actually have, by comparing captured frames.
+  - "app/Partir/Client/GLUT/Render.hs"
 
 coverage:
   status:
