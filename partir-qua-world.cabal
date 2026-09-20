@@ -37,6 +37,7 @@ extra-doc-files:
 
 extra-source-files:
     LICENSE
+  , examples/avatar.glb
 
 source-repository head
   type:              git
@@ -60,6 +61,8 @@ library
       Partir.Agent.Class
     , Partir.Agent.Input
     , Partir.Agent.Null
+    , Partir.Asset
+    , Partir.Asset.GLTF
     , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
@@ -68,9 +71,12 @@ library
   other-modules:
 
   build-depends:
-      containers >= 0.7 && < 0.9
+      bytestring >= 0.12 && < 0.13
+    , containers >= 0.7 && < 0.9
+    , gltf-loader >= 0.3 && < 0.4
     , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
+    , vector >= 0.13 && < 0.14
 
   hs-source-dirs:
       src
@@ -108,12 +114,14 @@ test-suite partir-qua-world-test
   other-modules:
       Partir.Agent.NullSpec
     , Partir.Arbitrary
+    , Partir.Asset.GLTFSpec
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Sim.InterpolateSpec
     , Partir.World.SceneSpec
 
   build-depends:
-      containers >= 0.7 && < 0.9
+      bytestring >= 0.12 && < 0.13
+    , containers >= 0.7 && < 0.9
     , GLUT >= 2.7 && < 2.8
     , linear >= 1.23 && < 1.24
     , partir-qua-world
@@ -123,6 +131,7 @@ test-suite partir-qua-world-test
     , tasty-hunit >= 0.10 && < 0.11
     , tasty-quickcheck >= 0.10 && < 0.12
     , text >= 2.1 && < 2.2
+    , vector >= 0.13 && < 0.14
 
   build-tool-depends:
       tasty-discover:tasty-discover >= 5.2 && < 5.3
