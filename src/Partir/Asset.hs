@@ -11,9 +11,6 @@ positions with optional indices, normals, and a material binding. The type
 names no source format, so the renderer depends on this vocabulary and each
 loader converts into it.
 
-"Partir.Asset.Sprite" and "Partir.Asset.Tilemap" carry the other kinds of
-asset, each with its own loaders beneath it.
-
 Coordinates are 'Float' rather than the 'Partir.World.Types.Vec3' the
 simulation uses: this side of the boundary feeds vertex buffers, and OpenGL
 reads single precision.

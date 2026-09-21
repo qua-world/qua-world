@@ -57,16 +57,14 @@ data Renderer = Renderer
   -- ^ Absent when the sheet holds no frame to show.
   }
 
-{- | The scene's geometry on the GPU: the program that shades every primitive,
-and the call that draws each one.
--}
+-- | The scene's geometry on the GPU.
 data Geometry = Geometry
   { geometryProgram :: GL.Program
   , geometryDraws :: [Draw]
   }
 
-{- | The icon's own program, quad, and sheet, with the frame it shows already
-reduced to the bounds that select it. Drawing one reads no 'Sprite'.
+{- | The icon on the GPU, with the frame it shows already reduced to the
+bounds that select it. Drawing one reads no 'Sprite'.
 -}
 data Overlay = Overlay
   { overlayProgram :: GL.Program
@@ -218,10 +216,10 @@ uploadSheet sprite = do
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
 
   -- The pointer is read, never written, and does not outlive this call, which
-  -- is all 'Storable.unsafeWith' asks of a caller. The length is the part
-  -- worth watching: glTexImage2D reads spriteWidth * spriteHeight * 4 bytes,
-  -- and a sheet whose buffer is shorter than its dimensions claim is read past
-  -- its end. 'Partir.Asset.PNG' derives both from one decoded image.
+  -- is all Storable.unsafeWith asks. The length is the part worth watching:
+  -- glTexImage2D reads spriteWidth * spriteHeight * 4 bytes, so a buffer
+  -- shorter than its dimensions claim is read past its end.
+  -- Partir.Asset.Sprite.PNG derives both from one decoded image.
   Storable.unsafeWith (spritePixels sprite) $ \pixels ->
     GL.texImage2D
       GL.Texture2D
