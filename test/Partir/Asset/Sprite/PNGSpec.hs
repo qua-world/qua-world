@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: MIT
 
-module Partir.Asset.PNGSpec (
+module Partir.Asset.Sprite.PNGSpec (
   test_loadSprite,
   test_loadSpriteBytes,
 )
@@ -15,8 +15,8 @@ import Data.Word (Word8)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
-import Partir.Asset (Frame (..), Grid (..), Sprite (..))
-import Partir.Asset.PNG (PngLoadError, loadSprite, loadSpriteBytes)
+import Partir.Asset.Sprite (Frame (..), Grid (..), Sprite (..))
+import Partir.Asset.Sprite.PNG (PngLoadError, loadSprite, loadSpriteBytes)
 import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/sprites.png@ is a placeholder standing in for real Pixelorama

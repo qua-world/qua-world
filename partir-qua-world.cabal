@@ -70,7 +70,8 @@ library
     , Partir.Agent.Null
     , Partir.Asset
     , Partir.Asset.GLTF
-    , Partir.Asset.PNG
+    , Partir.Asset.Sprite
+    , Partir.Asset.Sprite.PNG
     , Partir.Asset.Tilemap
     , Partir.Asset.Tilemap.LDtk
     , Partir.Asset.Tilemap.Tiled
@@ -135,13 +136,13 @@ test-suite partir-qua-world-test
       Partir.Agent.NullSpec
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
-    , Partir.Asset.PNGSpec
+    , Partir.Asset.Sprite.PNGSpec
+    , Partir.Asset.SpriteSpec
     , Partir.Asset.Tilemap.LDtkSpec
     , Partir.Asset.Tilemap.Sample
     , Partir.Asset.Tilemap.SampleSpec
     , Partir.Asset.Tilemap.TiledSpec
     , Partir.Asset.TilemapSpec
-    , Partir.AssetSpec
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Client.GLUT.ViewSpec
     , Partir.Sim.InterpolateSpec

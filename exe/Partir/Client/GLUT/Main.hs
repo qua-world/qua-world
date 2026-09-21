@@ -16,7 +16,8 @@ import qualified Partir.Client.GLUT.Render as Render
 
 import qualified Partir.Asset as Asset
 import qualified Partir.Asset.GLTF as GLTF
-import qualified Partir.Asset.PNG as PNG
+import qualified Partir.Asset.Sprite as Sprite
+import qualified Partir.Asset.Sprite.PNG as PNG
 import qualified Partir.Asset.Tilemap as Tilemap
 import qualified Partir.Asset.Tilemap.LDtk as LDtk
 import Paths_partir_qua_world (getDataFileName)
@@ -78,12 +79,12 @@ bundled :: Exception e => FilePath -> (FilePath -> IO (Either e a)) -> IO a
 bundled name load = getDataFileName name >>= load >>= either throwIO pure
 
 -- | The sheet the client draws its corner icon from.
-icons :: IO Asset.Sprite
+icons :: IO Sprite.Sprite
 icons = bundled "examples/sprites.png" (PNG.loadSprite grid)
  where
   -- The cell examples/sprites.png is laid out on. A sheet carries no frame
   -- metadata, so this is knowledge about that file (#111).
-  grid = Asset.Grid{Asset.gridFrameWidth = 16, Asset.gridFrameHeight = 16}
+  grid = Sprite.Grid{Sprite.gridFrameWidth = 16, Sprite.gridFrameHeight = 16}
 
 display :: Render.Renderer -> GLUT.DisplayCallback
 display renderer = do

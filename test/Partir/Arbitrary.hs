@@ -46,7 +46,7 @@ import Test.QuickCheck (
   vectorOf,
  )
 
-import Partir.Asset (Grid (..))
+import Partir.Asset.Sprite (Grid (..))
 import Partir.Asset.Tilemap (
   Placement (..),
   TileLayer (..),

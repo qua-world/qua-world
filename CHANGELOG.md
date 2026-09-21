@@ -36,10 +36,11 @@ bucket. Later `[Unreleased]` sections split by change type.
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
   as a typed `GltfLoadError`.
-* `Partir.Asset` also names a sprite sheet and the frames cut from it, filled
-  by `Partir.Asset.PNG` from a PNG and the cell size its frames sit on, so
-  pixel art authored in Pixelorama or any PNG-emitting tool loads. A malformed
-  image comes back as a typed `PngLoadError`.
+* `Partir.Asset.Sprite`: a sprite sheet and the frames cut from it, naming no
+  source format, filled by `Partir.Asset.Sprite.PNG` from a PNG and the cell
+  size its frames sit on, so pixel art authored in Pixelorama or any
+  PNG-emitting tool loads. A malformed image comes back as a typed
+  `PngLoadError`.
 * `Partir.Asset.Tilemap`: a tile grid and the entities placed on it, naming no
   editor, filled by `Partir.Asset.Tilemap.Tiled` from Tiled's JSON map export
   (`.tmj`) and by `Partir.Asset.Tilemap.LDtk` from an LDtk project (`.ldtk`),

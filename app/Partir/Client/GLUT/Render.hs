@@ -40,7 +40,8 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44)
 import Linear.V3 (V3 (..))
 
-import Partir.Asset (Frame, Mesh (..), Primitive (..), Sprite (..))
+import Partir.Asset (Mesh (..), Primitive (..))
+import Partir.Asset.Sprite (Frame, Sprite (..))
 import Partir.Client.GLUT.View (
   Bounds (..),
   camera,

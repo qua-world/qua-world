@@ -26,7 +26,8 @@ import Linear.Matrix (M44, (!*!))
 import Linear.Projection (lookAt, perspective)
 import Linear.V3 (V3 (..))
 
-import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
+import Partir.Asset (Primitive (..))
+import Partir.Asset.Sprite (Frame (..), Sprite (..))
 
 {- | An axis-aligned rectangle, given by its edges.
 

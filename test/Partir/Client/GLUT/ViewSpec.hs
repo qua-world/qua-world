@@ -19,7 +19,8 @@ import Linear.V4 (V4 (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
-import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
+import Partir.Asset (Primitive (..))
+import Partir.Asset.Sprite (Frame (..), Sprite (..))
 import Partir.Client.GLUT.View (
   Bounds (..),
   camera,

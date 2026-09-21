@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: MIT
 
-module Partir.AssetSpec (
+module Partir.Asset.SpriteSpec (
   test_gridFrames,
 )
 where
@@ -14,7 +14,7 @@ import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
 
 import Partir.Arbitrary (Sheet (..))
-import Partir.Asset (Frame (..), Grid (..), gridFrames)
+import Partir.Asset.Sprite (Frame (..), Grid (..), gridFrames)
 
 test_gridFrames :: TestTree
 test_gridFrames =
