@@ -45,6 +45,7 @@ data-files:
     examples/level.ldtk
     examples/level.tmj
     examples/sprites.png
+    examples/walk/*.png
 
 source-repository head
   type:              git
@@ -70,6 +71,7 @@ library
     , Partir.Agent.Null
     , Partir.Asset
     , Partir.Asset.Animation
+    , Partir.Asset.Animation.PNG
     , Partir.Asset.GLTF
     , Partir.Asset.Sprite
     , Partir.Asset.Sprite.PNG
@@ -88,6 +90,8 @@ library
     , aeson-tiled >= 0.0.2 && < 0.1
     , bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
+    , directory >= 1.3 && < 1.4
+    , filepath >= 1.5 && < 1.6
     , gltf-loader >= 0.3 && < 0.4
     , JuicyPixels >= 3.3 && < 3.4
     , ldtk-types >= 1.2 && < 1.3
@@ -136,6 +140,7 @@ test-suite partir-qua-world-test
   other-modules:
       Partir.Agent.NullSpec
     , Partir.Arbitrary
+    , Partir.Asset.Animation.PNGSpec
     , Partir.Asset.AnimationSpec
     , Partir.Asset.GLTFSpec
     , Partir.Asset.Sprite.PNGSpec
@@ -157,6 +162,8 @@ test-suite partir-qua-world-test
   build-depends:
       bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
+    , directory >= 1.3 && < 1.4
+    , filepath >= 1.5 && < 1.6
     , GLUT >= 2.7 && < 2.8
     , linear >= 1.23 && < 1.24
     , OpenGL >= 3.0 && < 3.1
