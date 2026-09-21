@@ -12,5 +12,6 @@ Hackage
 LDtk
 MIT
 partir
+Pixelorama
 subcommand
 Tiled('s)?

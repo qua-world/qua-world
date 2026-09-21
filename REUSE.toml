@@ -4,10 +4,11 @@
 
 version = 1
 
-# A GLB is a binary container whose header is fixed by the glTF specification,
-# so a comment cannot go in the file.
+# `reuse` reads a header out of text, and an example asset is binary. A GLB's
+# own header is fixed by the glTF specification, and the chunk a PNG could
+# carry a comment in is not somewhere `reuse` looks.
 [[annotations]]
-path = "examples/**.glb"
+path = ["examples/**.glb", "examples/**.png"]
 SPDX-FileCopyrightText = "2026 Alex Brandt"
 SPDX-License-Identifier = "MIT"
 

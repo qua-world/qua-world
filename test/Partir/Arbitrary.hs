@@ -19,6 +19,7 @@ failing case whole, and a failing case here is a pose of six unrounded
 -}
 module Partir.Arbitrary (
   Position (..),
+  Sheet (..),
   UnitQuat (..),
   Window (..),
   orderedBelow,
@@ -45,6 +46,7 @@ import Test.QuickCheck (
   vectorOf,
  )
 
+import Partir.Asset.Sprite (Grid (..))
 import Partir.Asset.Tilemap (
   Placement (..),
   TileLayer (..),
@@ -96,6 +98,29 @@ instance Arbitrary UnitQuat where
     | (w', x', y', z') <- shrink (w, x, y, z)
     , let q = Quaternion w' (V3 x' y' z')
     , quadrance q > degenerate
+    ]
+
+{- | A sheet waiting to be cut: the cell, and the pixel size of the sheet it is
+cut from.
+
+Every extent reaches below one, so a property sees the sheets that hold no
+whole cell alongside those that do. Cells are drawn from a smaller range than
+sheets, which leaves most draws with frames to inspect.
+-}
+data Sheet = Sheet
+  { sheetGrid :: Grid
+  , sheetWidth :: Int
+  , sheetHeight :: Int
+  }
+  deriving (Eq, Show)
+
+instance Arbitrary Sheet where
+  arbitrary = Sheet <$> (Grid <$> cellExtent <*> cellExtent) <*> sheetExtent <*> sheetExtent
+
+  shrink (Sheet (Grid frameWidth frameHeight) width height) =
+    [ Sheet (Grid frameWidth' frameHeight') width' height'
+    | (frameWidth', frameHeight', width', height') <-
+        shrink (frameWidth, frameHeight, width, height)
     ]
 
 {- | Two fractions of a span, the earlier first — a window into @[0, 1]@, the
@@ -268,6 +293,11 @@ extent cells = maximum . (0 :) . map cells
 -- | How far a generated coordinate reaches from the origin, on any one axis.
 coordinate :: Gen Double
 coordinate = choose (-100, 100)
+
+-- | The pixel extents a 'Sheet' and its cell are drawn from.
+cellExtent, sheetExtent :: Gen Int
+cellExtent = choose (-2, 8)
+sheetExtent = choose (-4, 32)
 
 -- | Three coordinates, the shape both a position and a quaternion's axis take.
 coordinates :: Gen Vec3

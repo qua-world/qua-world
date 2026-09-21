@@ -36,6 +36,11 @@ bucket. Later `[Unreleased]` sections split by change type.
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
   as a typed `GltfLoadError`.
+* `Partir.Asset.Sprite`: a sprite sheet and the frames cut from it, naming no
+  source format, filled by `Partir.Asset.Sprite.PNG` from a PNG and the cell
+  size its frames sit on, so pixel art authored in Pixelorama or any
+  PNG-emitting tool loads. A malformed image comes back as a typed
+  `PngLoadError`.
 * `Partir.Asset.Tilemap`: a tile grid and the entities placed on it, naming no
   editor, filled by `Partir.Asset.Tilemap.Tiled` from Tiled's JSON map export
   (`.tmj`) and by `Partir.Asset.Tilemap.LDtk` from an LDtk project (`.ldtk`),
@@ -50,6 +55,8 @@ bucket. Later `[Unreleased]` sections split by change type.
 * The client renders `examples/avatar.glb` in front of the camera, standing on
   the tiles of `examples/level.ldtk`, lit by the assets' own normals, in an
   OpenGL 3.3 core-profile context.
+* The client draws the first frame of `examples/sprites.png` as an icon in the
+  window's top-left corner, over the scene and blended against it.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
