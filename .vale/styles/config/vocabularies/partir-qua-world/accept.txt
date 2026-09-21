@@ -9,7 +9,9 @@ GHC
 GLU
 GLUT
 Hackage
+LDtk
 MIT
 partir
 Pixelorama
 subcommand
+Tiled('s)?

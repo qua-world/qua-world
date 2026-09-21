@@ -42,6 +42,8 @@ extra-source-files:
 -- it runs from and not only in a source checkout.
 data-files:
     examples/avatar.glb
+    examples/level.ldtk
+    examples/level.tmj
     examples/sprites.png
 
 source-repository head
@@ -69,6 +71,9 @@ library
     , Partir.Asset
     , Partir.Asset.GLTF
     , Partir.Asset.PNG
+    , Partir.Asset.Tilemap
+    , Partir.Asset.Tilemap.LDtk
+    , Partir.Asset.Tilemap.Tiled
     , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
@@ -77,10 +82,13 @@ library
   other-modules:
 
   build-depends:
-      bytestring >= 0.12 && < 0.13
+      aeson >= 2.2 && < 2.3
+    , aeson-tiled >= 0.0.2 && < 0.1
+    , bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
     , gltf-loader >= 0.3 && < 0.4
     , JuicyPixels >= 3.3 && < 3.4
+    , ldtk-types >= 1.2 && < 1.3
     , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
     , vector >= 0.13 && < 0.14
@@ -128,6 +136,11 @@ test-suite partir-qua-world-test
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
     , Partir.Asset.PNGSpec
+    , Partir.Asset.Tilemap.LDtkSpec
+    , Partir.Asset.Tilemap.Sample
+    , Partir.Asset.Tilemap.SampleSpec
+    , Partir.Asset.Tilemap.TiledSpec
+    , Partir.Asset.TilemapSpec
     , Partir.AssetSpec
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Client.GLUT.ViewSpec
