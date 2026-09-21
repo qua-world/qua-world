@@ -8,7 +8,9 @@ module Partir.Asset.Animation.PNGSpec (
 )
 where
 
+import qualified Codec.Picture as Picture
 import qualified Data.ByteString.Char8 as ByteString
+import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
 import Data.Word (Word8)
@@ -90,6 +92,19 @@ test_loadAnimationFrames =
         case loadAnimationFrames rate [("0001.png", ByteString.pack "not a png")] of
           Left (UndecodableFrame named _) -> named @?= "0001.png"
           _ -> assertFailure "expected a decode failure"
+    , -- A sequence exported from a tool that trims each frame gives frames of
+      -- differing extent. Laying those out in equal cells would either clip
+      -- the widest or leave the narrowest sampling its neighbour.
+      testCase "gives an uneven frame the extent it came with" $ do
+        sheet <- animationSheet <$> composed [(3, 5), (7, 2)]
+        (spriteWidth sheet, spriteHeight sheet) @?= (10, 5)
+        spriteFrames sheet @?= Vector.fromList [Frame 0 0 3 5, Frame 3 0 7 2]
+    , -- The row is as tall as the tallest frame, and what a shorter one does
+      -- not cover has to stay clear rather than repeat its last row.
+      testCase "leaves the space under a short frame transparent" $ do
+        sheet <- animationSheet <$> composed [(3, 5), (7, 2)]
+        pixelAt sheet 5 1 @?= [255, 0, 0, 255]
+        pixelAt sheet 5 3 @?= [0, 0, 0, 0]
     ]
 
 -- | The rate @examples/walk/@ is drawn to play at.
@@ -102,6 +117,19 @@ loadWalk =
   getDataFileName "examples/walk"
     >>= loadAnimation rate
     >>= either (assertFailure . show) pure
+
+{- | Compose frames of the given pixel sizes, each filled solid red, failing
+the test case with the load error.
+-}
+composed :: [(Int, Int)] -> IO Animation
+composed sizes =
+  either (assertFailure . show) pure (loadAnimationFrames rate (zipWith frame [1 :: Int ..] sizes))
+ where
+  frame n (width, height) =
+    ( show n ++ ".png"
+    , Lazy.toStrict (Picture.encodePng (Picture.generateImage (const (const red)) width height))
+    )
+  red = Picture.PixelRGBA8 255 0 0 255
 
 -- | Run an action over a directory holding no frames, and clear it away after.
 withEmptyDirectory :: (FilePath -> IO a) -> IO a
