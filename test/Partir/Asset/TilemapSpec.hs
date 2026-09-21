@@ -40,10 +40,9 @@ test_toMesh =
             let mesh = toMesh tilemap
              in vertexCount mesh == 4 * tileCount tilemap
                   && indexCount mesh == 6 * tileCount tilemap
-    , -- A quad's indices are offset by the quads already in its primitive. An
-      -- offset taken from the cell instead would still land inside the
-      -- primitive for a layer with every cell filled, and run off the end for
-      -- a layer with gaps in it.
+    , -- An offset taken from the cell rather than from the quad still indexes
+      -- inside a layer with every cell filled, and runs off the end of one
+      -- with gaps.
       testProperty "indexes only the vertices of the primitive it belongs to" $
         \tilemap ->
           overLayerKinds tilemap $
@@ -57,8 +56,8 @@ test_toMesh =
         maximum [x | V3 x _ _ <- corners] @?= 2
         minimum [z | V3 _ _ z <- corners] @?= -2
         maximum [z | V3 _ _ z <- corners] @?= 2
-    , -- Two tile layers are coplanar in the editor. Drawing them coplanar here
-      -- would leave the renderer to break the depth tie however it liked.
+    , -- Coplanar layers would leave the renderer to break the depth tie
+      -- however it liked.
       testCase "raises each layer above the one below it" $ do
         let cell = Vector.singleton (Just 1)
             layer name = TileLayer (Text.pack name) 1 1 cell

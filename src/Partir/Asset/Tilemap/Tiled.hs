@@ -10,13 +10,12 @@ Reads the JSON a Tiled map exports (@.tmj@) and converts it into the
 'Tilemap.Tilemap' the client consumes. The @aeson-tiled@ dependency is
 confined to this module: none of it appears in the returned type.
 
-Tiled's native @.tmx@ is XML rather than JSON and goes unread. The one parser
-for it on Hackage, @htiled@, pins @containers < 0.6@ and does not solve against
-the GHC this package is @tested-with@, so a map has to reach the client through
-Tiled's JSON export.
+Tiled's native @.tmx@ goes unread. The one parser for it on Hackage,
+@htiled@, pins @containers < 0.6@ and does not solve against the GHC this
+package is @tested-with@, so a map reaches the client through Tiled's JSON
+export.
 
-Group layers are flattened in place, so a grouped tile layer loads as though
-the author had never grouped it.
+Group layers are flattened in place.
 -}
 module Partir.Asset.Tilemap.Tiled (
   TiledLoadError (..),
@@ -60,9 +59,9 @@ data TiledLoadError
 
 instance Exception TiledLoadError
 
-{- | Load a Tiled JSON map. A malformed or unreadable document is anticipated,
-so it comes back as a 'Left'; a missing or unreadable file is an I\/O failure
-and surfaces as the 'IOError' thrown by reading it.
+{- | Load a Tiled JSON map. A malformed document is anticipated, so it comes
+back as a 'Left'; a missing file is an I\/O failure and surfaces as the
+'IOError' thrown by reading it.
 -}
 loadTilemap :: FilePath -> IO (Either TiledLoadError Tilemap.Tilemap)
 loadTilemap path = decodeTilemap <$> ByteString.readFile path

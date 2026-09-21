@@ -41,8 +41,8 @@ test_loadTilemap =
     , testCase "fills every cell of the floor" $ do
         floorLayer <- layerNamed "floor" =<< tiledRoom
         filledCells floorLayer @?= 36
-    , -- A global ID of zero means an empty cell rather than tile zero, and
-      -- reading it as a tile would pave the room the walls ring.
+    , -- Reading Tiled's global ID zero as a tile rather than as an empty cell
+      -- would pave the room the walls ring.
       testCase "leaves the cells inside the walls empty" $ do
         walls <- layerNamed "walls" =<< tiledRoom
         filledCells walls @?= 20
@@ -66,9 +66,8 @@ test_decodeTilemap =
         case decodeTilemap (ByteString.pack "not a map") of
           Left (TiledDecodeError _) -> pure ()
           outcome -> assertFailure ("expected a decode failure, got " ++ show outcome)
-    , -- Tiled can write a layer's cells base64-encoded and compressed, which
-      -- this loader does not unpack. Naming the layer is what tells an author
-      -- which one to re-export.
+    , -- Tiled can write a layer's cells base64-encoded, which this loader
+      -- does not unpack.
       testCase "names the layer whose cells it cannot read" $
         case decodeTilemap (ByteString.pack encodedLayer) of
           Left (TiledUnreadableLayer name) -> name @?= Text.pack "packed"

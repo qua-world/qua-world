@@ -40,9 +40,8 @@ test_loadTilemap =
     , testCase "reads an IntGrid layer's painted values as its cells" $ do
         floorLayer <- layerNamed "Floor" =<< ldtkRoom
         filledCells floorLayer @?= 36
-    , -- LDtk gives a grid tile a pixel offset rather than a cell, so a loader
-      -- that forgot to divide by the grid size would pile the walls into the
-      -- first few cells.
+    , -- A loader that forgot to divide the pixel offset by the grid size would
+      -- pile the walls into the first few cells.
       testCase "places a grid tile in the cell its pixel offset falls in" $ do
         walls <- layerNamed "Walls" =<< ldtkRoom
         filledCells walls @?= 20
@@ -69,10 +68,7 @@ test_decodeTilemap =
         case decodeTilemap (ByteString.pack "not a project") of
           Left (LDtkDecodeError _) -> pure ()
           outcome -> assertFailure ("expected a decode failure, got " ++ show outcome)
-    , -- A project saved with separate level files parses but carries no level
-      -- of its own, which is a different thing to tell an author than a
-      -- malformed document.
-      testCase "separates a levelless project from a malformed one" $
+    , testCase "separates a levelless project from a malformed one" $
         decodeTilemap (ByteString.pack levellessProject) @?= Left LDtkNoLevels
     ]
 

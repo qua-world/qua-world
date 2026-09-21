@@ -12,8 +12,8 @@ Reads an LDtk project file (@.ldtk@) and converts its first level into the
 to this module: none of it appears in the returned type.
 
 @ldtk-types@ names its fields after LDtk's own JSON keys, several of which
-repeat across records, so this module reads them through
-@OverloadedRecordDot@ rather than through ambiguous selectors.
+repeat across records and leave the plain selectors ambiguous. This module
+reads them through @OverloadedRecordDot@.
 -}
 module Partir.Asset.Tilemap.LDtk (
   LDtkLoadError (..),

@@ -11,12 +11,10 @@ grid, plus the entities an author placed on it. The type names no editor, so
 each loader under @Partir.Asset.Tilemap.*@ converts into this vocabulary and
 the client depends only on it.
 
-Every coordinate is in tile units rather than pixels. An editor's tile size is
-a property of its source art, not of the level, so each loader divides it out
-and one cell is one unit here.
+Every coordinate is in tile units. An editor's tile size belongs to its source
+art, so each loader divides it out and one cell is one unit here.
 
-'toMesh' turns the grid into geometry the renderer already draws: cells lie in
-the XZ plane with Y up, and the map is centred on the origin.
+'toMesh' turns the grid into geometry the renderer already draws.
 -}
 module Partir.Asset.Tilemap (
   Tilemap (..),
@@ -55,9 +53,7 @@ data TileLayer = TileLayer
   { tileLayerName :: Text
   -- ^ The name the author gave the layer.
   , tileLayerColumns :: Int
-  -- ^ Cells across.
   , tileLayerRows :: Int
-  -- ^ Cells down.
   , tileLayerTiles :: Vector (Maybe Int)
   {- ^ The tile drawn in each cell, 'Nothing' where the author left it empty.
   Row-major from the top-left corner, @'tileLayerColumns' * 'tileLayerRows'@
@@ -89,14 +85,12 @@ tileCount =
 {- | Build the geometry for a tilemap: one quad per filled cell, gathered into
 a primitive per layer. Layers that came out empty contribute nothing.
 
-The map is centred on the origin, which is where the client points its camera.
-Nothing is scaled to fit: a cell is a unit whatever the grid, so a map wider
-than the frustum overruns the window rather than shrinking into it.
+Cells lie in the XZ plane with Y up. The map is centred on the origin, where
+the client points its camera. Nothing is scaled to fit: a cell is one unit
+whatever the grid, so a map wider than the frustum overruns the window.
 
-Layer @n@ sits at @y = n@. Tile layers stack in the editor, which on a plane
-would leave them coplanar and fighting for depth; one unit of separation is
-both the fix and the reading a tile game wants, with a floor below and what
-stands on it above.
+Layer @n@ sits at @y = n@. Coplanar layers would fight for depth, and the
+separation reads as a floor with what stands on it above.
 -}
 toMesh :: Tilemap -> Asset.Mesh
 toMesh tilemap =

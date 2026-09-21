@@ -9,11 +9,9 @@ Description : The bundled sample levels, and the questions a spec asks of one
 @examples/level.tmj@ and @examples/level.ldtk@ are hand-written stand-ins for
 what Tiled and LDtk export. Both describe one room: a 6x6 floor with every
 cell filled, a wall layer ringing its border, and a spawn on the centre cell
-of a 16-pixel grid. Each loader's spec reads its own, and
-"Partir.Asset.Tilemap.SampleSpec" reads both.
+of a 16-pixel grid.
 
-Loading lives here rather than in either spec because three call sites want
-the same thing: the tilemap, with a decode failure ending the test case.
+A decode failure ends the test case rather than reaching the assertions.
 -}
 module Partir.Asset.Tilemap.Sample (
   tiledRoom,
@@ -60,9 +58,7 @@ layerNamed name tilemap =
 filledCells :: TileLayer -> Int
 filledCells = Vector.length . Vector.filter isJust . tileLayerTiles
 
-{- | The tile at a column and row, which the row-major index a layer stores
-would otherwise leave as arithmetic in the assertion.
--}
+-- | The tile at a column and row.
 cellAt :: Int -> Int -> TileLayer -> Maybe Int
 cellAt column row layer =
   join (tileLayerTiles layer Vector.!? (row * tileLayerColumns layer + column))

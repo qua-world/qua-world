@@ -192,13 +192,13 @@ instance Arbitrary Scene where
     [Scene t' es | t' <- shrink t]
       <> [Scene t (Map.fromList es') | es' <- shrink (Map.toList es)]
 
-{- | A layer whose cell vector matches the grid it declares. A generator that
-let the two drift would test a shape no loader produces, and the geometry
+{- | A layer whose cell vector matches the grid it declares.
 'Partir.Asset.Tilemap.toMesh' reads a cell's column and row out of the
-declared width.
+declared width, so a generator that let the two drift would test a shape no
+loader produces.
 
-Shrinking drops whole rows off the bottom and shrinks the tiles in place,
-both of which keep that agreement; dropping cells alone would break it.
+Shrinking drops whole rows off the bottom and shrinks tiles in place;
+dropping cells alone would break that agreement.
 -}
 instance Arbitrary TileLayer where
   arbitrary = do
