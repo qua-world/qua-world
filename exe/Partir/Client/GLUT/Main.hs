@@ -4,7 +4,7 @@
 
 module Main where
 
-import Control.Exception (throwIO)
+import Control.Exception (Exception, throwIO)
 import Control.Monad (join)
 import Data.StateVar (get, ($=))
 import Debug.Trace (traceIO)
@@ -16,6 +16,8 @@ import qualified Partir.Client.GLUT.Render as Render
 
 import qualified Partir.Asset as Asset
 import qualified Partir.Asset.GLTF as GLTF
+import qualified Partir.Asset.Tilemap as Tilemap
+import qualified Partir.Asset.Tilemap.LDtk as LDtk
 import Paths_partir_qua_world (getDataFileName)
 
 main :: IO ()
@@ -33,7 +35,7 @@ main = do
   _ <- GLUT.createWindow "Qua World"
 
   -- Uploading needs the context the window just created.
-  renderer <- Render.upload =<< avatar
+  renderer <- Render.upload =<< scene
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
@@ -55,11 +57,24 @@ main = do
 
   GLUT.mainLoop
 
-{- | The only asset the client draws. A document that will not decode is
-fatal: there is nothing else to put on screen.
+{- | Everything the client draws: the sample level's tiles, and the one asset
+standing on them.
+
+Nothing here is transformed, so the avatar sits at its own model origin and
+the ground layer passes through it until node transforms land (#67).
 -}
-avatar :: IO Asset.Mesh
-avatar = getDataFileName "examples/avatar.glb" >>= GLTF.loadAsset >>= either throwIO pure
+scene :: IO Asset.Mesh
+scene = do
+  level <- Tilemap.toMesh <$> bundled "examples/level.ldtk" LDtk.loadTilemap
+  avatar <- bundled "examples/avatar.glb" GLTF.loadAsset
+  pure (Asset.Mesh (Asset.meshPrimitives level ++ Asset.meshPrimitives avatar))
+
+{- | Read one of the package's own data files. A document that will not decode
+is fatal here: the client ships it, so a failure is a broken build rather than
+anything a player can act on.
+-}
+bundled :: Exception e => FilePath -> (FilePath -> IO (Either e a)) -> IO a
+bundled name load = getDataFileName name >>= load >>= either throwIO pure
 
 display :: Render.Renderer -> GLUT.DisplayCallback
 display renderer = do

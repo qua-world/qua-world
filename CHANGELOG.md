@@ -36,12 +36,20 @@ bucket. Later `[Unreleased]` sections split by change type.
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
   as a typed `GltfLoadError`.
+* `Partir.Asset.Tilemap`: a tile grid and the entities placed on it, naming no
+  editor, filled by `Partir.Asset.Tilemap.Tiled` from Tiled's JSON map export
+  (`.tmj`) and by `Partir.Asset.Tilemap.LDtk` from an LDtk project (`.ldtk`),
+  so levels authored in either editor load. Coordinates arrive in tile units
+  whatever the source art's pixel grid, and `toMesh` lays the cells out in the
+  XZ plane as geometry the renderer already draws. A malformed document comes
+  back as a typed error.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its
   `apply` fold).
-* The client renders `examples/avatar.glb` in front of the camera, lit by the
-  asset's own normals, in an OpenGL 3.3 core-profile context.
+* The client renders `examples/avatar.glb` in front of the camera, standing on
+  the tiles of `examples/level.ldtk`, lit by the assets' own normals, in an
+  OpenGL 3.3 core-profile context.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.
