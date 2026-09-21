@@ -67,6 +67,7 @@ library
     , Partir.Agent.Null
     , Partir.Asset
     , Partir.Asset.GLTF
+    , Partir.Asset.Tilemap
     , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
@@ -124,6 +125,7 @@ test-suite partir-qua-world-test
       Partir.Agent.NullSpec
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
+    , Partir.Asset.TilemapSpec
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Client.GLUT.ViewSpec
     , Partir.Sim.InterpolateSpec
