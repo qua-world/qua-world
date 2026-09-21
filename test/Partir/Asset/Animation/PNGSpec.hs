@@ -13,7 +13,6 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
-import Data.Word (Word8)
 import qualified System.Directory as Directory
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
@@ -22,6 +21,7 @@ import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 import Partir.Asset.Animation (Animation (..), Rate (..), timeline, totalDuration)
 import Partir.Asset.Animation.PNG (SequenceLoadError (..), loadAnimation, loadAnimationFrames)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
+import Partir.Asset.Sprite.Pixels (pixelAt)
 import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/walk/@ is a placeholder standing in for real Pencil2D content:
@@ -137,10 +137,3 @@ withEmptyDirectory action = do
   path <- (</> "partir-empty-sequence") <$> Directory.getTemporaryDirectory
   Directory.createDirectoryIfMissing True path
   action path <* Directory.removeDirectoryRecursive path
-
--- | The four channels of one pixel, addressed from the sheet's top-left.
-pixelAt :: Sprite -> Int -> Int -> [Word8]
-pixelAt sheet x y =
-  [ spritePixels sheet Storable.! ((y * spriteWidth sheet + x) * 4 + channel)
-  | channel <- [0 .. 3]
-  ]

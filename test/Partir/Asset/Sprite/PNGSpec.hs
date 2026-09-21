@@ -11,12 +11,12 @@ where
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
-import Data.Word (Word8)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
 import Partir.Asset.Sprite (Frame (..), Grid (..), Sprite (..))
 import Partir.Asset.Sprite.PNG (PngLoadError, loadSprite, loadSpriteBytes)
+import Partir.Asset.Sprite.Pixels (pixelAt)
 import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/sprites.png@ is a placeholder standing in for real Pixelorama
@@ -80,10 +80,3 @@ loadIcons =
   getDataFileName "examples/sprites.png"
     >>= loadSprite cell
     >>= either (assertFailure . show) pure
-
--- | The four channels of one pixel, addressed from the sheet's top-left.
-pixelAt :: Sprite -> Int -> Int -> [Word8]
-pixelAt sheet x y =
-  [ spritePixels sheet Storable.! ((y * spriteWidth sheet + x) * 4 + channel)
-  | channel <- [0 .. 3]
-  ]
