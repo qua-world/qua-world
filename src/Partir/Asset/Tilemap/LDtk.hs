@@ -92,7 +92,7 @@ carrying none of the three holds only entities and contributes no geometry.
 -}
 fromLayer :: LDtk.Layer -> Maybe Tilemap.TileLayer
 fromLayer layer
-  | not (null tiles) = Just (cells (placed tiles))
+  | not (null tiles) = Just (cells (spread layer tiles))
   | not (null layer.intGridCsv) = Just (cells (map painted layer.intGridCsv))
   | otherwise = Nothing
  where
@@ -113,13 +113,18 @@ fromLayer layer
   painted 0 = Nothing
   painted value = Just value
 
-  {- LDtk places a tile by its pixel offset within the layer rather than by
-  cell, and lists a cell's tiles in the order they stack, so the last one
-  written to a cell is the one on top. -}
-  placed =
-    Vector.toList
-      . (Vector.replicate (columns * rows) Nothing Vector.//)
-      . mapMaybe overwrite
+{- | Lay a layer's tiles out over its grid. LDtk places a tile by its pixel
+offset within the layer rather than by cell, and lists the tiles of one cell
+in the order they stack, so the last one written to a cell is the one on top.
+-}
+spread :: LDtk.Layer -> [LDtk.Tile] -> [Maybe Int]
+spread layer =
+  Vector.toList
+    . (Vector.replicate (columns * rows) Nothing Vector.//)
+    . mapMaybe overwrite
+ where
+  columns = layer.__cWid
+  rows = layer.__cHei
 
   overwrite :: LDtk.Tile -> Maybe (Int, Maybe Int)
   overwrite tile

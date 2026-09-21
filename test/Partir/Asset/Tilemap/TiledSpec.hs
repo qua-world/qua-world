@@ -9,9 +9,7 @@ module Partir.Asset.Tilemap.TiledSpec (
 where
 
 import qualified Data.ByteString.Char8 as ByteString
-import Data.Maybe (isJust)
 import qualified Data.Text as Text
-import qualified Data.Vector as Vector
 import Linear.V2 (V2 (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
@@ -21,39 +19,36 @@ import Partir.Asset.Tilemap (
   TileLayer (..),
   Tilemap (..),
  )
-import Partir.Asset.Tilemap.Tiled (
-  TiledLoadError (..),
-  decodeTilemap,
-  loadTilemap,
+import Partir.Asset.Tilemap.Sample (
+  cellAt,
+  filledCells,
+  layerNamed,
+  tiledRoom,
  )
-import Paths_partir_qua_world (getDataFileName)
+import Partir.Asset.Tilemap.Tiled (TiledLoadError (..), decodeTilemap)
 
-{- | @examples/level.tmj@ is a hand-written stand-in for a Tiled export: a
-6x6 room of a floor layer under a wall layer that rings its border, and one
-@player-start@ object on the centre cell of a 16-pixel grid. These
-expectations track that file.
--}
+-- | Expectations on @examples/level.tmj@, which "Partir.Asset.Tilemap.Sample" describes.
 test_loadTilemap :: TestTree
 test_loadTilemap =
   testGroup
     "loadTilemap"
     [ testCase "reads the tile layers in the order the editor stacks them" $ do
-        tilemap <- loadRoom
+        tilemap <- tiledRoom
         map tileLayerName (tilemapLayers tilemap) @?= map Text.pack ["floor", "walls"]
     , testCase "sizes the map by the grid its layers declare" $ do
-        tilemap <- loadRoom
+        tilemap <- tiledRoom
         (tilemapColumns tilemap, tilemapRows tilemap) @?= (6, 6)
     , testCase "fills every cell of the floor" $ do
-        floorLayer <- layerNamed "floor" =<< loadRoom
-        filled floorLayer @?= 36
+        floorLayer <- layerNamed "floor" =<< tiledRoom
+        filledCells floorLayer @?= 36
     , -- A global ID of zero means an empty cell rather than tile zero, and
       -- reading it as a tile would pave the room the walls ring.
       testCase "leaves the cells inside the walls empty" $ do
-        walls <- layerNamed "walls" =<< loadRoom
-        filled walls @?= 20
-        Vector.toList (tileLayerTiles walls) !! 7 @?= Nothing
+        walls <- layerNamed "walls" =<< tiledRoom
+        filledCells walls @?= 20
+        cellAt 1 1 walls @?= Nothing
     , testCase "measures an object group's objects in tile units" $ do
-        tilemap <- loadRoom
+        tilemap <- tiledRoom
         tilemapPlacements tilemap
           @?= [ Placement
                   { placementName = Text.pack "player-start"
@@ -79,21 +74,6 @@ test_decodeTilemap =
           Left (TiledUnreadableLayer name) -> name @?= Text.pack "packed"
           outcome -> assertFailure ("expected an unreadable layer, got " ++ show outcome)
     ]
-
-loadRoom :: IO Tilemap
-loadRoom =
-  getDataFileName "examples/level.tmj"
-    >>= loadTilemap
-    >>= either (assertFailure . show) pure
-
-layerNamed :: String -> Tilemap -> IO TileLayer
-layerNamed name tilemap =
-  case filter ((== Text.pack name) . tileLayerName) (tilemapLayers tilemap) of
-    [layer] -> pure layer
-    layers -> assertFailure ("expected one " ++ name ++ " layer, got " ++ show (length layers))
-
-filled :: TileLayer -> Int
-filled = Vector.length . Vector.filter isJust . tileLayerTiles
 
 -- | The smallest map Tiled writes with @base64@ tile layer format.
 encodedLayer :: String

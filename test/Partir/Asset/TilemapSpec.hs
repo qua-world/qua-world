@@ -11,7 +11,7 @@ import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Linear.V3 (V3 (..))
-import Test.QuickCheck (Property, checkCoverage, cover)
+import Test.QuickCheck (Property, Testable, checkCoverage, cover)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
@@ -72,11 +72,11 @@ test_toMesh =
 {- | 'toMesh' branches on whether a layer has anything in it, so a run that
 never generated one of each says nothing about the branch it skipped.
 -}
-overLayerKinds :: Tilemap -> Bool -> Property
-overLayerKinds tilemap outcome =
-  checkCoverage $
-    cover 40 (any occupied layers) "a layer with a filled cell" $
-      cover 10 (not (all occupied layers)) "a layer with no filled cell" outcome
+overLayerKinds :: Testable prop => Tilemap -> prop -> Property
+overLayerKinds tilemap =
+  checkCoverage
+    . cover 40 (any occupied layers) "a layer with a filled cell"
+    . cover 10 (not (all occupied layers)) "a layer with no filled cell"
  where
   layers = tilemapLayers tilemap
   occupied = Vector.any isJust . tileLayerTiles

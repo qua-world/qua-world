@@ -89,21 +89,24 @@ tileCount =
 {- | Build the geometry for a tilemap: one quad per filled cell, gathered into
 a primitive per layer. Layers that came out empty contribute nothing.
 
-The map is centred on the origin so a default camera frames it, and layer @n@
-sits at @y = n@. Tile layers stack in the editor, which on a plane would leave
-them coplanar and fighting for depth; one unit of separation is both the fix
-and the reading a tile game wants, with a floor below and what stands on it
-above.
+The map is centred on the origin, which is where the client points its camera.
+Nothing is scaled to fit: a cell is a unit whatever the grid, so a map wider
+than the frustum overruns the window rather than shrinking into it.
+
+Layer @n@ sits at @y = n@. Tile layers stack in the editor, which on a plane
+would leave them coplanar and fighting for depth; one unit of separation is
+both the fix and the reading a tile game wants, with a floor below and what
+stands on it above.
 -}
 toMesh :: Tilemap -> Asset.Mesh
 toMesh tilemap =
-  Asset.Mesh (filter filled (zipWith (layerPrimitive centre) [0 ..] (tilemapLayers tilemap)))
+  Asset.Mesh (filter hasGeometry (zipWith (layerPrimitive centre) [0 ..] (tilemapLayers tilemap)))
  where
   centre =
     V2
       (fromIntegral (tilemapColumns tilemap) / 2)
       (fromIntegral (tilemapRows tilemap) / 2)
-  filled = not . Vector.null . Asset.primitivePositions
+  hasGeometry = not . Vector.null . Asset.primitivePositions
 
 layerPrimitive :: V2 Float -> Float -> TileLayer -> Asset.Primitive
 layerPrimitive centre elevation layer =
