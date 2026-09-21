@@ -49,12 +49,19 @@ import Partir.Client.GLUT.View (
   overlayBounds,
  )
 
--- | A mesh resident on the GPU, ready to draw.
+-- | Everything resident on the GPU, ready to draw.
 data Renderer = Renderer
-  { rendererProgram :: GL.Program
-  , rendererDraws :: [Draw]
+  { rendererGeometry :: Geometry
   , rendererOverlay :: Maybe Overlay
   -- ^ Absent when the sheet holds no frame to show.
+  }
+
+{- | The scene's geometry on the GPU: the program that shades every primitive,
+and the call that draws each one.
+-}
+data Geometry = Geometry
+  { geometryProgram :: GL.Program
+  , geometryDraws :: [Draw]
   }
 
 {- | The icon's own program, quad, and sheet, with the frame it shows already
@@ -94,15 +101,15 @@ lifetime, and 'draw' allocates nothing.
 upload :: Mesh -> Sprite -> IO Renderer
 upload mesh sprite = do
   GL.depthFunc $= sceneDepthFunc
+  geometry <- uploadGeometry mesh
+  overlay <- traverse (uploadOverlay sprite) (spriteFrames sprite Vector.!? 0)
+  pure Renderer{rendererGeometry = geometry, rendererOverlay = overlay}
+
+uploadGeometry :: Mesh -> IO Geometry
+uploadGeometry mesh = do
   program <- buildProgram vertexSource fragmentSource
   draws <- traverse uploadPrimitive (meshPrimitives mesh)
-  overlay <- traverse (uploadOverlay sprite) (spriteFrames sprite Vector.!? 0)
-  pure
-    Renderer
-      { rendererProgram = program
-      , rendererDraws = draws
-      , rendererOverlay = overlay
-      }
+  pure Geometry{geometryProgram = program, geometryDraws = draws}
 
 uploadPrimitive :: Primitive -> IO Draw
 uploadPrimitive prim = do
@@ -230,14 +237,20 @@ draw :: Renderer -> GL.Size -> IO ()
 draw renderer size = do
   GL.viewport $= (GL.Position 0 0, size)
   GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-  GL.currentProgram $= Just (rendererProgram renderer)
-  setMatrix (rendererProgram renderer) "modelViewProjection" (camera size)
-
-  traverse_ issue (rendererDraws renderer)
-  GL.bindVertexArrayObject $= Nothing
-
+  drawGeometry size (rendererGeometry renderer)
   traverse_ (drawOverlay size) (rendererOverlay renderer)
+
+-- | Draw the scene's primitives through the camera.
+drawGeometry :: GL.Size -> Geometry -> IO ()
+drawGeometry size geometry = do
+  GL.currentProgram $= Just program
+  setMatrix program "modelViewProjection" (camera size)
+
+  traverse_ issue (geometryDraws geometry)
+  GL.bindVertexArrayObject $= Nothing
  where
+  program = geometryProgram geometry
+
   issue d = do
     GL.bindVertexArrayObject $= Just (drawArray d)
     if drawIndexed d
