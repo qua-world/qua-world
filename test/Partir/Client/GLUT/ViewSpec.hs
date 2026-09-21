@@ -73,19 +73,28 @@ test_overlayBounds =
     , testCase "holds a square footprint in a portrait window" $
         assertSquare portrait
     , testCase "insets the icon from the window's top-left corner" $ do
-        let icon = overlayBounds landscape
+        let icon = overlayBounds landscape 0
         assertBool "the icon is not left of centre" (boundsLeft icon < 0)
         assertBool "the icon is not above centre" (boundsTop icon > 0)
     , -- Clip space runs upward and a window's rows run downward, so the icon's
       -- bottom edge is the lesser of the two.
       testCase "orders the bounds from the top-left corner" $ do
-        let icon = overlayBounds landscape
+        let icon = overlayBounds landscape 0
         assertBool
           "the left edge is not left of the right"
           (boundsLeft icon < boundsRight icon)
         assertBool
           "the top edge is not above the bottom"
           (boundsTop icon > boundsBottom icon)
+    , -- Overlapping slots would draw one icon over another.
+      testCase "clears the slot before it" $ do
+        let (first', second') = (overlayBounds landscape 0, overlayBounds landscape 1)
+        assertBool
+          "the second slot starts before the first ends"
+          (boundsLeft second' > boundsRight first')
+    , testCase "keeps every slot on the same row" $
+        map (boundsTop . overlayBounds landscape) [0, 1, 2]
+          @?= replicate 3 (boundsTop (overlayBounds landscape 0))
     , -- A window with no height would divide by it.
       testCase "survives a window collapsed to nothing" $
         assertSquare (GL.Size 0 0)
@@ -130,7 +139,7 @@ assertSquare size@(GL.Size width height) =
     ("expected a square icon, got " ++ show (across, down) ++ " pixels")
     (abs (across - down) < tolerance)
  where
-  icon = overlayBounds size
+  icon = overlayBounds size 0
   across = (boundsRight icon - boundsLeft icon) / 2 * fromIntegral (max 1 width)
   down = (boundsTop icon - boundsBottom icon) / 2 * fromIntegral (max 1 height)
   tolerance = 1e-3

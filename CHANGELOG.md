@@ -41,6 +41,13 @@ bucket. Later `[Unreleased]` sections split by change type.
   size its frames sit on, so pixel art authored in Pixelorama or any
   PNG-emitting tool loads. A malformed image comes back as a typed
   `PngLoadError`.
+* `Partir.Asset.Animation`: a sprite sheet read as a timed sequence, filled by
+  `Partir.Asset.Animation.PNG` from a directory of PNG frames and the rate they
+  play at, so frame-by-frame animation authored in Pencil2D or any tool
+  exporting an image sequence loads. The frames arrive laid into one sheet, in
+  the order their names sort, and `stepAt` says which of them a clock has
+  reached. A frame that won't decode comes back as a typed `SequenceLoadError`
+  naming it.
 * `Partir.Asset.Tilemap`: a tile grid and the entities placed on it, naming no
   editor, filled by `Partir.Asset.Tilemap.Tiled` from Tiled's JSON map export
   (`.tmj`) and by `Partir.Asset.Tilemap.LDtk` from an LDtk project (`.ldtk`),
@@ -57,6 +64,8 @@ bucket. Later `[Unreleased]` sections split by change type.
   OpenGL 3.3 core-profile context.
 * The client draws the first frame of `examples/sprites.png` as an icon in the
   window's top-left corner, over the scene and blended against it.
+* The client plays `examples/walk/` as a second icon beside that one, looping
+  on a timer rather than waiting on input.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.

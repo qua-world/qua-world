@@ -67,14 +67,15 @@ verticalFieldOfView = pi / 4
 nearPlane = 0.1
 farPlane = 100
 
-{- | Where the sprite overlay sits in clip space.
+{- | Where the overlay in the given slot sits in clip space. Slots run left to
+right from the window's top-left corner, one icon each.
 
-The icon holds a square footprint in pixels whatever shape the window is. Its
+An icon holds a square footprint in pixels whatever shape the window is. Its
 extent therefore follows from the window size: one clip-space unit spans a
 different number of pixels along each axis.
 -}
-overlayBounds :: GL.Size -> Bounds
-overlayBounds (GL.Size width height) =
+overlayBounds :: GL.Size -> Int -> Bounds
+overlayBounds (GL.Size width height) slot =
   Bounds
     { boundsLeft = left
     , boundsTop = top
@@ -82,12 +83,14 @@ overlayBounds (GL.Size width height) =
     , boundsBottom = top - 2 * overlaySize / h
     }
  where
-  left = -1 + 2 * overlayMargin / w
+  left = -1 + 2 * (overlayMargin + fromIntegral slot * (overlaySize + overlayMargin)) / w
   top = 1 - 2 * overlayMargin / h
   w = divisor width
   h = divisor height
 
--- | The icon's footprint and its inset from the window's top-left, in pixels.
+{- | An icon's footprint, and the gap holding it off the window's top-left
+corner and off the icon before it.
+-}
 overlaySize, overlayMargin :: Float
 overlaySize = 96
 overlayMargin = 16
