@@ -240,7 +240,7 @@ drawOverlay size overlay = do
 
   GL.activeTexture $= GL.TextureUnit 0
   GL.textureBinding GL.Texture2D $= Just (overlayTexture overlay)
-  setSampler (overlayProgram overlay) "sheet" 0
+  setUniform (overlayProgram overlay) "sheet" (0 :: GL.GLint)
 
   GL.bindVertexArrayObject $= Just (overlayArray overlay)
   GL.drawArrays GL.TriangleStrip 0 4
@@ -249,26 +249,24 @@ drawOverlay size overlay = do
   GL.blend $= GL.Disabled
   GL.depthFunc $= Just GL.Less
 
+-- | Assign a program's uniform by name, whatever shape it takes.
+setUniform :: GL.Uniform a => GL.Program -> String -> a -> IO ()
+setUniform program name value = do
+  location <- GL.uniformLocation program name
+  GL.uniform location $= value
+
 -- | Upload a rectangle to a @vec4@ uniform, in the order "View" packs it.
 setBounds :: GL.Program -> String -> V4 Float -> IO ()
-setBounds program name (V4 left top right bottom) = do
-  location <- GL.uniformLocation program name
-  GL.uniform location $= GL.Vertex4 left top right bottom
-
--- | Point a @sampler2D@ uniform at a texture unit.
-setSampler :: GL.Program -> String -> GL.GLint -> IO ()
-setSampler program name unit = do
-  location <- GL.uniformLocation program name
-  GL.uniform location $= unit
+setBounds program name (V4 left top right bottom) =
+  setUniform program name (GL.Vertex4 left top right bottom)
 
 {- | Upload a "Linear" matrix to a @mat4@ uniform. @linear@ nests rows, which
 is what 'GL.RowMajor' names, so the flattened elements transfer as they are.
 -}
 setMatrix :: GL.Program -> String -> M44 Float -> IO ()
-setMatrix program name matrix = do
-  location <- GL.uniformLocation program name
-  value <- GL.newMatrix GL.RowMajor (concatMap toList matrix) :: IO (GL.GLmatrix GL.GLfloat)
-  GL.uniform location $= value
+setMatrix program name matrix =
+  setUniform program name
+    =<< (GL.newMatrix GL.RowMajor (concatMap toList matrix) :: IO (GL.GLmatrix GL.GLfloat))
 
 buildProgram :: String -> String -> IO GL.Program
 buildProgram vertexShader fragmentShader = do
