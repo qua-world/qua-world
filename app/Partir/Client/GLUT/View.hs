@@ -11,6 +11,7 @@ where the client watches the world from, and how many elements a primitive
 draws. None of it needs a live context, so the test suite reaches all of it.
 -}
 module Partir.Client.GLUT.View (
+  Bounds (..),
   camera,
   elementCount,
   overlayBounds,
@@ -23,9 +24,23 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44, (!*!))
 import Linear.Projection (lookAt, perspective)
 import Linear.V3 (V3 (..))
-import Linear.V4 (V4 (..))
 
 import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
+
+{- | An axis-aligned rectangle, named from the corner a reader starts at.
+
+The icon's place on screen and a frame's place in its sheet are both this
+shape, and both reach the vertex shader as one @vec4@ it interpolates a corner
+between: @(left, top)@ in @xy@ and @(right, bottom)@ in @zw@. Naming the edges
+keeps that order in one place rather than in each caller.
+-}
+data Bounds = Bounds
+  { boundsLeft :: Float
+  , boundsTop :: Float
+  , boundsRight :: Float
+  , boundsBottom :: Float
+  }
+  deriving (Eq, Show)
 
 {- | The transform from model space to clip space, for a window of the given
 size: a fixed viewpoint, and a projection matched to the window's aspect
@@ -35,7 +50,7 @@ camera :: GL.Size -> M44 Float
 camera (GL.Size width height) =
   perspective verticalFieldOfView aspect nearPlane farPlane !*! lookAt eye target up
  where
-  aspect = fromIntegral width / fromIntegral (max 1 height)
+  aspect = fromIntegral width / divisor height
 
 {- | Where the client watches the world from. Off all three axes, so an asset
 reads as a solid rather than as a flat silhouette.
@@ -51,43 +66,54 @@ verticalFieldOfView = pi / 4
 nearPlane = 0.1
 farPlane = 100
 
-{- | Where the sprite overlay sits in clip space, as left, top, right, bottom —
-the order the vertex shader reads the pair of corners from.
+{- | Where the sprite overlay sits in clip space.
 
 The icon holds a square footprint in pixels whatever shape the window is, so
 its extent follows from the window size rather than being fixed in clip space,
 where one unit spans a different number of pixels along each axis.
 -}
-overlayBounds :: GL.Size -> V4 Float
+overlayBounds :: GL.Size -> Bounds
 overlayBounds (GL.Size width height) =
-  V4 left top (left + 2 * overlaySize / w) (top - 2 * overlaySize / h)
+  Bounds
+    { boundsLeft = left
+    , boundsTop = top
+    , boundsRight = left + 2 * overlaySize / w
+    , boundsBottom = top - 2 * overlaySize / h
+    }
  where
   left = -1 + 2 * overlayMargin / w
   top = 1 - 2 * overlayMargin / h
-  w = fromIntegral (max 1 width)
-  h = fromIntegral (max 1 height)
+  w = divisor width
+  h = divisor height
 
 -- | The icon's footprint and its inset from the window's top-left, in pixels.
 overlaySize, overlayMargin :: Float
 overlaySize = 96
 overlayMargin = 16
 
-{- | Where one frame sits in its sheet's texture coordinates, in the same
-left\/top\/right\/bottom order as 'overlayBounds'.
+{- | Where one frame sits in its sheet's texture coordinates.
 
 The sheet uploads with its top row first, so the vertical coordinate runs down
 the image and a frame's 'frameY' stays its top edge.
 -}
-frameBounds :: Sprite -> Frame -> V4 Float
+frameBounds :: Sprite -> Frame -> Bounds
 frameBounds sprite frame =
-  V4
-    (fromIntegral (frameX frame) / w)
-    (fromIntegral (frameY frame) / h)
-    (fromIntegral (frameX frame + frameWidth frame) / w)
-    (fromIntegral (frameY frame + frameHeight frame) / h)
+  Bounds
+    { boundsLeft = fromIntegral (frameX frame) / w
+    , boundsTop = fromIntegral (frameY frame) / h
+    , boundsRight = fromIntegral (frameX frame + frameWidth frame) / w
+    , boundsBottom = fromIntegral (frameY frame + frameHeight frame) / h
+    }
  where
-  w = fromIntegral (max 1 (spriteWidth sprite))
-  h = fromIntegral (max 1 (spriteHeight sprite))
+  w = divisor (spriteWidth sprite)
+  h = divisor (spriteHeight sprite)
+
+{- | A pixel extent to divide by. A window or a sheet can report no extent at
+all, and one is the nearest size that still leaves a quotient. A window counts
+in 'GL.GLsizei' and a sheet in 'Int', so this takes either.
+-}
+divisor :: Integral a => a -> Float
+divisor = fromIntegral . max 1
 
 {- | How many elements one draw call issues: the indices when the primitive
 has them, otherwise its vertices.

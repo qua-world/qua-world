@@ -112,15 +112,20 @@ no frames at all.
 -}
 gridFrames :: Grid -> Int -> Int -> Vector Frame
 gridFrames grid sheetWidth sheetHeight
-  | gridFrameWidth grid <= 0 || gridFrameHeight grid <= 0 = Vector.empty
+  | cellWidth <= 0 || cellHeight <= 0 = Vector.empty
   | otherwise =
       Vector.fromList
         [ Frame
-            { frameX = column * gridFrameWidth grid
-            , frameY = row * gridFrameHeight grid
-            , frameWidth = gridFrameWidth grid
-            , frameHeight = gridFrameHeight grid
+            { frameX = column * cellWidth
+            , frameY = row * cellHeight
+            , frameWidth = cellWidth
+            , frameHeight = cellHeight
             }
-        | row <- [0 .. sheetHeight `div` gridFrameHeight grid - 1]
-        , column <- [0 .. sheetWidth `div` gridFrameWidth grid - 1]
+        | row <- [0 .. rows - 1]
+        , column <- [0 .. columns - 1]
         ]
+ where
+  cellWidth = gridFrameWidth grid
+  cellHeight = gridFrameHeight grid
+  columns = sheetWidth `div` cellWidth
+  rows = sheetHeight `div` cellHeight

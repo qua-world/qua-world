@@ -39,10 +39,15 @@ import Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44)
 import Linear.V3 (V3 (..))
-import Linear.V4 (V4 (..))
 
 import Partir.Asset (Frame, Mesh (..), Primitive (..), Sprite (..))
-import Partir.Client.GLUT.View (camera, elementCount, frameBounds, overlayBounds)
+import Partir.Client.GLUT.View (
+  Bounds (..),
+  camera,
+  elementCount,
+  frameBounds,
+  overlayBounds,
+ )
 
 -- | A mesh resident on the GPU, ready to draw.
 data Renderer = Renderer
@@ -53,13 +58,13 @@ data Renderer = Renderer
   }
 
 {- | The icon's own program, quad, and sheet. The frame it shows is settled
-here as texture bounds, so drawing one reads no sprite.
+here as the bounds selecting it, so drawing one reads no sprite.
 -}
 data Overlay = Overlay
   { overlayProgram :: GL.Program
   , overlayArray :: GL.VertexArrayObject
   , overlayTexture :: GL.TextureObject
-  , overlayFrame :: V4 Float
+  , overlaySheetBounds :: Bounds
   }
 
 {- | One primitive's vertex array and the call that draws it. Indices are
@@ -86,7 +91,7 @@ lifetime, and 'draw' allocates nothing.
 -}
 upload :: Mesh -> Sprite -> IO Renderer
 upload mesh sprite = do
-  GL.depthFunc $= Just GL.Less
+  GL.depthFunc $= sceneDepthFunc
   program <- buildProgram vertexSource fragmentSource
   draws <- traverse uploadPrimitive (meshPrimitives mesh)
   overlay <- traverse (uploadOverlay sprite) (spriteFrames sprite Vector.!? 0)
@@ -172,7 +177,7 @@ uploadOverlay sprite frame = do
       { overlayProgram = program
       , overlayArray = vao
       , overlayTexture = texture
-      , overlayFrame = frameBounds sprite frame
+      , overlaySheetBounds = frameBounds sprite frame
       }
 
 {- | The quad's corners, as the fractions of its bounds the vertex shader
@@ -180,6 +185,16 @@ interpolates between, wound as a triangle strip.
 -}
 unitSquare :: [GL.GLfloat]
 unitSquare = [0, 0, 0, 1, 1, 0, 1, 1]
+
+-- | How many corners 'unitSquare' holds, at two components each.
+unitSquareCorners :: GL.GLsizei
+unitSquareCorners = fromIntegral (length unitSquare `div` 2)
+
+{- | The depth test the scene draws under. 'drawOverlay' suspends it and puts
+it back, so naming it once keeps the two from drifting apart.
+-}
+sceneDepthFunc :: Maybe GL.ComparisonFunction
+sceneDepthFunc = Just GL.Less
 
 uploadSheet :: Sprite -> IO GL.TextureObject
 uploadSheet sprite = do
@@ -234,20 +249,22 @@ drawOverlay size overlay = do
   GL.blend $= GL.Enabled
   GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
 
-  GL.currentProgram $= Just (overlayProgram overlay)
-  setBounds (overlayProgram overlay) "overlayBounds" (overlayBounds size)
-  setBounds (overlayProgram overlay) "frameBounds" (overlayFrame overlay)
+  GL.currentProgram $= Just program
+  setBounds program "overlayBounds" (overlayBounds size)
+  setBounds program "frameBounds" (overlaySheetBounds overlay)
 
   GL.activeTexture $= GL.TextureUnit 0
   GL.textureBinding GL.Texture2D $= Just (overlayTexture overlay)
-  setUniform (overlayProgram overlay) "sheet" (0 :: GL.GLint)
+  setUniform program "sheet" (0 :: GL.GLint)
 
   GL.bindVertexArrayObject $= Just (overlayArray overlay)
-  GL.drawArrays GL.TriangleStrip 0 4
+  GL.drawArrays GL.TriangleStrip 0 unitSquareCorners
   GL.bindVertexArrayObject $= Nothing
 
   GL.blend $= GL.Disabled
-  GL.depthFunc $= Just GL.Less
+  GL.depthFunc $= sceneDepthFunc
+ where
+  program = overlayProgram overlay
 
 -- | Assign a program's uniform by name, whatever shape it takes.
 setUniform :: GL.Uniform a => GL.Program -> String -> a -> IO ()
@@ -255,10 +272,16 @@ setUniform program name value = do
   location <- GL.uniformLocation program name
   GL.uniform location $= value
 
--- | Upload a rectangle to a @vec4@ uniform, in the order "View" packs it.
-setBounds :: GL.Program -> String -> V4 Float -> IO ()
-setBounds program name (V4 left top right bottom) =
-  setUniform program name (GL.Vertex4 left top right bottom)
+-- | Upload a rectangle to a @vec4@ uniform, corner by corner.
+setBounds :: GL.Program -> String -> Bounds -> IO ()
+setBounds program name bounds = setUniform program name corners
+ where
+  corners =
+    GL.Vertex4
+      (boundsLeft bounds)
+      (boundsTop bounds)
+      (boundsRight bounds)
+      (boundsBottom bounds)
 
 {- | Upload a "Linear" matrix to a @mat4@ uniform. @linear@ nests rows, which
 is what 'GL.RowMajor' names, so the flattened elements transfer as they are.
