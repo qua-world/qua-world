@@ -209,6 +209,11 @@ uploadSheet sprite = do
   GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.ClampToEdge)
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
 
+  -- The pointer is read, never written, and does not outlive this call, which
+  -- is all 'Storable.unsafeWith' asks of a caller. The length is the part
+  -- worth watching: glTexImage2D reads spriteWidth * spriteHeight * 4 bytes,
+  -- and a sheet whose buffer is shorter than its dimensions claim is read past
+  -- its end. 'Partir.Asset.PNG' derives both from one decoded image.
   Storable.unsafeWith (spritePixels sprite) $ \pixels ->
     GL.texImage2D
       GL.Texture2D

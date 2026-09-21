@@ -32,9 +32,14 @@ test_loadSprite =
     [ testCase "reads the sheet's pixel dimensions" $ do
         sheet <- loadIcons
         (spriteWidth sheet, spriteHeight sheet) @?= (64, 64)
-    , testCase "converts the sheet to four bytes a pixel" $ do
+    , -- The renderer hands this buffer to glTexImage2D and tells it to read
+      -- spriteWidth * spriteHeight * 4 bytes. A buffer shorter than its
+      -- dimensions claim is read past its end, so the relation between the two
+      -- is what matters here, not the count a 64 by 64 sheet happens to reach.
+      testCase "fills four bytes for every pixel the dimensions claim" $ do
         sheet <- loadIcons
-        Storable.length (spritePixels sheet) @?= 64 * 64 * 4
+        Storable.length (spritePixels sheet)
+          @?= spriteWidth sheet * spriteHeight sheet * 4
     , testCase "cuts the sheet into the grid's cells" $ do
         sheet <- loadIcons
         Vector.length (spriteFrames sheet) @?= 16
