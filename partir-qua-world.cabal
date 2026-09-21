@@ -42,6 +42,7 @@ extra-source-files:
 -- it runs from and not only in a source checkout.
 data-files:
     examples/avatar.glb
+    examples/sprites.png
 
 source-repository head
   type:              git
@@ -67,6 +68,7 @@ library
     , Partir.Agent.Null
     , Partir.Asset
     , Partir.Asset.GLTF
+    , Partir.Asset.PNG
     , Partir.Sim.Interpolate
     , Partir.World.Event
     , Partir.World.Scene
@@ -78,6 +80,7 @@ library
       bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
     , gltf-loader >= 0.3 && < 0.4
+    , JuicyPixels >= 3.3 && < 3.4
     , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
     , vector >= 0.13 && < 0.14
@@ -124,6 +127,8 @@ test-suite partir-qua-world-test
       Partir.Agent.NullSpec
     , Partir.Arbitrary
     , Partir.Asset.GLTFSpec
+    , Partir.Asset.PNGSpec
+    , Partir.AssetSpec
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Client.GLUT.ViewSpec
     , Partir.Sim.InterpolateSpec

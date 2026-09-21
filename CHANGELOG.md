@@ -36,6 +36,10 @@ bucket. Later `[Unreleased]` sections split by change type.
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
   as a typed `GltfLoadError`.
+* `Partir.Asset` also names a sprite sheet and the frames cut from it, filled
+  by `Partir.Asset.PNG` from a PNG and the cell size its frames sit on, so
+  pixel art authored in Pixelorama or any PNG-emitting tool loads. A malformed
+  image comes back as a typed `PngLoadError`.
 * Pure `Partir.World.*` domain layer: `Types` (agent/entity/tick identifiers,
   `linear`-backed `Vec3`/`Quat` aliases, and the shared rigid-body `Pose`),
   `Event` (agent-produced world changes), and `Scene` (the shared state and its

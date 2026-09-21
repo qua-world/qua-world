@@ -11,4 +11,5 @@ GLUT
 Hackage
 MIT
 partir
+Pixelorama
 subcommand
