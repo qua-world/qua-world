@@ -68,9 +68,9 @@ beside the frames does not become one.
 loadAnimation ::
   Animation.Rate -> FilePath -> IO (Either SequenceLoadError Animation.Animation)
 loadAnimation rate directory = do
-  names <- sort . filter isPng <$> Directory.listDirectory directory
-  frames <- traverse (ByteString.readFile . (directory </>)) names
-  pure $ case zip (map (directory </>) names) frames of
+  paths <- map (directory </>) . sort . filter isPng <$> Directory.listDirectory directory
+  frames <- traverse ByteString.readFile paths
+  pure $ case zip paths frames of
     [] -> Left (EmptySequence directory)
     sequenced -> loadAnimationFrames rate sequenced
 
@@ -93,6 +93,14 @@ loadAnimationFrames rate frames = compose rate <$> traverse decode frames
  where
   decode (name, bytes) = first (UndecodableFrame name) (PNG.decodeSheet bytes)
 
+-- | Pair the packed frames with how long each of them holds.
+compose :: Animation.Rate -> [Sprite.Sprite] -> Animation.Animation
+compose rate frames =
+  Animation.Animation
+    { Animation.animationSheet = packed frames
+    , Animation.animationDurations = Animation.rateDurations rate (length frames)
+    }
+
 {- | Lay the decoded frames side by side into one sheet.
 
 Frames sit flush against each other in one row, each keeping its own size, so
@@ -100,41 +108,42 @@ a sequence whose frames differ in extent wastes no texels and no frame
 addresses its neighbour's. The row is as tall as the tallest frame, and a
 shorter one sits against its top edge over transparent pixels.
 -}
-compose :: Animation.Rate -> [Sprite.Sprite] -> Animation.Animation
-compose rate frames =
-  Animation.Animation
-    { Animation.animationSheet =
-        Sprite.Sprite
-          { Sprite.spriteWidth = sheetWidth
-          , Sprite.spriteHeight = sheetHeight
-          , Sprite.spritePixels = pixels
-          , Sprite.spriteFrames = Vector.fromList (zipWith region offsets frames)
-          }
-    , Animation.animationDurations = Animation.rateDurations rate (length frames)
+packed :: [Sprite.Sprite] -> Sprite.Sprite
+packed frames =
+  Sprite.Sprite
+    { Sprite.spriteWidth = sheetWidth
+    , Sprite.spriteHeight = sheetHeight
+    , Sprite.spritePixels = composite sheetWidth sheetHeight placed
+    , Sprite.spriteFrames = Vector.fromList (map (uncurry region) placed)
     }
  where
   sheetWidth = sum (map Sprite.spriteWidth frames)
   sheetHeight = maximum (0 : map Sprite.spriteHeight frames)
-  offsets = scanl (+) 0 (map Sprite.spriteWidth frames)
+  placed = zip (scanl (+) 0 (map Sprite.spriteWidth frames)) frames
 
-  region x frame =
-    Sprite.Frame
-      { Sprite.frameX = x
-      , Sprite.frameY = 0
-      , Sprite.frameWidth = Sprite.spriteWidth frame
-      , Sprite.frameHeight = Sprite.spriteHeight frame
-      }
+-- | The region a frame laid down at the given offset occupies.
+region :: Int -> Sprite.Sprite -> Sprite.Frame
+region x frame =
+  Sprite.Frame
+    { Sprite.frameX = x
+    , Sprite.frameY = 0
+    , Sprite.frameWidth = Sprite.spriteWidth frame
+    , Sprite.frameHeight = Sprite.spriteHeight frame
+    }
 
-  pixels = Storable.create $ do
-    sheet <- Mutable.new (sheetWidth * sheetHeight * channels)
-    Mutable.set sheet transparent
-    traverse_ (uncurry (blit sheet)) (zip offsets frames)
-    pure sheet
-
+{- | Fill a sheet of the given extent with each frame's pixels, at the offset
+it was placed at. Whatever no frame covers keeps the transparent fill.
+-}
+composite :: Int -> Int -> [(Int, Sprite.Sprite)] -> Storable.Vector Word8
+composite sheetWidth sheetHeight placed = Storable.create $ do
+  sheet <- Mutable.new (sheetWidth * sheetHeight * channels)
+  Mutable.set sheet transparent
+  traverse_ (uncurry (blit sheet)) placed
+  pure sheet
+ where
   -- A frame's rows are contiguous in its own buffer and stride the sheet's
   -- width in the composite, so each one copies whole.
-  blit sheet x frame =
-    traverse_ row [0 .. Sprite.spriteHeight frame - 1]
+  blit sheet x frame = traverse_ row [0 .. Sprite.spriteHeight frame - 1]
    where
     width = Sprite.spriteWidth frame
     row y =
