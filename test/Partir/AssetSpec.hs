@@ -39,10 +39,8 @@ test_gridFrames =
     , testProperty "keeps every frame inside the sheet" framesFitTheSheet
     ]
 
-{- | A frame that reaches past the sheet samples whatever the texture wraps or
-clamps to, not the art. Cutting is the only thing standing between a cell size
-and that, so the invariant holds for cells that tile the sheet and for the
-degenerate ones that yield nothing.
+{- | A frame that reaches past the sheet samples whatever the texture clamps or
+wraps to, not the art.
 -}
 framesFitTheSheet :: Property
 framesFitTheSheet = checkCoverage $ forAllShrink arbitrary shrink $ \sheet ->

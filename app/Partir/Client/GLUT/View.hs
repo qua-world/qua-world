@@ -7,8 +7,9 @@ Module      : Partir.Client.GLUT.View
 Description : What the renderer draws and how it is framed, decided without a context
 
 What "Partir.Client.GLUT.Render" settles before it issues an OpenGL call:
-where the client watches the world from, and how many elements a primitive
-draws. None of it needs a live context, so the test suite reaches all of it.
+where the client watches the world from, how many elements a primitive draws,
+and where the sprite overlay and its frame sit. None of it needs a live
+context, so the test suite reaches all of it.
 -}
 module Partir.Client.GLUT.View (
   Bounds (..),
@@ -27,12 +28,11 @@ import Linear.V3 (V3 (..))
 
 import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
 
-{- | An axis-aligned rectangle, named from the corner a reader starts at.
+{- | An axis-aligned rectangle, given by its edges.
 
 The icon's place on screen and a frame's place in its sheet are both this
-shape, and both reach the vertex shader as one @vec4@ it interpolates a corner
-between: @(left, top)@ in @xy@ and @(right, bottom)@ in @zw@. Naming the edges
-keeps that order in one place rather than in each caller.
+shape. Both reach the vertex shader as one @vec4@ it interpolates a corner
+between: @(left, top)@ in @xy@, @(right, bottom)@ in @zw@.
 -}
 data Bounds = Bounds
   { boundsLeft :: Float
@@ -68,9 +68,9 @@ farPlane = 100
 
 {- | Where the sprite overlay sits in clip space.
 
-The icon holds a square footprint in pixels whatever shape the window is, so
-its extent follows from the window size rather than being fixed in clip space,
-where one unit spans a different number of pixels along each axis.
+The icon holds a square footprint in pixels whatever shape the window is. Its
+extent therefore follows from the window size: one clip-space unit spans a
+different number of pixels along each axis.
 -}
 overlayBounds :: GL.Size -> Bounds
 overlayBounds (GL.Size width height) =
@@ -108,9 +108,9 @@ frameBounds sprite frame =
   w = divisor (spriteWidth sprite)
   h = divisor (spriteHeight sprite)
 
-{- | A pixel extent to divide by. A window or a sheet can report no extent at
-all, and one is the nearest size that still leaves a quotient. A window counts
-in 'GL.GLsizei' and a sheet in 'Int', so this takes either.
+{- | A pixel extent to divide by, never zero — a window or a sheet can report
+no extent at all. A window counts in 'GL.GLsizei' and a sheet in 'Int', so this
+takes either.
 -}
 divisor :: Integral a => a -> Float
 divisor = fromIntegral . max 1

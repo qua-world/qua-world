@@ -43,10 +43,10 @@ test_loadSprite =
         spriteFrames sheet Vector.!? 0 @?= Just (Frame 0 0 16 16)
         spriteFrames sheet Vector.!? 5 @?= Just (Frame 16 16 16 16)
         spriteFrames sheet Vector.!? 15 @?= Just (Frame 48 48 16 16)
-    , -- The sheet's rows have to arrive top first, because a 'Frame' counts
-      -- its 'frameY' down from the top and the renderer uploads the rows in
-      -- the order they come. A sheet handed over flipped reads every frame
-      -- from the row mirroring it, which these two colours tell apart.
+    , -- A Frame counts its frameY down from the top and the renderer uploads
+      -- rows in the order they arrive, so a flipped sheet would read every
+      -- frame from the row mirroring it. These two colours come from opposite
+      -- ends of the sheet.
       testCase "keeps the sheet's top row first" $ do
         sheet <- loadIcons
         pixelAt sheet 8 8 @?= [40, 40, 200, 255]

@@ -60,9 +60,8 @@ test_elementCount =
         elementCount (triangleWith Vector.empty) @?= 3
     ]
 
-{- | An icon stretched by its window would be the visible symptom, and clip
-space is where a window's shape leaks in: one clip-space unit spans half the
-window along each axis, and those halves differ.
+{- | A clip-space unit spans half the window along each axis, and those halves
+differ, so a rectangle fixed in clip space comes out stretched.
 -}
 test_overlayBounds :: TestTree
 test_overlayBounds =

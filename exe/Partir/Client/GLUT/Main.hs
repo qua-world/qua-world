@@ -68,7 +68,7 @@ as 'avatar'.
 icons :: IO Asset.Sprite
 icons = getDataFileName "examples/sprites.png" >>= PNG.loadSprite grid >>= either throwIO pure
  where
-  -- The cell @examples/sprites.png@ is laid out on. A sheet carries no frame
+  -- The cell examples/sprites.png is laid out on. A sheet carries no frame
   -- metadata, so this is knowledge about that file (#111).
   grid = Asset.Grid{Asset.gridFrameWidth = 16, Asset.gridFrameHeight = 16}
 

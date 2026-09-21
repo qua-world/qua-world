@@ -57,8 +57,8 @@ data Renderer = Renderer
   -- ^ Absent when the sheet holds no frame to show.
   }
 
-{- | The icon's own program, quad, and sheet. The frame it shows is settled
-here as the bounds selecting it, so drawing one reads no sprite.
+{- | The icon's own program, quad, and sheet, with the frame it shows already
+reduced to the bounds that select it. Drawing one reads no 'Sprite'.
 -}
 data Overlay = Overlay
   { overlayProgram :: GL.Program
@@ -82,7 +82,9 @@ positionAttribute = GL.AttribLocation 0
 normalAttribute :: GL.AttribLocation
 normalAttribute = GL.AttribLocation 1
 
--- | The overlay quad's own attribute, in its own program.
+{- | The overlay quad's attribute. It shares a location with
+'positionAttribute' because each program binds its own.
+-}
 cornerAttribute :: GL.AttribLocation
 cornerAttribute = GL.AttribLocation 0
 
@@ -137,7 +139,7 @@ bindVectorAttribute :: GL.AttribLocation -> Vector.Vector (V3 Float) -> IO ()
 bindVectorAttribute location =
   bindAttribute location 3 . concatMap toList . Vector.toList
 
--- | Feed one attribute from a flat run of components, so many per vertex.
+-- | Feed one attribute from a flat run of components, given how many a vertex takes.
 bindAttribute :: GL.AttribLocation -> GL.NumComponents -> [GL.GLfloat] -> IO ()
 bindAttribute location components values = do
   fillBuffer GL.ArrayBuffer (sizeOf (undefined :: GL.GLfloat)) values
@@ -186,13 +188,10 @@ interpolates between, wound as a triangle strip.
 unitSquare :: [GL.GLfloat]
 unitSquare = [0, 0, 0, 1, 1, 0, 1, 1]
 
--- | How many corners 'unitSquare' holds, at two components each.
 unitSquareCorners :: GL.GLsizei
 unitSquareCorners = fromIntegral (length unitSquare `div` 2)
 
-{- | The depth test the scene draws under. 'drawOverlay' suspends it and puts
-it back, so naming it once keeps the two from drifting apart.
--}
+-- | The depth test the scene draws under, which 'drawOverlay' suspends.
 sceneDepthFunc :: Maybe GL.ComparisonFunction
 sceneDepthFunc = Just GL.Less
 
@@ -272,7 +271,7 @@ setUniform program name value = do
   location <- GL.uniformLocation program name
   GL.uniform location $= value
 
--- | Upload a rectangle to a @vec4@ uniform, corner by corner.
+-- | Upload a rectangle to a @vec4@ uniform.
 setBounds :: GL.Program -> String -> Bounds -> IO ()
 setBounds program name bounds = setUniform program name corners
  where
