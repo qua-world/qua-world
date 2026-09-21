@@ -18,6 +18,7 @@ module Partir.Asset.Sprite.PNG (
   PngLoadError (..),
   loadSprite,
   loadSpriteBytes,
+  decodeSheet,
 )
 where
 
@@ -25,6 +26,7 @@ import Control.Exception (Exception)
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
+import qualified Data.Vector as Vector
 
 import qualified Codec.Picture as Picture
 
@@ -50,17 +52,28 @@ loadSprite grid path = loadSpriteBytes grid <$> ByteString.readFile path
 content that arrives from somewhere other than a file.
 -}
 loadSpriteBytes :: Sprite.Grid -> ByteString -> Either PngLoadError Sprite.Sprite
-loadSpriteBytes grid bytes =
-  toSprite grid . Picture.convertRGBA8 <$> first PngLoadError (Picture.decodePng bytes)
-
-toSprite :: Sprite.Grid -> Picture.Image Picture.PixelRGBA8 -> Sprite.Sprite
-toSprite grid image =
-  Sprite.Sprite
-    { Sprite.spriteWidth = width
-    , Sprite.spriteHeight = height
-    , Sprite.spritePixels = Picture.imageData image
-    , Sprite.spriteFrames = Sprite.gridFrames grid width height
-    }
+loadSpriteBytes grid bytes = cut <$> decodeSheet bytes
  where
-  width = Picture.imageWidth image
-  height = Picture.imageHeight image
+  cut sheet =
+    sheet
+      { Sprite.spriteFrames =
+          Sprite.gridFrames grid (Sprite.spriteWidth sheet) (Sprite.spriteHeight sheet)
+      }
+
+{- | Decode a PNG into the sheet alone, its frames left empty for the caller
+to fill. Frames that come from somewhere other than a grid — a sequence of
+separate files, each its own frame — reach a 'Sprite.Sprite' through here
+rather than through a second decoder.
+-}
+decodeSheet :: ByteString -> Either PngLoadError Sprite.Sprite
+decodeSheet bytes =
+  toSheet . Picture.convertRGBA8 <$> first PngLoadError (Picture.decodePng bytes)
+
+toSheet :: Picture.Image Picture.PixelRGBA8 -> Sprite.Sprite
+toSheet image =
+  Sprite.Sprite
+    { Sprite.spriteWidth = Picture.imageWidth image
+    , Sprite.spriteHeight = Picture.imageHeight image
+    , Sprite.spritePixels = Picture.imageData image
+    , Sprite.spriteFrames = Vector.empty
+    }
