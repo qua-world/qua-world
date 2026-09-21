@@ -6,6 +6,7 @@ module Partir.Client.GLUT.ViewSpec (
   test_camera,
   test_elementCount,
   test_frameBounds,
+  test_iconAt,
   test_overlayBounds,
 )
 where
@@ -20,12 +21,15 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
 import Partir.Asset (Primitive (..))
+import Partir.Asset.Animation (Animation (..), still)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
 import Partir.Client.GLUT.View (
   Bounds (..),
   camera,
   elementCount,
   frameBounds,
+  icon,
+  iconAt,
   overlayBounds,
  )
 
@@ -73,19 +77,19 @@ test_overlayBounds =
     , testCase "holds a square footprint in a portrait window" $
         assertSquare portrait
     , testCase "insets the icon from the window's top-left corner" $ do
-        let icon = overlayBounds landscape 0
-        assertBool "the icon is not left of centre" (boundsLeft icon < 0)
-        assertBool "the icon is not above centre" (boundsTop icon > 0)
+        let footprint = overlayBounds landscape 0
+        assertBool "the icon is not left of centre" (boundsLeft footprint < 0)
+        assertBool "the icon is not above centre" (boundsTop footprint > 0)
     , -- Clip space runs upward and a window's rows run downward, so the icon's
       -- bottom edge is the lesser of the two.
       testCase "orders the bounds from the top-left corner" $ do
-        let icon = overlayBounds landscape 0
+        let footprint = overlayBounds landscape 0
         assertBool
           "the left edge is not left of the right"
-          (boundsLeft icon < boundsRight icon)
+          (boundsLeft footprint < boundsRight footprint)
         assertBool
           "the top edge is not above the bottom"
-          (boundsTop icon > boundsBottom icon)
+          (boundsTop footprint > boundsBottom footprint)
     , -- Overlapping slots would draw one icon over another.
       testCase "clears the slot before it" $ do
         let (first', second') = (overlayBounds landscape 0, overlayBounds landscape 1)
@@ -120,6 +124,44 @@ test_frameBounds =
         frameBounds (sheet 0 0) (Frame 0 0 0 0) @?= Bounds 0 0 0 0
     ]
 
+{- | An animation reduced to what the renderer draws it from, and the frame
+that reduction yields at an instant. The renderer makes this choice every
+frame it draws; it is settled here so the test suite reaches it.
+-}
+test_iconAt :: TestTree
+test_iconAt =
+  testGroup
+    "iconAt"
+    [ -- Handing back one frame's bounds for another draws the wrong art in
+      -- the right place, which no dimension check would catch.
+      testCase "takes each frame's own region in turn" $
+        map (iconAt (icon (timed [0.5, 0.5]))) [0, 0.6]
+          @?= [Just (Bounds 0 0 0.5 1), Just (Bounds 0.5 0 1 1)]
+    , testCase "returns to the first frame once the last one ends" $
+        iconAt (icon (timed [0.5, 0.5])) 1 @?= Just (Bounds 0 0 0.5 1)
+    , testCase "holds a still on its one frame however long it runs" $
+        map (iconAt (icon (still (strip 2)))) [0, 99]
+          @?= replicate 2 (Just (Bounds 0 0 0.5 1))
+    , -- The renderer draws nothing rather than picking an arbitrary region.
+      testCase "shows nothing for an animation with no frames" $
+        iconAt (icon (timed [])) 0 @?= Nothing
+    ]
+
+-- | An animation over a row of 16-pixel frames, one frame per duration given.
+timed :: [Double] -> Animation
+timed durations =
+  Animation
+    { animationSheet = strip (length durations)
+    , animationDurations = Vector.fromList durations
+    }
+
+-- | A sheet cut into the given number of 16-pixel frames, laid out in one row.
+strip :: Int -> Sprite
+strip count =
+  (sheet (16 * count) 16)
+    { spriteFrames = Vector.generate count (\n -> Frame (16 * n) 0 16 16)
+    }
+
 -- | A sheet of the given size, holding no pixels and no frames.
 sheet :: Int -> Int -> Sprite
 sheet width height =
@@ -139,9 +181,9 @@ assertSquare size@(GL.Size width height) =
     ("expected a square icon, got " ++ show (across, down) ++ " pixels")
     (abs (across - down) < tolerance)
  where
-  icon = overlayBounds size 0
-  across = (boundsRight icon - boundsLeft icon) / 2 * fromIntegral (max 1 width)
-  down = (boundsTop icon - boundsBottom icon) / 2 * fromIntegral (max 1 height)
+  footprint = overlayBounds size 0
+  across = (boundsRight footprint - boundsLeft footprint) / 2 * fromIntegral (max 1 width)
+  down = (boundsTop footprint - boundsBottom footprint) / 2 * fromIntegral (max 1 height)
   tolerance = 1e-3
 
 -- | Three vertices, and whichever indices the example wants over them.

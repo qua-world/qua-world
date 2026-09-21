@@ -27,10 +27,9 @@ module Partir.Client.GLUT.Render (
 )
 where
 
-import Control.Monad (unless, when)
+import Control.Monad (unless, when, zipWithM)
 import qualified Data.ByteString.Char8 as ByteString
 import Data.Foldable (toList, traverse_)
-import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
 import Data.Word (Word32)
@@ -43,13 +42,15 @@ import Linear.Matrix (M44)
 import Linear.V3 (V3 (..))
 
 import Partir.Asset (Mesh (..), Primitive (..))
-import Partir.Asset.Animation (Animation (..), stepAt, timeline)
+import Partir.Asset.Animation (Animation (..))
 import Partir.Asset.Sprite (Sprite (..))
 import Partir.Client.GLUT.View (
   Bounds (..),
+  Icon,
   camera,
   elementCount,
-  frameBounds,
+  icon,
+  iconAt,
   overlayBounds,
  )
 
@@ -66,17 +67,13 @@ data Geometry = Geometry
   , geometryDraws :: [Draw]
   }
 
-{- | One icon on the GPU, with its timeline already reduced to the durations
-that time it and the bounds that select each frame. Drawing one reads no
-'Sprite'.
--}
+-- | One icon on the GPU, with the sheet it draws from already a texture.
 data Overlay = Overlay
   { overlayProgram :: GL.Program
   , overlayArray :: GL.VertexArrayObject
   , overlayTexture :: GL.TextureObject
   , overlaySlot :: Int
-  , overlayDurations :: Vector Double
-  , overlayFrames :: Vector Bounds
+  , overlayIcon :: Icon
   }
 
 {- | One primitive's vertex array and the call that draws it. Indices are
@@ -108,7 +105,7 @@ upload mesh animations = do
   GL.depthFunc $= sceneDepthFunc
   geometry <- uploadGeometry mesh
   program <- buildProgram overlayVertexSource overlayFragmentSource
-  overlays <- traverse (uncurry (uploadOverlay program)) (zip [0 ..] animations)
+  overlays <- zipWithM (uploadOverlay program) [0 ..] animations
   pure Renderer{rendererGeometry = geometry, rendererOverlays = overlays}
 
 uploadGeometry :: Mesh -> IO Geometry
@@ -185,19 +182,15 @@ uploadOverlay program slot animation = do
   bindAttribute cornerAttribute 2 unitSquare
   GL.bindVertexArrayObject $= Nothing
 
-  texture <- uploadSheet sheet
+  texture <- uploadSheet (animationSheet animation)
   pure
     Overlay
       { overlayProgram = program
       , overlayArray = vao
       , overlayTexture = texture
       , overlaySlot = slot
-      , overlayDurations = Vector.map fst steps
-      , overlayFrames = Vector.map (frameBounds sheet . snd) steps
+      , overlayIcon = icon animation
       }
- where
-  sheet = animationSheet animation
-  steps = timeline animation
 
 {- | The quad's corners, as the fractions of its bounds the vertex shader
 interpolates between, wound as a triangle strip.
@@ -289,7 +282,7 @@ drawOverlays size elapsed overlays = do
 -- | Draw whichever frame of one icon its timeline has reached.
 drawOverlay :: GL.Size -> Double -> Overlay -> IO ()
 drawOverlay size elapsed overlay =
-  traverse_ showing (stepAt (overlayDurations overlay) elapsed >>= (overlayFrames overlay Vector.!?))
+  traverse_ showing (iconAt (overlayIcon overlay) elapsed)
  where
   program = overlayProgram overlay
 
