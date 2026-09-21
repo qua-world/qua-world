@@ -16,6 +16,7 @@ import qualified Partir.Client.GLUT.Render as Render
 
 import qualified Partir.Asset as Asset
 import qualified Partir.Asset.GLTF as GLTF
+import qualified Partir.Asset.PNG as PNG
 import Paths_partir_qua_world (getDataFileName)
 
 main :: IO ()
@@ -33,7 +34,7 @@ main = do
   _ <- GLUT.createWindow "Qua World"
 
   -- Uploading needs the context the window just created.
-  renderer <- Render.upload =<< avatar
+  renderer <- join (Render.upload <$> avatar <*> icons)
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
@@ -55,11 +56,21 @@ main = do
 
   GLUT.mainLoop
 
-{- | The only asset the client draws. A document that will not decode is
-fatal: there is nothing else to put on screen.
+{- | The asset the client draws in the scene. A document that will not decode
+is fatal: there is nothing else to put on screen.
 -}
 avatar :: IO Asset.Mesh
 avatar = getDataFileName "examples/avatar.glb" >>= GLTF.loadAsset >>= either throwIO pure
+
+{- | The sheet the client draws its corner icon from, fatal on the same terms
+as 'avatar'.
+-}
+icons :: IO Asset.Sprite
+icons = getDataFileName "examples/sprites.png" >>= PNG.loadSprite grid >>= either throwIO pure
+ where
+  -- The cell @examples/sprites.png@ is laid out on. A sheet carries no frame
+  -- metadata, so this is knowledge about that file (#111).
+  grid = Asset.Grid{Asset.gridFrameWidth = 16, Asset.gridFrameHeight = 16}
 
 display :: Render.Renderer -> GLUT.DisplayCallback
 display renderer = do

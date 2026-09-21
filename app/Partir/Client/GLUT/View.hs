@@ -13,6 +13,8 @@ draws. None of it needs a live context, so the test suite reaches all of it.
 module Partir.Client.GLUT.View (
   camera,
   elementCount,
+  overlayBounds,
+  frameBounds,
 )
 where
 
@@ -21,8 +23,9 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44, (!*!))
 import Linear.Projection (lookAt, perspective)
 import Linear.V3 (V3 (..))
+import Linear.V4 (V4 (..))
 
-import Partir.Asset (Primitive (..))
+import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
 
 {- | The transform from model space to clip space, for a window of the given
 size: a fixed viewpoint, and a projection matched to the window's aspect
@@ -47,6 +50,44 @@ verticalFieldOfView, nearPlane, farPlane :: Float
 verticalFieldOfView = pi / 4
 nearPlane = 0.1
 farPlane = 100
+
+{- | Where the sprite overlay sits in clip space, as left, top, right, bottom —
+the order the vertex shader reads the pair of corners from.
+
+The icon holds a square footprint in pixels whatever shape the window is, so
+its extent follows from the window size rather than being fixed in clip space,
+where one unit spans a different number of pixels along each axis.
+-}
+overlayBounds :: GL.Size -> V4 Float
+overlayBounds (GL.Size width height) =
+  V4 left top (left + 2 * overlaySize / w) (top - 2 * overlaySize / h)
+ where
+  left = -1 + 2 * overlayMargin / w
+  top = 1 - 2 * overlayMargin / h
+  w = fromIntegral (max 1 width)
+  h = fromIntegral (max 1 height)
+
+-- | The icon's footprint and its inset from the window's top-left, in pixels.
+overlaySize, overlayMargin :: Float
+overlaySize = 96
+overlayMargin = 16
+
+{- | Where one frame sits in its sheet's texture coordinates, in the same
+left\/top\/right\/bottom order as 'overlayBounds'.
+
+The sheet uploads with its top row first, so the vertical coordinate runs down
+the image and a frame's 'frameY' stays its top edge.
+-}
+frameBounds :: Sprite -> Frame -> V4 Float
+frameBounds sprite frame =
+  V4
+    (fromIntegral (frameX frame) / w)
+    (fromIntegral (frameY frame) / h)
+    (fromIntegral (frameX frame + frameWidth frame) / w)
+    (fromIntegral (frameY frame + frameHeight frame) / h)
+ where
+  w = fromIntegral (max 1 (spriteWidth sprite))
+  h = fromIntegral (max 1 (spriteHeight sprite))
 
 {- | How many elements one draw call issues: the indices when the primitive
 has them, otherwise its vertices.

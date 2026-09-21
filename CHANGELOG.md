@@ -46,6 +46,8 @@ bucket. Later `[Unreleased]` sections split by change type.
   `apply` fold).
 * The client renders `examples/avatar.glb` in front of the camera, lit by the
   asset's own normals, in an OpenGL 3.3 core-profile context.
+* The client draws the first frame of `examples/sprites.png` as an icon in the
+  window's top-left corner, over the scene and blended against it.
 * GLUT-based GUI client that opens a "Qua World" window.
 * `observe` subcommand to become an observer in qua.world.
 * Escape key quits the client.

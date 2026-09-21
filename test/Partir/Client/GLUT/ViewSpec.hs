@@ -5,10 +5,13 @@
 module Partir.Client.GLUT.ViewSpec (
   test_camera,
   test_elementCount,
+  test_frameBounds,
+  test_overlayBounds,
 )
 where
 
 import qualified Data.Vector as Vector
+import qualified Data.Vector.Storable as Storable
 import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix ((!*))
 import Linear.V3 (V3 (..))
@@ -16,8 +19,8 @@ import Linear.V4 (V4 (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
-import Partir.Asset (Primitive (..))
-import Partir.Client.GLUT.View (camera, elementCount)
+import Partir.Asset (Frame (..), Primitive (..), Sprite (..))
+import Partir.Client.GLUT.View (camera, elementCount, frameBounds, overlayBounds)
 
 {- | An asset modelled about the origin lands in the middle of the window,
 whatever shape the window is.
@@ -50,6 +53,77 @@ test_elementCount =
     , testCase "counts the vertices when the primitive has no indices" $
         elementCount (triangleWith Vector.empty) @?= 3
     ]
+
+{- | An icon stretched by its window would be the visible symptom, and clip
+space is where a window's shape leaks in: one clip-space unit spans half the
+window along each axis, and those halves differ.
+-}
+test_overlayBounds :: TestTree
+test_overlayBounds =
+  testGroup
+    "overlayBounds"
+    [ testCase "holds a square footprint in a landscape window" $
+        assertSquare landscape
+    , testCase "holds a square footprint in a portrait window" $
+        assertSquare portrait
+    , testCase "insets the icon from the window's top-left corner" $ do
+        let V4 left top _ _ = overlayBounds landscape
+        assertBool "the icon is not left of centre" (left < 0)
+        assertBool "the icon is not above centre" (top > 0)
+    , -- Clip space runs upward and a window's rows run downward, so the icon's
+      -- bottom edge is the lesser of the two.
+      testCase "orders the bounds from the top-left corner" $ do
+        let V4 left top right bottom = overlayBounds landscape
+        assertBool "the left edge is not left of the right" (left < right)
+        assertBool "the top edge is not above the bottom" (top > bottom)
+    , -- A window with no height would divide by it.
+      testCase "survives a window collapsed to nothing" $
+        assertSquare (GL.Size 0 0)
+    ]
+
+{- | Texture coordinates run 0 to 1 over the sheet however many pixels it is,
+so a frame's bounds are its pixels over the sheet's.
+-}
+test_frameBounds :: TestTree
+test_frameBounds =
+  testGroup
+    "frameBounds"
+    [ testCase "spans the whole sheet for a frame that covers it" $
+        frameBounds (sheet 64 64) (Frame 0 0 64 64) @?= V4 0 0 1 1
+    , testCase "takes the quarter a frame occupies" $
+        frameBounds (sheet 64 64) (Frame 16 16 16 16) @?= V4 0.25 0.25 0.5 0.5
+    , -- A frame's own y counts down from the top, and so does the coordinate
+      -- it becomes. Flipping either one here would swap these two.
+      testCase "leaves the vertical coordinate running downward" $ do
+        let V4 _ top _ bottom = frameBounds (sheet 64 64) (Frame 0 48 16 16)
+        (top, bottom) @?= (0.75, 1)
+    , testCase "survives a sheet of no extent" $
+        frameBounds (sheet 0 0) (Frame 0 0 0 0) @?= V4 0 0 0 0
+    ]
+
+-- | A sheet of the given size, holding no pixels and no frames.
+sheet :: Int -> Int -> Sprite
+sheet width height =
+  Sprite
+    { spriteWidth = width
+    , spriteHeight = height
+    , spritePixels = Storable.empty
+    , spriteFrames = Vector.empty
+    }
+
+{- | The icon covers as many pixels across as it does down. Clip space spans
+two units over each axis, so an extent there is that fraction of the window.
+-}
+assertSquare :: GL.Size -> IO ()
+assertSquare size@(GL.Size width height) =
+  assertBool
+    ("expected a square icon, got " ++ show (across, down) ++ " pixels")
+    (abs (across - down) < tolerance)
+ where
+  V4 left top right bottom = overlayBounds size
+  across = (right - left) / 2 * fromIntegral (max 1 width)
+  down = (top - bottom) / 2 * fromIntegral (max 1 height)
+  tolerance = 1e-3
 
 -- | Three vertices, and whichever indices the example wants over them.
 triangleWith :: Vector.Vector Word -> Primitive
