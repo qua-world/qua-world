@@ -1,0 +1,184 @@
+{
+	"jsonVersion": "1.5.3",
+	"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840001",
+	"worldLayout": "Free",
+	"worldGridWidth": 96,
+	"worldGridHeight": 96,
+	"externalLevels": false,
+	"bgColor": "#40465B",
+	"defs": {
+		"layers": [
+			{
+				"__type": "IntGrid",
+				"identifier": "Floor",
+				"uid": 1,
+				"gridSize": 16,
+				"displayOpacity": 1,
+				"parallaxFactorX": 0,
+				"parallaxFactorY": 0,
+				"parallaxScaling": true,
+				"pxOffsetX": 0,
+				"pxOffsetY": 0,
+				"intGridValues": [
+					{ "value": 1, "identifier": "ground", "color": "#5A7D3C" }
+				]
+			},
+			{
+				"__type": "Tiles",
+				"identifier": "Walls",
+				"uid": 2,
+				"gridSize": 16,
+				"displayOpacity": 1,
+				"parallaxFactorX": 0,
+				"parallaxFactorY": 0,
+				"parallaxScaling": true,
+				"pxOffsetX": 0,
+				"pxOffsetY": 0,
+				"intGridValues": []
+			},
+			{
+				"__type": "Entities",
+				"identifier": "Spawns",
+				"uid": 3,
+				"gridSize": 16,
+				"displayOpacity": 1,
+				"parallaxFactorX": 0,
+				"parallaxFactorY": 0,
+				"parallaxScaling": true,
+				"pxOffsetX": 0,
+				"pxOffsetY": 0,
+				"intGridValues": []
+			}
+		],
+		"entities": [
+			{
+				"identifier": "PlayerStart",
+				"uid": 4,
+				"width": 16,
+				"height": 16,
+				"color": "#BE4A2F",
+				"nineSliceBorders": [],
+				"pivotX": 0,
+				"pivotY": 0,
+				"tileRenderMode": "FitInside"
+			}
+		],
+		"tilesets": [],
+		"enums": [],
+		"externalEnums": []
+	},
+	"levels": [
+		{
+			"identifier": "Room",
+			"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840002",
+			"uid": 5,
+			"worldX": 0,
+			"worldY": 0,
+			"worldDepth": 0,
+			"pxWid": 96,
+			"pxHei": 96,
+			"__bgColor": "#40465B",
+			"__neighbours": [],
+			"fieldInstances": [],
+			"layerInstances": [
+				{
+					"__identifier": "Spawns",
+					"__type": "Entities",
+					"__cWid": 6,
+					"__cHei": 6,
+					"__gridSize": 16,
+					"__opacity": 1,
+					"__pxTotalOffsetX": 0,
+					"__pxTotalOffsetY": 0,
+					"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840003",
+					"levelId": 5,
+					"layerDefUid": 3,
+					"visible": true,
+					"intGridCsv": [],
+					"gridTiles": [],
+					"autoLayerTiles": [],
+					"entityInstances": [
+						{
+							"__identifier": "PlayerStart",
+							"__grid": [3, 3],
+							"__pivot": [0, 0],
+							"__smartColor": "#BE4A2F",
+							"__tags": [],
+							"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840004",
+							"defUid": 4,
+							"width": 16,
+							"height": 16,
+							"px": [48, 48],
+							"fieldInstances": []
+						}
+					]
+				},
+				{
+					"__identifier": "Walls",
+					"__type": "Tiles",
+					"__cWid": 6,
+					"__cHei": 6,
+					"__gridSize": 16,
+					"__opacity": 1,
+					"__pxTotalOffsetX": 0,
+					"__pxTotalOffsetY": 0,
+					"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840005",
+					"levelId": 5,
+					"layerDefUid": 2,
+					"visible": true,
+					"intGridCsv": [],
+					"autoLayerTiles": [],
+					"entityInstances": [],
+					"gridTiles": [
+						{ "px": [0, 0], "src": [0, 0], "f": 0, "t": 2, "d": [0] },
+						{ "px": [16, 0], "src": [0, 0], "f": 0, "t": 2, "d": [1] },
+						{ "px": [32, 0], "src": [0, 0], "f": 0, "t": 2, "d": [2] },
+						{ "px": [48, 0], "src": [0, 0], "f": 0, "t": 2, "d": [3] },
+						{ "px": [64, 0], "src": [0, 0], "f": 0, "t": 2, "d": [4] },
+						{ "px": [80, 0], "src": [0, 0], "f": 0, "t": 2, "d": [5] },
+						{ "px": [0, 16], "src": [0, 0], "f": 0, "t": 2, "d": [6] },
+						{ "px": [80, 16], "src": [0, 0], "f": 0, "t": 2, "d": [11] },
+						{ "px": [0, 32], "src": [0, 0], "f": 0, "t": 2, "d": [12] },
+						{ "px": [80, 32], "src": [0, 0], "f": 0, "t": 2, "d": [17] },
+						{ "px": [0, 48], "src": [0, 0], "f": 0, "t": 2, "d": [18] },
+						{ "px": [80, 48], "src": [0, 0], "f": 0, "t": 2, "d": [23] },
+						{ "px": [0, 64], "src": [0, 0], "f": 0, "t": 2, "d": [24] },
+						{ "px": [80, 64], "src": [0, 0], "f": 0, "t": 2, "d": [29] },
+						{ "px": [0, 80], "src": [0, 0], "f": 0, "t": 2, "d": [30] },
+						{ "px": [16, 80], "src": [0, 0], "f": 0, "t": 2, "d": [31] },
+						{ "px": [32, 80], "src": [0, 0], "f": 0, "t": 2, "d": [32] },
+						{ "px": [48, 80], "src": [0, 0], "f": 0, "t": 2, "d": [33] },
+						{ "px": [64, 80], "src": [0, 0], "f": 0, "t": 2, "d": [34] },
+						{ "px": [80, 80], "src": [0, 0], "f": 0, "t": 2, "d": [35] }
+					]
+				},
+				{
+					"__identifier": "Floor",
+					"__type": "IntGrid",
+					"__cWid": 6,
+					"__cHei": 6,
+					"__gridSize": 16,
+					"__opacity": 1,
+					"__pxTotalOffsetX": 0,
+					"__pxTotalOffsetY": 0,
+					"iid": "5f3c9a10-4b60-11f0-9a5e-2f7d1c840006",
+					"levelId": 5,
+					"layerDefUid": 1,
+					"visible": true,
+					"gridTiles": [],
+					"autoLayerTiles": [],
+					"entityInstances": [],
+					"intGridCsv": [
+						1, 1, 1, 1, 1, 1,
+						1, 1, 1, 1, 1, 1,
+						1, 1, 1, 1, 1, 1,
+						1, 1, 1, 1, 1, 1,
+						1, 1, 1, 1, 1, 1,
+						1, 1, 1, 1, 1, 1
+					]
+				}
+			]
+		}
+	],
+	"worlds": []
+}

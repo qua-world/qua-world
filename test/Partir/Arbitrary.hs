@@ -28,17 +28,28 @@ where
 
 import qualified Data.Map.Strict as Map
 import Data.Text (pack, unpack)
+import qualified Data.Vector as Vector
 import Linear.Metric (normalize, quadrance)
 import Linear.Quaternion (Quaternion (..))
+import Linear.V2 (V2 (..))
 import Linear.V3 (V3 (..))
 import Test.QuickCheck (
   Arbitrary (arbitrary, shrink),
   Gen,
+  Positive (..),
   choose,
+  frequency,
   oneof,
+  resize,
   suchThat,
+  vectorOf,
  )
 
+import Partir.Asset.Tilemap (
+  Placement (..),
+  TileLayer (..),
+  Tilemap (..),
+ )
 import Partir.World.Event (Event (..))
 import Partir.World.Scene (Scene (..), apply, empty)
 import Partir.World.Types (
@@ -181,6 +192,77 @@ instance Arbitrary Scene where
     [Scene t' es | t' <- shrink t]
       <> [Scene t (Map.fromList es') | es' <- shrink (Map.toList es)]
 
+{- | A layer whose cell vector matches the grid it declares.
+'Partir.Asset.Tilemap.toMesh' reads a cell's column and row out of the
+declared width, so a generator that let the two drift would test a shape no
+loader produces.
+
+Shrinking drops whole rows off the bottom and shrinks tiles in place;
+dropping cells alone would break that agreement.
+-}
+instance Arbitrary TileLayer where
+  arbitrary = do
+    columns <- choose (0, gridEdge)
+    rows <- choose (0, gridEdge)
+    name <- pack <$> arbitrary
+    cells <- vectorOf (columns * rows) tile
+    pure (TileLayer name columns rows (Vector.fromList cells))
+   where
+    tile = frequency [(1, pure Nothing), (3, Just . getPositive <$> arbitrary)]
+
+  shrink layer =
+    [ layer
+        { tileLayerRows = rows
+        , tileLayerTiles = Vector.take (tileLayerColumns layer * rows) cells
+        }
+    | rows <- shrink (tileLayerRows layer)
+    ]
+      <> [ layer{tileLayerTiles = Vector.fromList shrunk}
+         | shrunk <- shrink (Vector.toList cells)
+         , length shrunk == Vector.length cells
+         ]
+   where
+    cells = tileLayerTiles layer
+
+instance Arbitrary Placement where
+  arbitrary = Placement . pack <$> arbitrary <*> tiles <*> tiles
+   where
+    tiles = V2 <$> coordinate <*> coordinate
+
+  shrink (Placement n (V2 ox oy) (V2 sx sy)) =
+    [ Placement (pack n') (V2 ox' oy') (V2 sx' sy')
+    | (n', (ox', oy'), (sx', sy')) <- shrink (unpack n, (ox, oy), (sx, sy))
+    ]
+
+{- | A map whose declared grid covers every layer on it, which is what each
+loader derives from its source document.
+-}
+instance Arbitrary Tilemap where
+  arbitrary = do
+    layers <- resize layerCount arbitrary
+    placements <- resize layerCount arbitrary
+    pure
+      Tilemap
+        { tilemapColumns = extent tileLayerColumns layers
+        , tilemapRows = extent tileLayerRows layers
+        , tilemapLayers = layers
+        , tilemapPlacements = placements
+        }
+
+  shrink tilemap =
+    [ tilemap
+        { tilemapLayers = layers
+        , tilemapColumns = extent tileLayerColumns layers
+        , tilemapRows = extent tileLayerRows layers
+        }
+    | layers <- shrink (tilemapLayers tilemap)
+    ]
+      <> [tilemap{tilemapPlacements = ps} | ps <- shrink (tilemapPlacements tilemap)]
+
+-- | The grid a tilemap needs to hold every one of its layers.
+extent :: (TileLayer -> Int) -> [TileLayer] -> Int
+extent cells = maximum . (0 :) . map cells
+
 -- Bounds
 
 -- | How far a generated coordinate reaches from the origin, on any one axis.
@@ -196,6 +278,17 @@ a meaningful rotation.
 -}
 degenerate :: Double
 degenerate = 1e-3
+
+{- | How far a generated tile layer reaches on either axis. The geometry a
+tilemap builds is four vertices per filled cell, so an unbounded grid spends
+the run allocating rather than covering cases.
+-}
+gridEdge :: Int
+gridEdge = 8
+
+-- | How many layers, and how many placements, a generated tilemap carries.
+layerCount :: Int
+layerCount = 3
 
 unitRange :: (Double, Double)
 unitRange = (0, 1)

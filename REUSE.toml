@@ -11,6 +11,13 @@ path = "examples/**.glb"
 SPDX-FileCopyrightText = "2026 Alex Brandt"
 SPDX-License-Identifier = "MIT"
 
+# JSON has no comment syntax, and Tiled and LDtk both rewrite the whole
+# document on save, so an unrecognised key would not survive one either.
+[[annotations]]
+path = ["examples/**.tmj", "examples/**.ldtk"]
+SPDX-FileCopyrightText = "2026 Alex Brandt"
+SPDX-License-Identifier = "MIT"
+
 # Vale reads every line of a vocabulary as a regex, leaving nowhere to put a
 # comment.
 [[annotations]]

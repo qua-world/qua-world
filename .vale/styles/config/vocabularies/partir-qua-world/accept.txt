@@ -9,6 +9,8 @@ GHC
 GLU
 GLUT
 Hackage
+LDtk
 MIT
 partir
 subcommand
+Tiled('s)?
