@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+# A square pyramid standing on the floor beside examples/avatar.glb. OBJ carries no
+# transform, so its placement is in the positions themselves.
+o pyramid
+v 0.6 0 -0.6
+v 1.0 0 -0.6
+v 1.0 0 -1.0
+v 0.6 0 -1.0
+v 0.8 0.6 -0.8
+vn 0 0.3162 0.9487
+vn 0.9487 0.3162 0
+vn 0 0.3162 -0.9487
+vn -0.9487 0.3162 0
+vn 0 -1 0
+f 1//1 2//1 5//1
+f 2//2 3//2 5//2
+f 3//3 4//3 5//3
+f 4//4 1//4 5//4
+f 1//5 4//5 3//5 2//5
