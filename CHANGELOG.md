@@ -34,7 +34,8 @@ bucket. Later `[Unreleased]` sections split by change type.
   samples the render clock has passed.
 * `Partir.Asset`: a renderer-ready mesh naming no source format, filled by
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
-  Blockbench or any glTF-emitting tool loads. A malformed document comes back
+  Blockbench or any glTF-emitting tool loads. Node translation, rotation, and
+  scale place each mesh where it was authored. A malformed document comes back
   as a typed `GltfLoadError`.
 * `Partir.Asset.Sprite`: a sprite sheet and the frames cut from it, naming no
   source format, filled by `Partir.Asset.Sprite.PNG` from a PNG and the cell
