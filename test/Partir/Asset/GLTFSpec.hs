@@ -80,17 +80,15 @@ test_loadAssetBytes =
           [V3 0 1 0, V3 0 0 1, V3 (-2) 1 0 / sqrt 5]
     ]
 
-{- | 'placedGlb' parsed, failing the test case on a decode error or on anything
-but the one primitive it places.
--}
+-- | Load the one primitive 'placedGlb' places, failing the test case otherwise.
 loadPlaced :: IO Primitive
 loadPlaced = loadAssetBytes placedGlb >>= either (assertFailure . show) onlyPrimitive
 
 {- | A three-vertex mesh under two nodes. The parent translates by (1, 2, 3)
-and turns a quarter about Z; its child, listed first so a walk has to start
-from the parent, scales X by 2 and holds the mesh. Vertex @i@ sits on axis
-@i@. The normals are X, Z, and the X-Y diagonal, which the non-uniform scale
-bends towards Y.
+and turns a quarter about Z. Its child scales X by 2 and holds the mesh. The
+child comes first in @nodes@, so only a walk from the parent places it. The
+diagonal normal is the one non-uniform scale bends, which separates the inverse
+transpose from the plain matrix.
 -}
 placedGlb :: ByteString
 placedGlb = glb json (floats positions <> floats normals)

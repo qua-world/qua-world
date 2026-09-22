@@ -31,14 +31,14 @@ import Linear.V3 (V3)
 -- | A drawable asset: the primitives of every mesh a source file places.
 newtype Mesh = Mesh
   { meshPrimitives :: [Primitive]
-  -- ^ Draw calls, in the order the loader visits them.
+  -- ^ Draw calls.
   }
   deriving (Eq, Show)
 
 -- | One triangle-list draw call.
 data Primitive = Primitive
   { primitivePositions :: Vector (V3 Float)
-  -- ^ Vertex positions in model space, with any placement in the source applied.
+  -- ^ Vertex positions in model space.
   , primitiveIndices :: Vector Word32
   {- ^ Triangle indices into 'primitivePositions'. Empty draws the positions in
   order.

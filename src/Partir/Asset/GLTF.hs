@@ -11,14 +11,12 @@ Reads binary glTF (@.glb@) and flattens it into the format-neutral
 @rio@ prelude are confined to this module: none of it appears in the returned
 type.
 
-Each mesh is placed by the nodes that reference it: a node's translation,
-rotation, and scale compose down the hierarchy and are baked into positions
-and normals. A mesh no node references is not drawn, and one referenced twice
-is drawn twice.
+The nodes that reference a mesh place it: each node's translation, rotation,
+and scale compose down the hierarchy into the mesh's positions and normals. A
+mesh no node references is dropped, and one referenced twice appears twice.
 
 @gltf-loader@ drops a node's @matrix@ and the document's scene list, so a
-@matrix@ node contributes no transform and every scene's nodes are drawn
-(#126).
+@matrix@ node applies no transform and every scene draws at once (#126).
 -}
 module Partir.Asset.GLTF (
   GltfLoadError (..),
@@ -89,10 +87,7 @@ fromGltf gltf =
     , p <- toList (GLTF.meshPrimitives mesh)
     ]
 
-{- | Every mesh a node references, paired with the world transform its node and
-that node's ancestors compose, walking down from the nodes no other node lists
-as a child.
--}
+-- | Each mesh a node references, paired with that node's world transform.
 placements :: GLTF.Gltf -> [(M44 Float, GLTF.Mesh)]
 placements gltf = concatMap (visit identity) roots
  where
@@ -107,7 +102,6 @@ placements gltf = concatMap (visit identity) roots
           mesh = GLTF.nodeMeshId node >>= (GLTF.gltfMeshes gltf Vector.!?)
        in [(world, m) | m <- toList mesh] ++ concatMap (visit world) (GLTF.nodeChildren node)
 
--- | A node's translation, rotation, and scale as one matrix, applied scale first.
 localTransform :: GLTF.Node -> M44 Float
 localTransform node = mkTransformationMat (rotation !*! scaled scale) offset
  where
@@ -119,8 +113,8 @@ localTransform node = mkTransformationMat (rotation !*! scaled scale) offset
 quaternion :: V4 Float -> Quaternion Float
 quaternion (V4 x y z w) = Quaternion w (V3 x y z)
 
-{- | Bake a world transform into a primitive. Normals take the inverse transpose
-so they stay perpendicular to their surface under non-uniform scale.
+{- | Normals take the inverse transpose so they stay perpendicular to their
+surface under non-uniform scale.
 -}
 transformPrimitive :: M44 Float -> Asset.Primitive -> Asset.Primitive
 transformPrimitive world p =
@@ -131,7 +125,7 @@ transformPrimitive world p =
  where
   normalMatrix = transpose (inv33 (linearPart world))
 
--- | The upper-left 3x3 of an affine transform: its rotation and scale, without translation.
+-- | The rotation and scale of an affine transform, without its translation.
 linearPart :: M44 Float -> M33 Float
 linearPart = fmap xyz . xyz
  where
