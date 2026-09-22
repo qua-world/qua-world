@@ -8,8 +8,13 @@ module Partir.Asset.GLTFSpec (
 )
 where
 
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Builder as Builder
 import qualified Data.ByteString.Char8 as ByteString
+import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
+import Data.Word (Word32)
+import Linear (V3 (..), distance)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertFailure, testCase, (@?=))
 
@@ -63,7 +68,78 @@ test_loadAssetBytes =
         case result :: Either GltfLoadError Mesh of
           Left _ -> pure ()
           Right _ -> assertFailure "expected a decode failure"
+    , testCase "places positions by the composed node transforms" $ do
+        prim <- loadPlaced
+        assertNear
+          (Vector.toList (primitivePositions prim))
+          [V3 1 4 3, V3 0 2 3, V3 1 2 4]
+    , testCase "turns normals with the node rotation, perpendicular under scale" $ do
+        prim <- loadPlaced
+        assertNear
+          (Vector.toList (primitiveNormals prim))
+          [V3 0 1 0, V3 0 0 1, V3 (-2) 1 0 / sqrt 5]
     ]
+
+{- | 'placedGlb' parsed, failing the test case on a decode error or on anything
+but the one primitive it places.
+-}
+loadPlaced :: IO Primitive
+loadPlaced = loadAssetBytes placedGlb >>= either (assertFailure . show) onlyPrimitive
+
+{- | A three-vertex mesh under two nodes. The parent translates by (1, 2, 3)
+and turns a quarter about Z; its child, listed first so a walk has to start
+from the parent, scales X by 2 and holds the mesh. Vertex @i@ sits on axis
+@i@. The normals are X, Z, and the X-Y diagonal, which the non-uniform scale
+bends towards Y.
+-}
+placedGlb :: ByteString
+placedGlb = glb json (floats positions <> floats normals)
+ where
+  positions = [V3 1 0 0, V3 0 1 0, V3 0 0 1]
+  normals = [V3 1 0 0, V3 0 0 1, V3 1 1 0 / sqrt 2]
+  floats = foldMap (foldMap Builder.floatLE)
+  json =
+    concat
+      [ "{\"asset\":{\"version\":\"2.0\"},"
+      , "\"buffers\":[{\"byteLength\":72}],"
+      , "\"bufferViews\":[{\"buffer\":0,\"byteOffset\":0,\"byteLength\":36},"
+      , "{\"buffer\":0,\"byteOffset\":36,\"byteLength\":36}],"
+      , "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"},"
+      , "{\"bufferView\":1,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"}],"
+      , "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0,\"NORMAL\":1}}]}],"
+      , "\"nodes\":[{\"mesh\":0,\"scale\":[2,1,1]},"
+      , "{\"children\":[0],\"translation\":[1,2,3],\"rotation\":[0,0,0.70710677,0.70710677]}],"
+      , "\"scenes\":[{\"nodes\":[1]}],\"scene\":0}"
+      ]
+
+{- | Frame a JSON document and its binary buffer as GLB: a 12-byte header, then
+each chunk as length, type tag, and payload padded to four bytes.
+-}
+glb :: String -> Builder.Builder -> ByteString
+glb json bin =
+  Lazy.toStrict . Builder.toLazyByteString $
+    word32 0x46546C67
+      <> word32 2
+      <> word32 (12 + len jsonChunk + len binChunk)
+      <> Builder.lazyByteString jsonChunk
+      <> Builder.lazyByteString binChunk
+ where
+  jsonChunk = chunk 0x4E4F534A ' ' (Builder.string7 json)
+  binChunk = chunk 0x004E4942 '\0' bin
+  chunk tag pad body =
+    let bytes = Builder.toLazyByteString body
+        padding = Lazy.replicate ((-Lazy.length bytes) `mod` 4) (fromIntegral (fromEnum pad))
+        payload = bytes <> padding
+     in Builder.toLazyByteString (word32 (len payload) <> word32 tag <> Builder.lazyByteString payload)
+  word32 = Builder.word32LE
+  len :: Lazy.ByteString -> Word32
+  len = fromIntegral . Lazy.length
+
+assertNear :: [V3 Float] -> [V3 Float] -> IO ()
+assertNear actual expected =
+  assertBool
+    ("expected " ++ show expected ++ ", got " ++ show actual)
+    (length actual == length expected && and (zipWith (\a e -> distance a e < 1e-5) actual expected))
 
 -- | Load the example cube, failing the test case with the decode error.
 loadCube :: IO Mesh
