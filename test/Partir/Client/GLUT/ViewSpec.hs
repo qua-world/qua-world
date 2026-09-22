@@ -23,6 +23,7 @@ import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 import Partir.Asset (Primitive (..))
 import Partir.Asset.Animation (Animation (..), still)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
+import Partir.Asset.Sprite.Sample (strip)
 import Partir.Client.GLUT.View (
   Bounds (..),
   camera,
@@ -153,13 +154,6 @@ timed durations =
   Animation
     { animationSheet = strip (length durations)
     , animationDurations = Vector.fromList durations
-    }
-
--- | A sheet cut into the given number of 16-pixel frames, laid out in one row.
-strip :: Int -> Sprite
-strip count =
-  (sheet (16 * count) 16)
-    { spriteFrames = Vector.generate count (\n -> Frame (16 * n) 0 16 16)
     }
 
 -- | A sheet of the given size, holding no pixels and no frames.

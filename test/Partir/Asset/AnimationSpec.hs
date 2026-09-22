@@ -11,7 +11,6 @@ module Partir.Asset.AnimationSpec (
 where
 
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Storable as Storable
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 
@@ -24,7 +23,7 @@ import Partir.Asset.Animation (
   timeline,
   totalDuration,
  )
-import Partir.Asset.Sprite (Frame (..), Sprite (..))
+import Partir.Asset.Sprite.Sample (cell, strip)
 
 {- | A rate is what the frames themselves do not carry, so getting it wrong
 plays the whole sequence at the wrong speed.
@@ -56,7 +55,7 @@ test_timeline =
       testCase "plays as far as the durations reach" $
         Vector.length (timeline (walk 3){animationDurations = Vector.fromList [0.5, 0.5]}) @?= 2
     , testCase "plays the one frame a still holds on" $
-        timeline (still (sheet 3)) @?= Vector.singleton (0, cell 0)
+        timeline (still (strip 3)) @?= Vector.singleton (0, cell 0)
     ]
 
 test_totalDuration :: TestTree
@@ -109,19 +108,6 @@ evenly = Vector.replicate 4 0.5
 walk :: Int -> Animation
 walk count =
   Animation
-    { animationSheet = sheet count
+    { animationSheet = strip count
     , animationDurations = rateDurations (Rate 2) count
     }
-
--- | A strip of 16-pixel cells laid out the way the sequence loader composes one.
-sheet :: Int -> Sprite
-sheet count =
-  Sprite
-    { spriteWidth = 16 * count
-    , spriteHeight = 16
-    , spritePixels = Storable.empty
-    , spriteFrames = Vector.generate count cell
-    }
-
-cell :: Int -> Frame
-cell n = Frame{frameX = 16 * n, frameY = 0, frameWidth = 16, frameHeight = 16}

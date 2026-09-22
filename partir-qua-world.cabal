@@ -145,6 +145,7 @@ test-suite partir-qua-world-test
     , Partir.Asset.GLTFSpec
     , Partir.Asset.Sprite.PNGSpec
     , Partir.Asset.Sprite.Pixels
+    , Partir.Asset.Sprite.Sample
     , Partir.Asset.SpriteSpec
     , Partir.Asset.Tilemap.LDtkSpec
     , Partir.Asset.Tilemap.Sample
