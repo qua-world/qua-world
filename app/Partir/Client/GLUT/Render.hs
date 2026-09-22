@@ -15,9 +15,10 @@ The context is core profile, which has no matrix stack, so transforms are
 Only geometry is read from the asset. A material binding selects nothing:
 every primitive draws in one placeholder color.
 
-A 'Sprite' draws over that scene as a screen-space icon, one frame of the
-sheet in the window's top-left corner. It takes no part in the camera: its
-corners are already in clip space.
+Each 'Animation' draws over that scene as a screen-space icon, the frame its
+timeline is showing, in a row from the window's top-left corner. They take no
+part in the camera: their corners are already in clip space. A static sheet
+reaches the same path as an animation holding on one frame.
 -}
 module Partir.Client.GLUT.Render (
   Renderer,
@@ -26,7 +27,7 @@ module Partir.Client.GLUT.Render (
 )
 where
 
-import Control.Monad (unless, when)
+import Control.Monad (unless, when, zipWithM)
 import qualified Data.ByteString.Char8 as ByteString
 import Data.Foldable (toList, traverse_)
 import qualified Data.Vector as Vector
@@ -41,20 +42,23 @@ import Linear.Matrix (M44)
 import Linear.V3 (V3 (..))
 
 import Partir.Asset (Mesh (..), Primitive (..))
-import Partir.Asset.Sprite (Frame, Sprite (..))
+import Partir.Asset.Animation (Animation (..))
+import Partir.Asset.Sprite (Sprite (..))
 import Partir.Client.GLUT.View (
   Bounds (..),
+  Icon,
   camera,
   elementCount,
-  frameBounds,
+  icon,
+  iconAt,
   overlayBounds,
  )
 
 -- | Everything resident on the GPU, ready to draw.
 data Renderer = Renderer
   { rendererGeometry :: Geometry
-  , rendererOverlay :: Maybe Overlay
-  -- ^ Absent when the sheet holds no frame to show.
+  , rendererOverlays :: [Overlay]
+  -- ^ The icons, in the slots they draw in.
   }
 
 -- | The scene's geometry on the GPU.
@@ -63,14 +67,13 @@ data Geometry = Geometry
   , geometryDraws :: [Draw]
   }
 
-{- | The icon on the GPU, with the frame it shows already reduced to the
-bounds that select it. Drawing one reads no 'Sprite'.
--}
+-- | One icon on the GPU, with the sheet it draws from already a texture.
 data Overlay = Overlay
   { overlayProgram :: GL.Program
   , overlayArray :: GL.VertexArrayObject
   , overlayTexture :: GL.TextureObject
-  , overlaySheetBounds :: Bounds
+  , overlaySlot :: Int
+  , overlayIcon :: Icon
   }
 
 {- | One primitive's vertex array and the call that draws it. Indices are
@@ -97,12 +100,13 @@ cornerAttribute = GL.AttribLocation 0
 {- | Call once per context: a 'Renderer' holds names valid for that context's
 lifetime, and 'draw' allocates nothing.
 -}
-upload :: Mesh -> Sprite -> IO Renderer
-upload mesh sprite = do
+upload :: Mesh -> [Animation] -> IO Renderer
+upload mesh animations = do
   GL.depthFunc $= sceneDepthFunc
   geometry <- uploadGeometry mesh
-  overlay <- traverse (uploadOverlay sprite) (spriteFrames sprite Vector.!? 0)
-  pure Renderer{rendererGeometry = geometry, rendererOverlay = overlay}
+  program <- buildProgram overlayVertexSource overlayFragmentSource
+  overlays <- zipWithM (uploadOverlay program) [0 ..] animations
+  pure Renderer{rendererGeometry = geometry, rendererOverlays = overlays}
 
 uploadGeometry :: Mesh -> IO Geometry
 uploadGeometry mesh = do
@@ -167,25 +171,25 @@ fillBuffer bufferTarget elementBytes values = do
     GL.bufferData bufferTarget
       $= (fromIntegral (length values * elementBytes), ptr, GL.StaticDraw)
 
-{- | Upload the icon: its own program over a unit square, and the whole sheet
-as one texture that the frame's bounds select from.
+{- | Upload one icon: a unit square, and the whole sheet as one texture that
+each frame's bounds select from. The program is built once and shared, so a
+second icon costs a texture rather than another compile.
 -}
-uploadOverlay :: Sprite -> Frame -> IO Overlay
-uploadOverlay sprite frame = do
-  program <- buildProgram overlayVertexSource overlayFragmentSource
-
+uploadOverlay :: GL.Program -> Int -> Animation -> IO Overlay
+uploadOverlay program slot animation = do
   vao <- GL.genObjectName
   GL.bindVertexArrayObject $= Just vao
   bindAttribute cornerAttribute 2 unitSquare
   GL.bindVertexArrayObject $= Nothing
 
-  texture <- uploadSheet sprite
+  texture <- uploadSheet (animationSheet animation)
   pure
     Overlay
       { overlayProgram = program
       , overlayArray = vao
       , overlayTexture = texture
-      , overlaySheetBounds = frameBounds sprite frame
+      , overlaySlot = slot
+      , overlayIcon = icon animation
       }
 
 {- | The quad's corners, as the fractions of its bounds the vertex shader
@@ -231,13 +235,15 @@ uploadSheet sprite = do
       (GL.PixelData GL.RGBA GL.UnsignedByte pixels)
   pure texture
 
--- | Draws one frame. The caller presents it.
-draw :: Renderer -> GL.Size -> IO ()
-draw renderer size = do
+{- | Draws one frame, with every icon showing whatever its timeline reaches at
+the given number of seconds. The caller presents it.
+-}
+draw :: Renderer -> GL.Size -> Double -> IO ()
+draw renderer size elapsed = do
   GL.viewport $= (GL.Position 0 0, size)
   GL.clear [GL.ColorBuffer, GL.DepthBuffer]
   drawGeometry size (rendererGeometry renderer)
-  traverse_ (drawOverlay size) (rendererOverlay renderer)
+  drawOverlays size elapsed (rendererOverlays renderer)
 
 -- | Draw the scene's primitives through the camera.
 drawGeometry :: GL.Size -> Geometry -> IO ()
@@ -256,31 +262,42 @@ drawGeometry size geometry = do
       then GL.drawElements GL.Triangles (drawCount d) GL.UnsignedInt nullPtr
       else GL.drawArrays GL.Triangles 0 (drawCount d)
 
-{- | Draw the icon over the scene: in front of whatever depth the scene left,
-and blended so the transparent margin around the frame's art lets it through.
+{- | Draw the icons over the scene: in front of whatever depth the scene left,
+and blended so the transparent margin around a frame's art lets it through.
+The depth test and the blend are set around the whole row, because each icon
+would otherwise pay to set them again.
 -}
-drawOverlay :: GL.Size -> Overlay -> IO ()
-drawOverlay size overlay = do
+drawOverlays :: GL.Size -> Double -> [Overlay] -> IO ()
+drawOverlays _ _ [] = pure ()
+drawOverlays size elapsed overlays = do
   GL.depthFunc $= Nothing
   GL.blend $= GL.Enabled
   GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
 
-  GL.currentProgram $= Just program
-  setBounds program "overlayBounds" (overlayBounds size)
-  setBounds program "frameBounds" (overlaySheetBounds overlay)
-
-  GL.activeTexture $= GL.TextureUnit 0
-  GL.textureBinding GL.Texture2D $= Just (overlayTexture overlay)
-  setUniform program "sheet" (0 :: GL.GLint)
-
-  GL.bindVertexArrayObject $= Just (overlayArray overlay)
-  GL.drawArrays GL.TriangleStrip 0 unitSquareCorners
-  GL.bindVertexArrayObject $= Nothing
+  traverse_ (drawOverlay size elapsed) overlays
 
   GL.blend $= GL.Disabled
   GL.depthFunc $= sceneDepthFunc
+
+-- | Draw whichever frame of one icon its timeline has reached.
+drawOverlay :: GL.Size -> Double -> Overlay -> IO ()
+drawOverlay size elapsed overlay =
+  traverse_ showing (iconAt (overlayIcon overlay) elapsed)
  where
   program = overlayProgram overlay
+
+  showing frame = do
+    GL.currentProgram $= Just program
+    setBounds program "overlayBounds" (overlayBounds size (overlaySlot overlay))
+    setBounds program "frameBounds" frame
+
+    GL.activeTexture $= GL.TextureUnit 0
+    GL.textureBinding GL.Texture2D $= Just (overlayTexture overlay)
+    setUniform program "sheet" (0 :: GL.GLint)
+
+    GL.bindVertexArrayObject $= Just (overlayArray overlay)
+    GL.drawArrays GL.TriangleStrip 0 unitSquareCorners
+    GL.bindVertexArrayObject $= Nothing
 
 -- | Assign a program's uniform by name, whatever shape it takes.
 setUniform :: GL.Uniform a => GL.Program -> String -> a -> IO ()

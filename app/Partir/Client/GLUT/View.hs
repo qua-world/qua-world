@@ -8,18 +8,22 @@ Description : What the renderer draws and how it is framed, decided without a co
 
 What "Partir.Client.GLUT.Render" settles before it issues an OpenGL call:
 where the client watches the world from, how many elements a primitive draws,
-and where the sprite overlay and its frame sit. None of it needs a live
-context, so the test suite reaches all of it.
+where an overlay sits, and which frame of its animation is showing. None of it
+needs a live context, so the test suite reaches all of it.
 -}
 module Partir.Client.GLUT.View (
   Bounds (..),
+  Icon,
   camera,
   elementCount,
+  icon,
+  iconAt,
   overlayBounds,
   frameBounds,
 )
 where
 
+import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import qualified Graphics.Rendering.OpenGL as GL
 import Linear.Matrix (M44, (!*!))
@@ -27,6 +31,7 @@ import Linear.Projection (lookAt, perspective)
 import Linear.V3 (V3 (..))
 
 import Partir.Asset (Primitive (..))
+import Partir.Asset.Animation (Animation (..), stepAt, timeline)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
 
 {- | An axis-aligned rectangle, given by its edges.
@@ -67,14 +72,44 @@ verticalFieldOfView = pi / 4
 nearPlane = 0.1
 farPlane = 100
 
-{- | Where the sprite overlay sits in clip space.
+{- | An animation reduced to what drawing it repeatedly needs: how long each
+frame holds, and where each one sits in its sheet.
 
-The icon holds a square footprint in pixels whatever shape the window is. Its
+The sheet's pixels are not part of it, so a renderer that has uploaded them as
+a texture retains no 'Sprite'.
+-}
+data Icon = Icon
+  { iconDurations :: Vector Double
+  , iconFrames :: Vector Bounds
+  }
+
+-- | Reduce an animation once, before drawing it every frame.
+icon :: Animation -> Icon
+icon animation =
+  Icon
+    { iconDurations = Vector.map fst steps
+    , iconFrames = Vector.map (frameBounds (animationSheet animation) . snd) steps
+    }
+ where
+  steps = timeline animation
+
+{- | Where the art an icon shows after the given seconds sits in its sheet.
+'Nothing' when the animation has no frame to show, and the caller then draws
+nothing.
+-}
+iconAt :: Icon -> Double -> Maybe Bounds
+iconAt shown elapsed =
+  stepAt (iconDurations shown) elapsed >>= (iconFrames shown Vector.!?)
+
+{- | Where the overlay in the given slot sits in clip space. Slots run left to
+right from the window's top-left corner, one icon each.
+
+An icon holds a square footprint in pixels whatever shape the window is. Its
 extent therefore follows from the window size: one clip-space unit spans a
 different number of pixels along each axis.
 -}
-overlayBounds :: GL.Size -> Bounds
-overlayBounds (GL.Size width height) =
+overlayBounds :: GL.Size -> Int -> Bounds
+overlayBounds (GL.Size width height) slot =
   Bounds
     { boundsLeft = left
     , boundsTop = top
@@ -82,12 +117,14 @@ overlayBounds (GL.Size width height) =
     , boundsBottom = top - 2 * overlaySize / h
     }
  where
-  left = -1 + 2 * overlayMargin / w
+  left = -1 + 2 * (overlayMargin + fromIntegral slot * (overlaySize + overlayMargin)) / w
   top = 1 - 2 * overlayMargin / h
   w = divisor width
   h = divisor height
 
--- | The icon's footprint and its inset from the window's top-left, in pixels.
+{- | An icon's footprint, and the gap holding it off the window's top-left
+corner and off the icon before it.
+-}
 overlaySize, overlayMargin :: Float
 overlaySize = 96
 overlayMargin = 16

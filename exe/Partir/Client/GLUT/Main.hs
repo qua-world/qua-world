@@ -15,6 +15,8 @@ import qualified Partir.Client.GLUT.Controls as Controls
 import qualified Partir.Client.GLUT.Render as Render
 
 import qualified Partir.Asset as Asset
+import qualified Partir.Asset.Animation as Animation
+import qualified Partir.Asset.Animation.PNG as Sequence
 import qualified Partir.Asset.GLTF as GLTF
 import qualified Partir.Asset.Sprite as Sprite
 import qualified Partir.Asset.Sprite.PNG as PNG
@@ -38,6 +40,11 @@ main = do
 
   -- Uploading needs the context the window just created.
   renderer <- join (Render.upload <$> scene <*> icons)
+
+  -- An animation advances on the clock, so something has to ask for a frame
+  -- while no input arrives. A timer asks at a fixed cadence; the idle callback
+  -- would ask as fast as the CPU allows.
+  GLUT.addTimerCallback frameInterval animate
 
   -- Global Callbacks
   GLUT.menuStatusCallback $= Nothing
@@ -78,19 +85,39 @@ anything a player can act on.
 bundled :: Exception e => FilePath -> (FilePath -> IO (Either e a)) -> IO a
 bundled name load = getDataFileName name >>= load >>= either throwIO pure
 
--- | The sheet the client draws its corner icon from.
-icons :: IO Sprite.Sprite
-icons = bundled "examples/sprites.png" (PNG.loadSprite grid)
+{- | The icons the client draws over the scene, left to right: a still frame
+of the sprite sheet, then the walk cycle playing beside it.
+-}
+icons :: IO [Animation.Animation]
+icons = do
+  sheet <- bundled "examples/sprites.png" (PNG.loadSprite grid)
+  walk <- bundled "examples/walk" (Sequence.loadAnimation rate)
+  pure [Animation.still sheet, walk]
  where
   -- The cell examples/sprites.png is laid out on. A sheet carries no frame
   -- metadata, so this is knowledge about that file (#111).
   grid = Sprite.Grid{Sprite.gridFrameWidth = 16, Sprite.gridFrameHeight = 16}
 
+  -- How fast examples/walk was drawn to play. A frame sequence carries no
+  -- timing either, so this is knowledge about that directory (#118).
+  rate = Animation.Rate{Animation.ratePerSecond = 8}
+
 display :: Render.Renderer -> GLUT.DisplayCallback
 display renderer = do
   size <- get GLUT.windowSize
-  Render.draw renderer size
+  elapsed <- get GLUT.elapsedTime
+  Render.draw renderer size (fromIntegral elapsed / 1000)
   GLUT.swapBuffers
+
+-- | GLUT timers fire once, so each one has to schedule the next.
+animate :: GLUT.TimerCallback
+animate = do
+  GLUT.postRedisplay Nothing
+  GLUT.addTimerCallback frameInterval animate
+
+-- | How long the client waits between frames, in milliseconds.
+frameInterval :: GLUT.Timeout
+frameInterval = 16
 
 commands :: [String] -> IO ()
 commands = join . handleParseResult . execParserPure defaultPrefs info'
