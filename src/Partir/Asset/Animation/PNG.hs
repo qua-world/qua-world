@@ -29,7 +29,6 @@ where
 import Control.Exception (Exception)
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
 import Data.Char (toLower)
 import Data.Foldable (traverse_)
 import Data.List (sort)
@@ -37,8 +36,10 @@ import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
 import qualified Data.Vector.Storable.Mutable as Mutable
 import Data.Word (Word8)
-import qualified System.Directory as Directory
-import System.FilePath (takeExtension, (</>))
+import qualified System.Directory.OsPath as Directory
+import qualified System.File.OsPath as File
+import System.OsPath (OsPath, takeExtension, (</>))
+import qualified System.OsPath as OsPath
 
 import qualified Partir.Asset.Animation as Animation
 import qualified Partir.Asset.Sprite as Sprite
@@ -50,9 +51,9 @@ missing animation is fatal, as the client does at startup.
 -}
 data SequenceLoadError
   = -- | The directory holds no PNG frames, so the path names the wrong place.
-    EmptySequence FilePath
+    EmptySequence OsPath
   | -- | The named frame is not a PNG.
-    UndecodableFrame FilePath PNG.PngLoadError
+    UndecodableFrame OsPath PNG.PngLoadError
   deriving Show
 
 instance Exception SequenceLoadError
@@ -66,16 +67,16 @@ Files that are not PNGs are skipped, so a manifest or a project file living
 beside the frames is not read as one.
 -}
 loadAnimation ::
-  Animation.Rate -> FilePath -> IO (Either SequenceLoadError Animation.Animation)
+  Animation.Rate -> OsPath -> IO (Either SequenceLoadError Animation.Animation)
 loadAnimation rate directory = do
   paths <- map (directory </>) . sort . filter isPng <$> Directory.listDirectory directory
-  frames <- traverse ByteString.readFile paths
+  frames <- traverse File.readFile' paths
   pure $ case zip paths frames of
     [] -> Left (EmptySequence directory)
     sequenced -> loadAnimationFrames rate sequenced
 
-isPng :: FilePath -> Bool
-isPng = (== ".png") . map toLower . takeExtension
+isPng :: OsPath -> Bool
+isPng = (== ".png") . map (toLower . OsPath.toChar) . OsPath.unpack . takeExtension
 
 {- | Build an animation from frames already in memory, in playing order, each
 labelled by where it came from so a decode failure can name it. Under the same
@@ -87,7 +88,7 @@ that as an error.
 -}
 loadAnimationFrames ::
   Animation.Rate ->
-  [(FilePath, ByteString)] ->
+  [(OsPath, ByteString)] ->
   Either SequenceLoadError Animation.Animation
 loadAnimationFrames rate frames = compose rate <$> traverse decode frames
  where

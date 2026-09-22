@@ -1,6 +1,7 @@
 -- SPDX-FileCopyrightText: 2026 Alex Brandt
 --
 -- SPDX-License-Identifier: MIT
+{-# LANGUAGE QuasiQuotes #-}
 
 module Partir.Asset.Animation.PNGSpec (
   test_loadAnimation,
@@ -14,14 +15,15 @@ import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
 import System.IO.Temp (withSystemTempDirectory)
+import System.OsPath (encodeFS, osp, unsafeEncodeUtf)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
 import Partir.Asset.Animation (Animation (..), Rate (..), timeline, totalDuration)
 import Partir.Asset.Animation.PNG (SequenceLoadError (..), loadAnimation, loadAnimationFrames)
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
 import Partir.Asset.Sprite.Pixels (pixelAt)
-import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/walk/@ is a placeholder standing in for real Pencil2D content:
 four 16-pixel frames, numbered @0001.png@ through @0004.png@. Each is a
@@ -76,7 +78,8 @@ test_loadAnimation =
     , -- Pointing at a directory holding no frames is a mistake worth naming,
       -- rather than an animation that draws nothing.
       testCase "rejects a directory holding no PNG frames" $
-        withSystemTempDirectory "partir-sequence" $ \empty -> do
+        withSystemTempDirectory "partir-sequence" $ \temporary -> do
+          empty <- encodeFS temporary
           outcome <- loadAnimation rate empty
           case outcome of
             Left (EmptySequence named) -> named @?= empty
@@ -88,8 +91,8 @@ test_loadAnimationFrames =
   testGroup
     "loadAnimationFrames"
     [ testCase "names the frame that would not decode" $
-        case loadAnimationFrames rate [("0001.png", ByteString.pack "not a png")] of
-          Left (UndecodableFrame named _) -> named @?= "0001.png"
+        case loadAnimationFrames rate [([osp|0001.png|], ByteString.pack "not a png")] of
+          Left (UndecodableFrame named _) -> named @?= [osp|0001.png|]
           _ -> assertFailure "expected a decode failure"
     , -- A sequence exported from a tool that trims each frame gives frames of
       -- differing extent. Laying those out in equal cells would either clip
@@ -110,12 +113,8 @@ test_loadAnimationFrames =
 rate :: Rate
 rate = Rate{ratePerSecond = 8}
 
--- | Load the example sequence, failing the test case with the load error.
 loadWalk :: IO Animation
-loadWalk =
-  getDataFileName "examples/walk"
-    >>= loadAnimation rate
-    >>= either (assertFailure . show) pure
+loadWalk = bundled "examples/walk" (loadAnimation rate)
 
 {- | Compose frames of the given pixel sizes, each filled solid red, failing
 the test case with the load error.
@@ -125,7 +124,7 @@ composed sizes =
   either (assertFailure . show) pure (loadAnimationFrames rate (zipWith frame [1 :: Int ..] sizes))
  where
   frame n (width, height) =
-    ( show n ++ ".png"
+    ( unsafeEncodeUtf (show n ++ ".png")
     , Lazy.toStrict (Picture.encodePng (Picture.generateImage (const (const red)) width height))
     )
   red = Picture.PixelRGBA8 255 0 0 255

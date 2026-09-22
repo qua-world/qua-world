@@ -14,10 +14,10 @@ import qualified Data.Vector.Storable as Storable
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.Sprite (Frame (..), Grid (..), Sprite (..))
 import Partir.Asset.Sprite.PNG (PngLoadError, loadSprite, loadSpriteBytes)
 import Partir.Asset.Sprite.Pixels (pixelAt)
-import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/sprites.png@ is a placeholder standing in for real Pixelorama
 content: 64 by 64 pixels holding a 4 by 4 grid of 16-pixel cells. Each cell is
@@ -74,9 +74,5 @@ test_loadSpriteBytes =
 cell :: Grid
 cell = Grid{gridFrameWidth = 16, gridFrameHeight = 16}
 
--- | Load the example sheet, failing the test case with the decode error.
 loadIcons :: IO Sprite
-loadIcons =
-  getDataFileName "examples/sprites.png"
-    >>= loadSprite cell
-    >>= either (assertFailure . show) pure
+loadIcons = bundled "examples/sprites.png" (loadSprite cell)

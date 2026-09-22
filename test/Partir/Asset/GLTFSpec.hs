@@ -24,8 +24,8 @@ import Partir.Asset (
   indexCount,
   vertexCount,
  )
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.GLTF (GltfLoadError, loadAsset, loadAssetBytes)
-import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/avatar.glb@ is a placeholder unit cube standing in for real
 Blockbench content: 6 faces * 4 corners = 24 vertices, 6 faces * 2 triangles *
@@ -139,12 +139,8 @@ assertNear actual expected =
     ("expected " ++ show expected ++ ", got " ++ show actual)
     (length actual == length expected && and (zipWith (\a e -> distance a e < 1e-5) actual expected))
 
--- | Load the example cube, failing the test case with the decode error.
 loadCube :: IO Mesh
-loadCube =
-  getDataFileName "examples/avatar.glb"
-    >>= loadAsset
-    >>= either (assertFailure . show) pure
+loadCube = bundled "examples/avatar.glb" loadAsset
 
 onlyPrimitive :: Mesh -> IO Primitive
 onlyPrimitive mesh =

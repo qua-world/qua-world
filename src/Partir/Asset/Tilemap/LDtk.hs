@@ -25,9 +25,10 @@ where
 import Control.Exception (Exception)
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
 import Data.Maybe (fromMaybe, mapMaybe)
 import qualified Data.Vector as Vector
+import qualified System.File.OsPath as File
+import System.OsPath (OsPath)
 
 import qualified Data.Aeson as Aeson
 import qualified LDtk.Types as LDtk
@@ -55,8 +56,8 @@ instance Exception LDtkLoadError
 anticipated, so it comes back as a 'Left'; a missing or unreadable file is an
 I\/O failure and surfaces as the 'IOError' thrown by reading it.
 -}
-loadTilemap :: FilePath -> IO (Either LDtkLoadError Tilemap.Tilemap)
-loadTilemap path = decodeTilemap <$> ByteString.readFile path
+loadTilemap :: OsPath -> IO (Either LDtkLoadError Tilemap.Tilemap)
+loadTilemap path = decodeTilemap <$> File.readFile' path
 
 {- | Decode in-memory project bytes under the same contract as 'loadTilemap',
 for content that arrives from somewhere other than a file.

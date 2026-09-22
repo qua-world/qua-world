@@ -27,11 +27,12 @@ where
 import Control.Exception (Exception)
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
+import qualified System.File.OsPath as File
+import System.OsPath (OsPath)
 
 import qualified Codec.Tiled.Layer as Layer
 import qualified Codec.Tiled.Layer.Data as LayerData
@@ -63,8 +64,8 @@ instance Exception TiledLoadError
 back as a 'Left'; a missing file is an I\/O failure and surfaces as the
 'IOError' thrown by reading it.
 -}
-loadTilemap :: FilePath -> IO (Either TiledLoadError Tilemap.Tilemap)
-loadTilemap path = decodeTilemap <$> ByteString.readFile path
+loadTilemap :: OsPath -> IO (Either TiledLoadError Tilemap.Tilemap)
+loadTilemap path = decodeTilemap <$> File.readFile' path
 
 {- | Decode in-memory map bytes under the same contract as 'loadTilemap', for
 content that arrives from somewhere other than a file.
