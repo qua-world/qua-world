@@ -70,8 +70,8 @@ main = do
 {- | Everything the client draws: the sample level's tiles, and the assets
 standing on them.
 
-Nothing here is transformed, so the avatar sits at its own model origin and
-the ground layer passes through it until node transforms land (#67).
+The avatar's node places it at the origin, so the ground layer passes through
+it.
 -}
 scene :: IO Asset.Mesh
 scene = do
