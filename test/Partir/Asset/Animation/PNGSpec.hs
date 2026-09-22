@@ -21,9 +21,9 @@ import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
 import Partir.Asset.Animation (Animation (..), Rate (..), timeline, totalDuration)
 import Partir.Asset.Animation.PNG (SequenceLoadError (..), loadAnimation, loadAnimationFrames)
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.Sprite (Frame (..), Sprite (..))
 import Partir.Asset.Sprite.Pixels (pixelAt)
-import Paths_partir_qua_world (getDataFileName)
 
 {- | @examples/walk/@ is a placeholder standing in for real Pencil2D content:
 four 16-pixel frames, numbered @0001.png@ through @0004.png@. Each is a
@@ -115,11 +115,7 @@ rate = Rate{ratePerSecond = 8}
 
 -- | Load the example sequence, failing the test case with the load error.
 loadWalk :: IO Animation
-loadWalk =
-  getDataFileName "examples/walk"
-    >>= encodeFS
-    >>= loadAnimation rate
-    >>= either (assertFailure . show) pure
+loadWalk = bundled "examples/walk" (loadAnimation rate)
 
 {- | Compose frames of the given pixel sizes, each filled solid red, failing
 the test case with the load error.

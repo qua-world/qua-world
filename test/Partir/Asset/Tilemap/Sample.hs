@@ -26,16 +26,15 @@ import Control.Monad (join)
 import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
-import System.OsPath (OsPath, encodeFS)
 import Test.Tasty.HUnit (assertFailure)
 
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.Tilemap (
   TileLayer (..),
   Tilemap (..),
  )
 import qualified Partir.Asset.Tilemap.LDtk as LDtk
 import qualified Partir.Asset.Tilemap.Tiled as Tiled
-import Paths_partir_qua_world (getDataFileName)
 
 -- | The room as Tiled exports it.
 tiledRoom :: IO Tilemap
@@ -44,9 +43,6 @@ tiledRoom = bundled "examples/level.tmj" Tiled.loadTilemap
 -- | The same room as LDtk saves it.
 ldtkRoom :: IO Tilemap
 ldtkRoom = bundled "examples/level.ldtk" LDtk.loadTilemap
-
-bundled :: Show e => FilePath -> (OsPath -> IO (Either e Tilemap)) -> IO Tilemap
-bundled name load = getDataFileName name >>= encodeFS >>= load >>= either (assertFailure . show) pure
 
 -- | The one layer with this name, failing the case when it is not exactly one.
 layerNamed :: String -> Tilemap -> IO TileLayer

@@ -143,6 +143,7 @@ test-suite partir-qua-world-test
     , Partir.Arbitrary
     , Partir.Asset.Animation.PNGSpec
     , Partir.Asset.AnimationSpec
+    , Partir.Asset.Bundled
     , Partir.Asset.GLTFSpec
     , Partir.Asset.Sprite.PNGSpec
     , Partir.Asset.Sprite.Pixels
