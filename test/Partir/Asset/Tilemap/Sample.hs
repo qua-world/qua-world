@@ -26,6 +26,7 @@ import Control.Monad (join)
 import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
+import System.OsPath (OsPath, encodeFS)
 import Test.Tasty.HUnit (assertFailure)
 
 import Partir.Asset.Tilemap (
@@ -44,8 +45,8 @@ tiledRoom = bundled "examples/level.tmj" Tiled.loadTilemap
 ldtkRoom :: IO Tilemap
 ldtkRoom = bundled "examples/level.ldtk" LDtk.loadTilemap
 
-bundled :: Show e => FilePath -> (FilePath -> IO (Either e Tilemap)) -> IO Tilemap
-bundled name load = getDataFileName name >>= load >>= either (assertFailure . show) pure
+bundled :: Show e => FilePath -> (OsPath -> IO (Either e Tilemap)) -> IO Tilemap
+bundled name load = getDataFileName name >>= encodeFS >>= load >>= either (assertFailure . show) pure
 
 -- | The one layer with this name, failing the case when it is not exactly one.
 layerNamed :: String -> Tilemap -> IO TileLayer

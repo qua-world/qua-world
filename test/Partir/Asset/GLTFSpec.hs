@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
 import Data.Word (Word32)
 import Linear (V3 (..), distance)
+import System.OsPath (encodeFS)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertFailure, testCase, (@?=))
 
@@ -143,6 +144,7 @@ assertNear actual expected =
 loadCube :: IO Mesh
 loadCube =
   getDataFileName "examples/avatar.glb"
+    >>= encodeFS
     >>= loadAsset
     >>= either (assertFailure . show) pure
 

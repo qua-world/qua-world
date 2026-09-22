@@ -25,8 +25,9 @@ where
 import Control.Exception (Exception)
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
 import qualified Data.Vector as Vector
+import qualified System.File.OsPath as File
+import System.OsPath (OsPath)
 
 import qualified Codec.Picture as Picture
 
@@ -45,8 +46,8 @@ instance Exception PngLoadError
 anticipated, so it comes back as a 'Left'; a missing or unreadable file is an
 I\/O failure and surfaces as the 'IOError' thrown by reading it.
 -}
-loadSprite :: Sprite.Grid -> FilePath -> IO (Either PngLoadError Sprite.Sprite)
-loadSprite grid path = loadSpriteBytes grid <$> ByteString.readFile path
+loadSprite :: Sprite.Grid -> OsPath -> IO (Either PngLoadError Sprite.Sprite)
+loadSprite grid path = loadSpriteBytes grid <$> File.readFile' path
 
 {- | Decode in-memory PNG bytes under the same contract as 'loadSprite', for
 content that arrives from somewhere other than a file.

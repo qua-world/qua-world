@@ -10,6 +10,7 @@ import Data.StateVar (get, ($=))
 import Debug.Trace (traceIO)
 import qualified Graphics.UI.GLUT as GLUT
 import Options.Applicative
+import System.OsPath (OsPath, encodeFS)
 import qualified Partir.Client.GLUT.Commands as Commands
 import qualified Partir.Client.GLUT.Controls as Controls
 import qualified Partir.Client.GLUT.Render as Render
@@ -82,8 +83,8 @@ scene = do
 is fatal here: the client ships it, so a failure is a broken build rather than
 anything a player can act on.
 -}
-bundled :: Exception e => FilePath -> (FilePath -> IO (Either e a)) -> IO a
-bundled name load = getDataFileName name >>= load >>= either throwIO pure
+bundled :: Exception e => FilePath -> (OsPath -> IO (Either e a)) -> IO a
+bundled name load = getDataFileName name >>= encodeFS >>= load >>= either throwIO pure
 
 {- | The icons the client draws over the scene, left to right: a still frame
 of the sprite sheet, then the walk cycle playing beside it.

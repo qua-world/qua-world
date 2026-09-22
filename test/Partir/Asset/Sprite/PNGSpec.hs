@@ -11,6 +11,7 @@ where
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
+import System.OsPath (encodeFS)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -78,5 +79,6 @@ cell = Grid{gridFrameWidth = 16, gridFrameHeight = 16}
 loadIcons :: IO Sprite
 loadIcons =
   getDataFileName "examples/sprites.png"
+    >>= encodeFS
     >>= loadSprite cell
     >>= either (assertFailure . show) pure

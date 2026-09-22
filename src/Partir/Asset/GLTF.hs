@@ -28,7 +28,6 @@ where
 import Control.Exception (Exception)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
 import Data.Foldable (toList)
 import Data.Maybe (fromMaybe)
 import qualified Data.Set as Set
@@ -51,6 +50,8 @@ import Linear (
   (!*),
   (!*!),
  )
+import qualified System.File.OsPath as File
+import System.OsPath (OsPath)
 
 import qualified Text.GLTF.Loader as GLTF
 
@@ -69,8 +70,8 @@ instance Exception GltfLoadError
 is anticipated, so it comes back as a 'Left'; a missing or unreadable file is
 an I\/O failure and surfaces as the 'IOError' thrown by reading it.
 -}
-loadAsset :: FilePath -> IO (Either GltfLoadError Asset.Mesh)
-loadAsset path = ByteString.readFile path >>= loadAssetBytes
+loadAsset :: OsPath -> IO (Either GltfLoadError Asset.Mesh)
+loadAsset path = File.readFile' path >>= loadAssetBytes
 
 {- | Decode in-memory GLB bytes under the same contract as 'loadAsset', for
 content that arrives from somewhere other than a file.
