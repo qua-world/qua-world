@@ -92,9 +92,7 @@ data Corner = Corner
   }
   deriving (Eq, Ord)
 
-{- | Number each distinct corner in order of first use, returning the corners
-and the index of every face corner.
--}
+-- | Number each distinct corner in order of first use.
 weld :: [OBJ.FaceIndex] -> ([Corner], Vector Word32)
 weld faceCorners = (map fst (sortOn snd (Map.toList seen)), Vector.fromList indices)
  where

@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# A square pyramid standing on the floor beside examples/avatar.glb. OBJ carries no
-# transform, so its placement is in the positions themselves.
+# A square pyramid standing on the floor beside examples/avatar.glb. OBJ
+# carries no transform, so its placement is in the positions themselves.
 o pyramid
 v 0.6 0 -0.6
 v 1.0 0 -0.6
