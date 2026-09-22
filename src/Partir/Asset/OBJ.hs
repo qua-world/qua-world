@@ -57,8 +57,7 @@ anticipated, so it comes back as a 'Left'; a missing or unreadable file is an
 I\/O failure and surfaces as the 'IOError' thrown by reading it.
 -}
 loadAsset :: OsPath -> IO (Either ObjLoadError Asset.Mesh)
--- @wavefront@ exposes no parser over text or bytes, only one that reads a
--- 'FilePath' itself.
+-- @wavefront@ parses only a file it opens by 'FilePath'.
 loadAsset path = either (Left . ObjSyntaxError) fromObj <$> (decodeFS path >>= OBJ.fromFile)
 
 fromObj :: OBJ.WavefrontOBJ -> Either ObjLoadError Asset.Mesh

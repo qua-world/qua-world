@@ -139,7 +139,6 @@ assertNear actual expected =
     ("expected " ++ show expected ++ ", got " ++ show actual)
     (length actual == length expected && and (zipWith (\a e -> distance a e < 1e-5) actual expected))
 
--- | Load the example cube, failing the test case with the decode error.
 loadCube :: IO Mesh
 loadCube = bundled "examples/avatar.glb" loadAsset
 

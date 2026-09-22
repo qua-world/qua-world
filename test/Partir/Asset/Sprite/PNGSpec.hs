@@ -74,6 +74,5 @@ test_loadSpriteBytes =
 cell :: Grid
 cell = Grid{gridFrameWidth = 16, gridFrameHeight = 16}
 
--- | Load the example sheet, failing the test case with the decode error.
 loadIcons :: IO Sprite
 loadIcons = bundled "examples/sprites.png" (loadSprite cell)

@@ -113,7 +113,6 @@ test_loadAnimationFrames =
 rate :: Rate
 rate = Rate{ratePerSecond = 8}
 
--- | Load the example sequence, failing the test case with the load error.
 loadWalk :: IO Animation
 loadWalk = bundled "examples/walk" (loadAnimation rate)
 
