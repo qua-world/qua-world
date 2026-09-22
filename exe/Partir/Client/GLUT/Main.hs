@@ -18,6 +18,7 @@ import qualified Partir.Asset as Asset
 import qualified Partir.Asset.Animation as Animation
 import qualified Partir.Asset.Animation.PNG as Sequence
 import qualified Partir.Asset.GLTF as GLTF
+import qualified Partir.Asset.OBJ as OBJ
 import qualified Partir.Asset.Sprite as Sprite
 import qualified Partir.Asset.Sprite.PNG as PNG
 import qualified Partir.Asset.Tilemap as Tilemap
@@ -66,7 +67,7 @@ main = do
 
   GLUT.mainLoop
 
-{- | Everything the client draws: the sample level's tiles, and the one asset
+{- | Everything the client draws: the sample level's tiles, and the assets
 standing on them.
 
 Nothing here is transformed, so the avatar sits at its own model origin and
@@ -76,7 +77,8 @@ scene :: IO Asset.Mesh
 scene = do
   level <- Tilemap.toMesh <$> bundled "examples/level.ldtk" LDtk.loadTilemap
   avatar <- bundled "examples/avatar.glb" GLTF.loadAsset
-  pure (Asset.Mesh (Asset.meshPrimitives level ++ Asset.meshPrimitives avatar))
+  pyramid <- bundled "examples/pyramid.obj" OBJ.loadAsset
+  pure (Asset.Mesh (concatMap Asset.meshPrimitives [level, avatar, pyramid]))
 
 {- | Read one of the package's own data files. A document that will not decode
 is fatal here: the client ships it, so a failure is a broken build rather than

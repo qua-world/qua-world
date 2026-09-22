@@ -36,6 +36,10 @@ bucket. Later `[Unreleased]` sections split by change type.
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. A malformed document comes back
   as a typed `GltfLoadError`.
+* `Partir.Asset.OBJ`: fills the same mesh from a Wavefront OBJ file's
+  positions, normals, and polygon faces, split into triangles. Texture
+  coordinates and `.mtl` materials go unread. A malformed file comes back as
+  a typed `ObjLoadError`.
 * `Partir.Asset.Sprite`: a sprite sheet and the frames cut from it, naming no
   source format, filled by `Partir.Asset.Sprite.PNG` from a PNG and the cell
   size its frames sit on, so pixel art authored in Pixelorama or any
