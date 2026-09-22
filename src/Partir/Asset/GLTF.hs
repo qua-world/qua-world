@@ -113,8 +113,11 @@ localTransform node = mkTransformationMat (rotation !*! scaled scale) offset
  where
   offset = fromMaybe 0 (GLTF.nodeTranslation node)
   scale = fromMaybe 1 (GLTF.nodeScale node)
-  -- glTF stores a quaternion as (x, y, z, w); linear puts the scalar first.
-  rotation = maybe identity (\(V4 x y z w) -> fromQuaternion (Quaternion w (V3 x y z))) (GLTF.nodeRotation node)
+  rotation = maybe identity (fromQuaternion . quaternion) (GLTF.nodeRotation node)
+
+-- | glTF stores a quaternion as (x, y, z, w); linear puts the scalar first.
+quaternion :: V4 Float -> Quaternion Float
+quaternion (V4 x y z w) = Quaternion w (V3 x y z)
 
 {- | Bake a world transform into a primitive. Normals take the inverse transpose
 so they stay perpendicular to their surface under non-uniform scale.
@@ -126,9 +129,13 @@ transformPrimitive world p =
     , Asset.primitiveNormals = Vector.map (normalize . (normalMatrix !*)) (Asset.primitiveNormals p)
     }
  where
-  normalMatrix :: M33 Float
-  normalMatrix = transpose (inv33 (fmap dropW (dropW world)))
-  dropW (V4 x y z _) = V3 x y z
+  normalMatrix = transpose (inv33 (linearPart world))
+
+-- | The upper-left 3x3 of an affine transform: its rotation and scale, without translation.
+linearPart :: M44 Float -> M33 Float
+linearPart = fmap xyz . xyz
+ where
+  xyz (V4 x y z _) = V3 x y z
 
 fromPrimitive :: GLTF.MeshPrimitive -> Asset.Primitive
 fromPrimitive p =
