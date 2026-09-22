@@ -11,6 +11,7 @@ import qualified Data.Vector as Vector
 import Linear.V3 (V3 (..))
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
+import System.OsPath (encodeFS)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -20,8 +21,8 @@ import Partir.Asset (
   indexCount,
   vertexCount,
  )
+import Partir.Asset.Bundled (bundled)
 import Partir.Asset.OBJ (ObjLoadError (..), loadAsset)
-import Paths_partir_qua_world (getDataFileName)
 
 test_loadAsset :: TestTree
 test_loadAsset =
@@ -66,10 +67,7 @@ test_loadAsset =
       indices. These expectations track that file.
       -}
       testCase "loads the example pyramid's geometry counts" $ do
-        mesh <-
-          getDataFileName "examples/pyramid.obj"
-            >>= loadAsset
-            >>= either (assertFailure . show) pure
+        mesh <- bundled "examples/pyramid.obj" loadAsset
         vertexCount mesh @?= 16
         indexCount mesh @?= 18
     ]
@@ -87,7 +85,7 @@ loadLines statements =
   withSystemTempDirectory "partir-obj" $ \dir -> do
     let path = dir </> "mesh.obj"
     writeFile path (unlines statements)
-    loadAsset path
+    encodeFS path >>= loadAsset
 
 onlyPrimitive :: Either ObjLoadError Mesh -> IO Primitive
 onlyPrimitive (Left err) = assertFailure (show err)

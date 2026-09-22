@@ -31,6 +31,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Data.Word (Word32)
 import Linear.V3 (V3 (..))
+import System.OsPath (OsPath, decodeFS)
 
 import qualified Codec.Wavefront as OBJ
 
@@ -55,8 +56,10 @@ instance Exception ObjLoadError
 anticipated, so it comes back as a 'Left'; a missing or unreadable file is an
 I\/O failure and surfaces as the 'IOError' thrown by reading it.
 -}
-loadAsset :: FilePath -> IO (Either ObjLoadError Asset.Mesh)
-loadAsset path = either (Left . ObjSyntaxError) fromObj <$> OBJ.fromFile path
+loadAsset :: OsPath -> IO (Either ObjLoadError Asset.Mesh)
+-- @wavefront@ exposes no parser over text or bytes, only one that reads a
+-- 'FilePath' itself.
+loadAsset path = either (Left . ObjSyntaxError) fromObj <$> (decodeFS path >>= OBJ.fromFile)
 
 fromObj :: OBJ.WavefrontOBJ -> Either ObjLoadError Asset.Mesh
 fromObj obj
