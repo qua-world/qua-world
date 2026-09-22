@@ -13,8 +13,7 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as Storable
-import qualified System.Directory as Directory
-import System.FilePath ((</>))
+import System.IO.Temp (withSystemTempDirectory)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -77,7 +76,7 @@ test_loadAnimation =
     , -- Pointing at a directory holding no frames is a mistake worth naming,
       -- rather than an animation that draws nothing.
       testCase "rejects a directory holding no PNG frames" $
-        withEmptyDirectory $ \empty -> do
+        withSystemTempDirectory "partir-sequence" $ \empty -> do
           outcome <- loadAnimation rate empty
           case outcome of
             Left (EmptySequence named) -> named @?= empty
@@ -130,10 +129,3 @@ composed sizes =
     , Lazy.toStrict (Picture.encodePng (Picture.generateImage (const (const red)) width height))
     )
   red = Picture.PixelRGBA8 255 0 0 255
-
--- | Run an action over a directory holding no frames, and clear it away after.
-withEmptyDirectory :: (FilePath -> IO a) -> IO a
-withEmptyDirectory action = do
-  path <- (</> "partir-empty-sequence") <$> Directory.getTemporaryDirectory
-  Directory.createDirectoryIfMissing True path
-  action path <* Directory.removeDirectoryRecursive path
