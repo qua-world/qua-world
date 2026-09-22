@@ -12,14 +12,10 @@ each loader under @Partir.Asset.Animation.*@ converts into this vocabulary and
 the renderer depends only on it.
 
 A frame sequence carries no timing of its own, so the durations come from a
-'Rate' the caller supplies rather than from the files (#118). They are a
-vector rather than one number so a frame timed individually needs no change to
-the type.
+'Rate' the caller supplies rather than from the files (#118).
 
-'timeline' and 'stepAt' are the whole of playback: the first says which frames
-play and for how long, the second says which of them is showing after a given
-number of seconds. A renderer reduces the timeline to whatever it draws from
-once, at upload, and keeps calling 'stepAt' on the durations.
+A caller reduces the 'timeline' to whatever it draws from once, then calls
+'stepAt' on the durations for every frame it draws.
 -}
 module Partir.Asset.Animation (
   Animation (..),
@@ -51,18 +47,15 @@ data Animation = Animation
   }
   deriving (Eq, Show)
 
-{- | How fast a sequence plays, in frames per second. The tool that exported
-the frames knows this and the frames themselves do not, so it reaches a loader
-from the caller.
--}
+-- | How fast a sequence plays, in frames per second.
 newtype Rate = Rate
   { ratePerSecond :: Double
   }
   deriving (Eq, Show)
 
 {- | Durations for a sequence of the given length played at a constant rate.
-A rate of no frames per second holds every frame for no time, which
-'frameIndexAt' plays as a still.
+A rate of no frames per second holds every frame for no time, which 'stepAt'
+plays as a still.
 -}
 rateDurations :: Rate -> Int -> Vector Double
 rateDurations rate count = Vector.replicate count seconds
@@ -82,9 +75,7 @@ still sheet =
 totalDuration :: Animation -> Double
 totalDuration = Vector.sum . Vector.map fst . timeline
 
-{- | The frames the animation plays, in order, each with how long it holds.
-Pairing the two vectors is what trims a sheet's frames to the durations given.
--}
+-- | The frames the animation plays, in order, each with how long it holds.
 timeline :: Animation -> Vector (Double, Sprite.Frame)
 timeline animation =
   Vector.zip

@@ -6,11 +6,11 @@
 Module      : Partir.Asset.Animation.PNG
 Description : Load a directory of PNG frames into a playable 'Animation.Animation'
 
-Reads the PNG frame sequence a frame-by-frame animation tool exports — one
-file per frame, as Pencil2D writes them — and lays the frames side by side
-into the single sheet 'Partir.Asset.Sprite' already names. The renderer
-therefore uploads one texture and selects a frame from it, exactly as it does
-for art that arrived packed.
+Reads the image sequence a frame-by-frame animation tool exports, one file per
+frame, as Pencil2D writes them. The frames are laid side by side into the
+single sheet 'Partir.Asset.Sprite' already names, so the renderer uploads one
+texture and selects a frame from it, exactly as it does for art that arrived
+packed.
 
 Frames play in the order their file names sort, which is the order a
 zero-padded export numbers them. An export numbering @1.png@ through @10.png@
@@ -63,7 +63,7 @@ missing or unreadable directory is an I\/O failure and surfaces as the
 'IOError' thrown by listing it.
 
 Files that are not PNGs are skipped, so a manifest or a project file living
-beside the frames does not become one.
+beside the frames is not read as one.
 -}
 loadAnimation ::
   Animation.Rate -> FilePath -> IO (Either SequenceLoadError Animation.Animation)
@@ -82,8 +82,8 @@ labelled by where it came from so a decode failure can name it. Under the same
 contract as 'loadAnimation', for content that arrives from somewhere other
 than a directory.
 
-No frames compose into an animation with nothing to play. Only 'loadAnimation'
-reads that as an error, because there it means the path named the wrong place.
+No frames give an animation with nothing to play. Only 'loadAnimation' reads
+that as an error.
 -}
 loadAnimationFrames ::
   Animation.Rate ->
@@ -93,7 +93,6 @@ loadAnimationFrames rate frames = compose rate <$> traverse decode frames
  where
   decode (name, bytes) = first (UndecodableFrame name) (PNG.decodeSheet bytes)
 
--- | Pair the packed frames with how long each of them holds.
 compose :: Animation.Rate -> [Sprite.Sprite] -> Animation.Animation
 compose rate frames =
   Animation.Animation
@@ -155,6 +154,6 @@ composite sheetWidth sheetHeight placed = Storable.create $ do
 channels :: Int
 channels = 4
 
--- | The fill an uncovered pixel of the composite keeps: fully transparent black.
+-- | The byte every channel of an uncovered pixel keeps, leaving it clear.
 transparent :: Word8
 transparent = 0

@@ -41,9 +41,9 @@ main = do
   -- Uploading needs the context the window just created.
   renderer <- join (Render.upload <$> scene <*> icons)
 
-  -- An animation advances on the clock rather than on input, so something has
-  -- to ask for a frame even while nothing happens. A timer does it at a fixed
-  -- cadence; the idle callback would do it as fast as the CPU allows.
+  -- An animation advances on the clock, so something has to ask for a frame
+  -- while no input arrives. A timer asks at a fixed cadence; the idle callback
+  -- would ask as fast as the CPU allows.
   GLUT.addTimerCallback frameInterval animate
 
   -- Global Callbacks
@@ -109,9 +109,7 @@ display renderer = do
   Render.draw renderer size (fromIntegral elapsed / 1000)
   GLUT.swapBuffers
 
-{- | Ask for a frame, then ask again. GLUT timers fire once, so each one has to
-schedule the next.
--}
+-- | GLUT timers fire once, so each one has to schedule the next.
 animate :: GLUT.TimerCallback
 animate = do
   GLUT.postRedisplay Nothing

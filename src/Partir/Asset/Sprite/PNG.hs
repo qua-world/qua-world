@@ -61,9 +61,8 @@ loadSpriteBytes grid bytes = cut <$> decodeSheet bytes
       }
 
 {- | Decode a PNG into the sheet alone, its frames left empty for the caller
-to fill. Frames that come from somewhere other than a grid — a sequence of
-separate files, each its own frame — reach a 'Sprite.Sprite' through here
-rather than through a second decoder.
+to fill. A caller whose frames come from somewhere other than a grid decodes
+through here rather than through a second decoder.
 -}
 decodeSheet :: ByteString -> Either PngLoadError Sprite.Sprite
 decodeSheet bytes =

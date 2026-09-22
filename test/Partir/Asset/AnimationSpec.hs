@@ -42,8 +42,8 @@ test_rateDurations =
         rateDurations (Rate 0) 2 @?= Vector.replicate 2 0
     ]
 
-{- | An animation is a sheet read as a sequence, so the frames it plays come
-from the sheet and the durations alongside decide how many of them do.
+{- | Which frames an animation plays, and for how long. The durations decide
+how far into the sheet it reaches, which is what lets a still share the path.
 -}
 test_timeline :: TestTree
 test_timeline =

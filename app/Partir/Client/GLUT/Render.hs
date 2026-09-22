@@ -264,8 +264,8 @@ drawGeometry size geometry = do
 
 {- | Draw the icons over the scene: in front of whatever depth the scene left,
 and blended so the transparent margin around a frame's art lets it through.
-The state the two changes costs a call each, so it is set around the row
-rather than per icon.
+The depth test and the blend are set around the whole row, because each icon
+would otherwise pay to set them again.
 -}
 drawOverlays :: GL.Size -> Double -> [Overlay] -> IO ()
 drawOverlays _ _ [] = pure ()

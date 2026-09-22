@@ -75,8 +75,8 @@ farPlane = 100
 {- | An animation reduced to what drawing it repeatedly needs: how long each
 frame holds, and where each one sits in its sheet.
 
-The sheet's pixels are not part of it. A renderer that has uploaded them as a
-texture holds an 'Icon' and no 'Sprite'.
+The sheet's pixels are not part of it, so a renderer that has uploaded them as
+a texture retains no 'Sprite'.
 -}
 data Icon = Icon
   { iconDurations :: Vector Double
@@ -95,7 +95,7 @@ icon animation =
 
 {- | Where the art an icon shows after the given seconds sits in its sheet.
 'Nothing' when the animation has no frame to show, and the caller then draws
-nothing at all rather than drawing something arbitrary.
+nothing.
 -}
 iconAt :: Icon -> Double -> Maybe Bounds
 iconAt shown elapsed =

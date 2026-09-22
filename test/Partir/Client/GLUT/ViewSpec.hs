@@ -124,9 +124,9 @@ test_frameBounds =
         frameBounds (sheet 0 0) (Frame 0 0 0 0) @?= Bounds 0 0 0 0
     ]
 
-{- | An animation reduced to what the renderer draws it from, and the frame
-that reduction yields at an instant. The renderer makes this choice every
-frame it draws; it is settled here so the test suite reaches it.
+{- | Which region of its sheet an icon draws at an instant. The client makes
+this choice for every frame it presents, so getting it wrong animates nothing
+or animates the wrong art.
 -}
 test_iconAt :: TestTree
 test_iconAt =
