@@ -44,6 +44,7 @@ data-files:
     examples/avatar.glb
     examples/level.ldtk
     examples/level.tmj
+    examples/pyramid.obj
     examples/sprites.png
     examples/walk/*.png
 
@@ -73,6 +74,7 @@ library
     , Partir.Asset.Animation
     , Partir.Asset.Animation.PNG
     , Partir.Asset.GLTF
+    , Partir.Asset.OBJ
     , Partir.Asset.Sprite
     , Partir.Asset.Sprite.PNG
     , Partir.Asset.Tilemap
@@ -98,6 +100,7 @@ library
     , linear >= 1.23 && < 1.24
     , text >= 2.1 && < 2.2
     , vector >= 0.13 && < 0.14
+    , wavefront >= 0.7.2 && < 0.8
 
   hs-source-dirs:
       src
@@ -143,6 +146,7 @@ test-suite partir-qua-world-test
     , Partir.Asset.Animation.PNGSpec
     , Partir.Asset.AnimationSpec
     , Partir.Asset.GLTFSpec
+    , Partir.Asset.OBJSpec
     , Partir.Asset.Sprite.PNGSpec
     , Partir.Asset.Sprite.Pixels
     , Partir.Asset.Sprite.Sample
@@ -164,6 +168,7 @@ test-suite partir-qua-world-test
   build-depends:
       bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
+    , filepath >= 1.5 && < 1.6
     , GLUT >= 2.7 && < 2.8
     , JuicyPixels >= 3.3 && < 3.4
     , linear >= 1.23 && < 1.24
