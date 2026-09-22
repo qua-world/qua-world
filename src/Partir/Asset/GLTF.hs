@@ -11,8 +11,12 @@ Reads binary glTF (@.glb@) and flattens it into the format-neutral
 @rio@ prelude are confined to this module: none of it appears in the returned
 type.
 
-Node transforms are not applied, so a document whose parts are placed by node
-draws them all at the origin (#67).
+The nodes that reference a mesh place it: each node's translation, rotation,
+and scale compose down the hierarchy into the mesh's positions and normals. A
+mesh no node references is dropped, and one referenced twice appears twice.
+
+@gltf-loader@ drops a node's @matrix@ and the document's scene list, so a
+@matrix@ node applies no transform and every scene draws at once (#126).
 -}
 module Partir.Asset.GLTF (
   GltfLoadError (..),
@@ -25,7 +29,28 @@ import Control.Exception (Exception)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
+import Data.Foldable (toList)
+import Data.Maybe (fromMaybe)
+import qualified Data.Set as Set
 import qualified Data.Vector as Vector
+import Linear (
+  M33,
+  M44,
+  Quaternion (..),
+  V3 (..),
+  V4 (..),
+  fromQuaternion,
+  identity,
+  inv33,
+  mkTransformationMat,
+  normalize,
+  normalizePoint,
+  point,
+  scaled,
+  transpose,
+  (!*),
+  (!*!),
+ )
 
 import qualified Text.GLTF.Loader as GLTF
 
@@ -55,11 +80,56 @@ loadAssetBytes bytes =
   bimap GltfLoadError (fromGltf . GLTF.unGltf) <$> GLTF.fromBinaryByteString bytes
 
 fromGltf :: GLTF.Gltf -> Asset.Mesh
-fromGltf =
+fromGltf gltf =
   Asset.Mesh
-    . concatMap (map fromPrimitive . Vector.toList . GLTF.meshPrimitives)
-    . Vector.toList
-    . GLTF.gltfMeshes
+    [ transformPrimitive world (fromPrimitive p)
+    | (world, mesh) <- placements gltf
+    , p <- toList (GLTF.meshPrimitives mesh)
+    ]
+
+-- | Each mesh a node references, paired with that node's world transform.
+placements :: GLTF.Gltf -> [(M44 Float, GLTF.Mesh)]
+placements gltf = concatMap (visit identity) roots
+ where
+  nodes = GLTF.gltfNodes gltf
+  children = Set.fromList (concatMap (toList . GLTF.nodeChildren) nodes)
+  roots = [i | i <- [0 .. Vector.length nodes - 1], i `Set.notMember` children]
+
+  visit parent i = case nodes Vector.!? i of
+    Nothing -> []
+    Just node ->
+      let world = parent !*! localTransform node
+          mesh = GLTF.nodeMeshId node >>= (GLTF.gltfMeshes gltf Vector.!?)
+       in [(world, m) | m <- toList mesh] ++ concatMap (visit world) (GLTF.nodeChildren node)
+
+localTransform :: GLTF.Node -> M44 Float
+localTransform node = mkTransformationMat (rotation !*! scaled scale) offset
+ where
+  offset = fromMaybe 0 (GLTF.nodeTranslation node)
+  scale = fromMaybe 1 (GLTF.nodeScale node)
+  rotation = maybe identity (fromQuaternion . quaternion) (GLTF.nodeRotation node)
+
+-- | glTF stores a quaternion as (x, y, z, w); linear puts the scalar first.
+quaternion :: V4 Float -> Quaternion Float
+quaternion (V4 x y z w) = Quaternion w (V3 x y z)
+
+{- | Normals take the inverse transpose so they stay perpendicular to their
+surface under non-uniform scale.
+-}
+transformPrimitive :: M44 Float -> Asset.Primitive -> Asset.Primitive
+transformPrimitive world p =
+  p
+    { Asset.primitivePositions = Vector.map (normalizePoint . (world !*) . point) (Asset.primitivePositions p)
+    , Asset.primitiveNormals = Vector.map (normalize . (normalMatrix !*)) (Asset.primitiveNormals p)
+    }
+ where
+  normalMatrix = transpose (inv33 (linearPart world))
+
+-- | The rotation and scale of an affine transform, without its translation.
+linearPart :: M44 Float -> M33 Float
+linearPart = fmap xyz . xyz
+ where
+  xyz (V4 x y z _) = V3 x y z
 
 fromPrimitive :: GLTF.MeshPrimitive -> Asset.Primitive
 fromPrimitive p =
