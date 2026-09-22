@@ -28,10 +28,10 @@ import qualified Data.Vector as Vector
 import Data.Word (Word32)
 import Linear.V3 (V3)
 
--- | A drawable asset: the flattened primitives of every mesh in a source file.
+-- | A drawable asset: the primitives of every mesh a source file places.
 newtype Mesh = Mesh
   { meshPrimitives :: [Primitive]
-  -- ^ Draw calls, in source order.
+  -- ^ Draw calls.
   }
   deriving (Eq, Show)
 
