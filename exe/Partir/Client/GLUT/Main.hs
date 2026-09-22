@@ -10,10 +10,10 @@ import Data.StateVar (get, ($=))
 import Debug.Trace (traceIO)
 import qualified Graphics.UI.GLUT as GLUT
 import Options.Applicative
-import System.OsPath (OsPath, encodeFS)
 import qualified Partir.Client.GLUT.Commands as Commands
 import qualified Partir.Client.GLUT.Controls as Controls
 import qualified Partir.Client.GLUT.Render as Render
+import System.OsPath (OsPath, encodeFS)
 
 import qualified Partir.Asset as Asset
 import qualified Partir.Asset.Animation as Animation
