@@ -104,7 +104,7 @@ test_stepAt =
 evenly :: Vector.Vector Double
 evenly = Vector.replicate 4 0.5
 
--- | A sheet of the given number of frames, played at two frames a second.
+-- | An animation over the given number of frames, played at two a second.
 walk :: Int -> Animation
 walk count =
   Animation

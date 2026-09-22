@@ -9,8 +9,8 @@ Description : A sheet in the shape a frame sequence composes into
 A sequence loader lays its frames along one row of equal cells, so a spec that
 needs a sheet of that shape without decoding one builds it here.
 
-The pixels are empty. What these stand in for is the frame layout, which is
-all a caller reading frames rather than art asks about.
+The pixels are empty, so a spec that asserts on art wants a decoded sheet
+instead.
 -}
 module Partir.Asset.Sprite.Sample (
   strip,

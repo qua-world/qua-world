@@ -148,7 +148,7 @@ test_iconAt =
         iconAt (icon (timed [])) 0 @?= Nothing
     ]
 
--- | An animation over a row of 16-pixel frames, one frame per duration given.
+-- | An animation over a row of sample frames, one frame per duration given.
 timed :: [Double] -> Animation
 timed durations =
   Animation

@@ -14,8 +14,8 @@ import Data.Word (Word8)
 import Partir.Asset.Sprite (Sprite (..))
 
 {- | The four channels of one pixel, addressed from the sheet's top-left. A
-sheet that came back flipped, or one frame short, holds its declared
-dimensions either way, so only its pixels give the fault away.
+sheet assembled with its rows or its frames in the wrong order keeps the
+dimensions it claims, so only the pixels give that away.
 -}
 pixelAt :: Sprite -> Int -> Int -> [Word8]
 pixelAt sheet x y =
