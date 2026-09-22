@@ -82,20 +82,30 @@ loadAssetBytes bytes =
   bimap GltfLoadError (fromGltf . GLTF.unGltf) <$> GLTF.fromBinaryByteString bytes
 
 fromGltf :: GLTF.Gltf -> Asset.Mesh
-fromGltf gltf = Asset.Mesh (concatMap (placeNode identity) roots)
+fromGltf gltf =
+  Asset.Mesh
+    [ transformPrimitive world (fromPrimitive p)
+    | (world, mesh) <- placements gltf
+    , p <- toList (GLTF.meshPrimitives mesh)
+    ]
+
+{- | Every mesh a node references, paired with the world transform its node and
+that node's ancestors compose, walking down from the nodes no other node lists
+as a child.
+-}
+placements :: GLTF.Gltf -> [(M44 Float, GLTF.Mesh)]
+placements gltf = concatMap (visit identity) roots
  where
   nodes = GLTF.gltfNodes gltf
   children = Set.fromList (concatMap (toList . GLTF.nodeChildren) nodes)
   roots = [i | i <- [0 .. Vector.length nodes - 1], i `Set.notMember` children]
 
-  placeNode :: M44 Float -> Int -> [Asset.Primitive]
-  placeNode parent i = case nodes Vector.!? i of
+  visit parent i = case nodes Vector.!? i of
     Nothing -> []
     Just node ->
       let world = parent !*! localTransform node
           mesh = GLTF.nodeMeshId node >>= (GLTF.gltfMeshes gltf Vector.!?)
-       in maybe [] (map (transformPrimitive world . fromPrimitive) . toList . GLTF.meshPrimitives) mesh
-            ++ concatMap (placeNode world) (GLTF.nodeChildren node)
+       in [(world, m) | m <- toList mesh] ++ concatMap (visit world) (GLTF.nodeChildren node)
 
 -- | A node's translation, rotation, and scale as one matrix, applied scale first.
 localTransform :: GLTF.Node -> M44 Float
