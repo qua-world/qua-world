@@ -25,6 +25,7 @@ module Partir.Asset.OBJ (
 where
 
 import Control.Exception (Exception)
+import Data.List (mapAccumL, sortOn)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -61,8 +62,8 @@ fromObj :: OBJ.WavefrontOBJ -> Either ObjLoadError Asset.Mesh
 fromObj obj
   | null corners = Right (Asset.Mesh [])
   | otherwise = do
-      positions <- traverse (fmap location . select (OBJ.objLocations obj) . fst) corners
-      normals <- traverse (traverse (fmap normal . select (OBJ.objNormals obj))) (traverse snd corners)
+      positions <- traverse (fmap location . select (OBJ.objLocations obj) . cornerLocation) corners
+      normals <- traverse (traverse (fmap normal . select (OBJ.objNormals obj))) (traverse cornerNormal corners)
       pure $
         Asset.Mesh
           [ Asset.Primitive
@@ -82,20 +83,27 @@ triangles :: OBJ.Face -> [OBJ.FaceIndex]
 triangles (OBJ.Face a b c rest) =
   concat (zipWith (\x y -> [a, x, y]) (b : c : rest) (c : rest))
 
-{- | Number each distinct position and normal pairing in order of first use,
-returning the pairings and the index of every corner.
+{- | The attributes one face corner selects, by one-based index. Texture
+coordinates are left out, so corners differing only there share a vertex.
 -}
-weld :: [OBJ.FaceIndex] -> ([(Int, Maybe Int)], Vector Word32)
-weld = finish . foldl' step (Map.empty, [], [])
+data Corner = Corner
+  { cornerLocation :: Int
+  , cornerNormal :: Maybe Int
+  }
+  deriving (Eq, Ord)
+
+{- | Number each distinct corner in order of first use, returning the corners
+and the index of every face corner.
+-}
+weld :: [OBJ.FaceIndex] -> ([Corner], Vector Word32)
+weld faceCorners = (map fst (sortOn snd (Map.toList seen)), Vector.fromList indices)
  where
-  step (seen, keys, is) c =
-    case Map.lookup key seen of
-      Just i -> (seen, keys, i : is)
-      Nothing -> (Map.insert key next seen, key : keys, next : is)
-   where
-    key = (OBJ.faceLocIndex c, OBJ.faceNorIndex c)
-    next = fromIntegral (Map.size seen)
-  finish (_, keys, is) = (reverse keys, Vector.fromList (reverse is))
+  (seen, indices) = mapAccumL number Map.empty (map corner faceCorners)
+  number known c =
+    case Map.lookup c known of
+      Just i -> (known, i)
+      Nothing -> let i = fromIntegral (Map.size known) in (Map.insert c i known, i)
+  corner c = Corner{cornerLocation = OBJ.faceLocIndex c, cornerNormal = OBJ.faceNorIndex c}
 
 -- | Look up a one-based OBJ index.
 select :: Vector a -> Int -> Either ObjLoadError a
