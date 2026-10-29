@@ -12,6 +12,15 @@ A GUI client for interacting with the qua.world massively multiplayer online
 gaming environment and client interfaces for creating bots, automation, and
 other actors in the game world.
 
+## Architecture
+
+This repository is becoming the qua.world **polyglot monorepo**, built with
+buck2. It holds the Haskell **client** today. The authoritative Erlang/OTP
+**world-server** will join it as a sibling build target. See [architecture
+decision record 0001](docs/adr/0001-architecture.md) for the client/server
+boundary and monorepo layout, and the rest of [`docs/adr/`](docs/adr/) for the
+decisions behind it.
+
 ## Getting started
 
 The `partir-glut` executable documents its usage in its help output.
