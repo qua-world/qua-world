@@ -12,27 +12,25 @@ Accepted
 
 ## Context
 
-qua.world has a client in Haskell, this repository today, and a world-server in
-another language that doesn't exist yet. They're distinct systems, and without
-a recorded boundary server-shaped concerns accrete in client code: protocol
-authoring, persistence, cell management.
+qua.world has two systems in different languages: the Haskell client in this
+repository and a world-server not yet written. Without a recorded boundary
+between them, server concerns such as protocol authoring, persistence, and cell
+management accrete in client code.
 
-A separate repository per side enforces that boundary by distance. The
-protocol is the seam between the two, though, and it changes on both sides at
-once. Separate repositories turn every protocol change into a coordinated
-release across them.
+Separate repositories enforce that boundary by distance. The protocol is the
+seam between the two systems and changes on both sides at once, so separate
+repositories make every protocol change a coordinated release.
 
 ## Decision
 
-qua.world is one polyglot monorepo, this repository, with buck2 as the build
-across languages. Client and server are separate build targets in it. Client
+qua.world lives in this repository as one polyglot monorepo, built across
+languages by buck2. Client and server are separate build targets in it. Client
 targets don't depend on server internals, and buck2 target visibility enforces
 that boundary.
 
 ## Consequences
 
-- A protocol change lands on both sides in one commit: `Partir.Net.*` (#12,
-  #13, #14) changes with the server's protocol module.
+- A protocol change lands on both sides in one commit.
 - The boundary is a build-time constraint rather than a convention reviewers
   have to remember.
 - buck2 has to replace the `cabal` build before the monorepo is real (#57,

@@ -14,8 +14,7 @@ Accepted
 
 qua.world aims to hold a large world with many actors in it: players,
 non-player characters, bots, and agents driven by large language models. The
-number of actors is the axis the system has to scale along, and the variety of
-actors is the point of the world.
+system has to scale with the number of actors.
 
 A conventional game server runs non-player characters inside its own
 simulation. Every new kind of behaviour is then server code, written in the
@@ -41,7 +40,7 @@ logic.
 
 - The world scales by adding actor processes. The server's load becomes
   connection count and area-of-interest fan-out (#16) rather than behaviour
-  code, and partitioning has to keep both bounded as actors cluster.
+  code. Partitioning has to keep both bounded as actors cluster.
 - An actor's latency, crashes, and resource use stay in its own process. A
   slow agent driven by a language model slows only itself.
 - Actor behaviour is never authoritative. Anything an actor does arrives as
@@ -49,7 +48,7 @@ logic.
 - The SDK's API and the protocol schema are public interfaces. Changes to
   either break actor authors, so both need compatibility rules (#28) before the
   first outside actor exists.
-- SDKs beyond Haskell are possible but aren't built here. Each one binds to the
-  schema, not to the Haskell library.
+- An SDK in another language binds to the schema, not to the Haskell library.
+  None exists yet.
 - Non-player characters pay a network round trip for every action that an
   in-server implementation would make locally.
