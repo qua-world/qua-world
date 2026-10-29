@@ -18,8 +18,9 @@ between them, server concerns such as protocol authoring, persistence, and cell
 management accrete in client code.
 
 Separate repositories enforce that boundary by distance. The protocol is the
-seam between the two systems and changes on both sides at once, so separate
-repositories make every protocol change a coordinated release.
+seam between the two systems, and a change to it touches the server, the SDK,
+and the compatibility check between them. Separate repositories split that
+change across pull requests that nobody reviews together.
 
 ## Decision
 
@@ -30,7 +31,13 @@ that boundary.
 
 ## Consequences
 
-- A protocol change lands on both sides in one commit.
+- A reviewer sees a protocol change, both of its sides, and its compatibility
+  check in one pull request.
+- One commit doesn't mean one deployment. Actors built on older SDK releases
+  stay connected after the server upgrades, so the server keeps reading every
+  supported protocol version. Forward and backward compatibility needs a
+  release practice and a schema check in CI (#28), whatever the repository
+  layout.
 - The boundary is a build-time constraint rather than a convention reviewers
   have to remember.
 - buck2 has to replace the `cabal` build before the monorepo is real (#57,
