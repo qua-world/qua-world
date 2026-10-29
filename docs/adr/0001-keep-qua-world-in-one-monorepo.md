@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2026 Alex Brandt
 SPDX-License-Identifier: MIT
 -->
 
-# 1. Keep qua.world in one buck2 monorepo
+# 1. Keep qua.world in one monorepo
 
 ## Status
 
@@ -24,10 +24,9 @@ change across pull requests that nobody reviews together.
 
 ## Decision
 
-qua.world lives in this repository as one polyglot monorepo, built across
-languages by buck2. Client and server are separate build targets in it. Client
-targets don't depend on server internals, and buck2 target visibility enforces
-that boundary.
+qua.world lives in this repository as one polyglot monorepo. Client and server
+are separate build targets in it, and client targets don't depend on server
+internals. The build tool is #60's decision.
 
 ## Consequences
 
@@ -38,9 +37,9 @@ that boundary.
   supported protocol version. Forward and backward compatibility needs a
   release practice and a schema check in CI (#28), whatever the repository
   layout.
-- The boundary is a build-time constraint rather than a convention reviewers
-  have to remember.
-- buck2 has to replace the `cabal` build before the monorepo is real (#57,
-  #58), and every contributor needs buck2 rather than per-language tools alone.
+- The boundary is a build-time constraint only if the build tool enforces
+  target visibility. Otherwise reviewers have to hold it.
+- The build has to span both languages once the server target lands, so the
+  `cabal` build gets replaced or wrapped (#60).
 - The repository stops being only the client. README framing, naming, and CI
   follow as the server target lands.
