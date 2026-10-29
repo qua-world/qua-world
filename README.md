@@ -12,6 +12,11 @@ A GUI client for interacting with the qua.world massively multiplayer online
 gaming environment and client interfaces for creating bots, automation, and
 other actors in the game world.
 
+## Architecture
+
+The [architecture decision records](docs/adr/) cover how this client fits with
+the qua.world world-server and the other actors that connect to it.
+
 ## Getting started
 
 The `partir-glut` executable documents its usage in its help output.

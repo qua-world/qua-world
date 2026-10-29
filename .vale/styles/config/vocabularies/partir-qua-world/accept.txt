@@ -10,8 +10,13 @@ GLU
 GLUT
 Hackage
 LDtk
+Lopes('s)?
 MIT
+(?i)monorepos?
+(?i)octrees?
+(?i)rebalances?
 partir
 Pixelorama
+SDKs?('s)?
 subcommand
 Tiled('s)?
