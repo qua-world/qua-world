@@ -13,12 +13,10 @@ LDtk
 Lopes('s)?
 MIT
 (?i)monorepos?
-Nygard('s)?
 (?i)octrees?
+(?i)rebalances?
 partir
 Pixelorama
-(?i)rebalanc(e|es|ing)
 SDKs?('s)?
 subcommand
 Tiled('s)?
-Voronoi

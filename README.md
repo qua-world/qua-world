@@ -16,10 +16,9 @@ other actors in the game world.
 
 This repository is becoming the qua.world **polyglot monorepo**, built with
 buck2. It holds the Haskell **client** today. The authoritative Erlang/OTP
-**world-server** will join it as a sibling build target. See [architecture
-decision record 0001](docs/adr/0001-architecture.md) for the client/server
-boundary and monorepo layout, and the rest of [`docs/adr/`](docs/adr/) for the
-decisions behind it.
+**world-server** will join it as a sibling build target. The architecture
+decision records in [`docs/adr/`](docs/adr/) cover the monorepo layout, the
+world-server, and how actors connect to it.
 
 ## Getting started
 

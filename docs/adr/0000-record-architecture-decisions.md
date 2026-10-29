@@ -20,8 +20,9 @@ choice is hard to find later and tempting to argue again.
 
 ## Decision
 
-Architecturally significant decisions go in Architecture Decision Records in [Michael Nygard's
-format](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
+Architecturally significant decisions go in Architecture Decision Records in
+the format from [Documenting Architecture
+Decisions](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
 
 - Records live in `docs/adr/`, one Markdown file per decision, named
   `NNNN-kebab-title.md` with the next four-digit sequence number.
