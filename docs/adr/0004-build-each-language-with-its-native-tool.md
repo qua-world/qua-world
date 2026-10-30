@@ -32,7 +32,7 @@ Three candidates:
 - **`cabal` and `rebar3`.** Each is its language's default build tool. Neither
   sees the other's targets, and neither offers remote execution.
 
-The tools' main advantages over native builds count for little here:
+Bazel's and buck2's main advantages over native builds count for little here:
 
 - Target visibility would enforce record 1's client–server boundary. Client and
   server are written in different languages, so neither can depend on the
@@ -60,6 +60,5 @@ support, or when cross-language build time becomes a measured cost.
 - Nothing caches build outputs across languages, and nothing runs builds
   remotely. CI time depends on caching each compiler and its dependencies
   (#144).
-- The client–server boundary rests on the language split. A Haskell SDK package
-  that must stay independent of the client needs its own `cabal` package to
-  keep that boundary checked.
+- The client–server boundary holds because the two sides are in different
+  languages, not because the build checks it.
