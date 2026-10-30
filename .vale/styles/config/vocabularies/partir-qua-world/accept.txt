@@ -3,6 +3,7 @@
 # when it recurs in linted prose, not for a one-off mention.
 
 (?i)agents?
+Bazel
 Blockbench
 freeglut
 GHC
