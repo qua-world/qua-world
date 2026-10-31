@@ -24,10 +24,9 @@
   // timestamp-required mode holds every cabal update forever rather than
   // for three days. Datasources that do report them keep the full bake.
   "minimumReleaseAgeBehaviour": "timestamp-optional",
-  // No packaged manager reads either place the GHC series is pinned.
-  // endoflife.date enumerates the compiler by release series, but labels each
-  // series with its newest point release; without extractVersionTemplate the
-  // constraint would pin that point release instead of the series.
+  // No packaged manager reads the GHC series pins. endoflife.date lists GHC by
+  // release series but labels each series with its newest point release, so
+  // extractVersionTemplate trims the label back to the series.
   //
   // Both managers extract the same dependency, so one branch carries both edits.
   "customManagers": [
@@ -69,29 +68,6 @@
         "replacement"
       ],
       "minimumReleaseAge": null
-    }
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Track every GHC series reference so a new series arrives as a single pull request.",
-      // An unmatched file pattern yields no error, only zero updates.
-      "managerFilePatterns": [
-        "/^\\.github/workflows/.+\\.ya?ml$/",
-        "/\\.cabal$/"
-      ],
-      "matchStringsStrategy": "any",
-      "matchStrings": [
-        "ghc-version: \"(?<currentValue>\\d+\\.\\d+)\"",
-        "GHC == (?<currentValue>\\d+\\.\\d+)\\.\\*",
-        "name: [^\\n]*GHC (?<currentValue>\\d+\\.\\d+)"
-      ],
-      "datasourceTemplate": "endoflife-date",
-      "depNameTemplate": "ghc",
-      "versioningTemplate": "loose",
-      // endoflife-date resolves a cycle to its latest patch, which would
-      // narrow tested-with and the CI pin from a series to one release.
-      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)"
     }
   ],
   "osvVulnerabilityAlerts": true,
