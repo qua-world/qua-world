@@ -194,12 +194,16 @@ ensure_github_app_secrets() {
 # Workflows authenticate to GCP with these. None is secret, and setting one
 # that already holds the value is a no-op.
 set_actions_variables() {
-  local name output
-  for name in GCP_WORKLOAD_IDENTITY_PROVIDER:workload_identity_provider \
-    GCP_DEPLOYER_RO_EMAIL:github_deployer_ro_email \
-    GCP_DEPLOYER_RW_EMAIL:github_deployer_rw_email; do
-    output="$(terraform -chdir="${LAYER}" output -raw "${name#*:}")"
-    gh variable set "${name%%:*}" --repo "${REPOSITORY}" --body "${output}"
+  local -A outputs=(
+    [GCP_WORKLOAD_IDENTITY_PROVIDER]=workload_identity_provider
+    [GCP_DEPLOYER_RO_EMAIL]=github_deployer_ro_email
+    [GCP_DEPLOYER_RW_EMAIL]=github_deployer_rw_email
+  )
+
+  local variable value
+  for variable in "${!outputs[@]}"; do
+    value="$(terraform -chdir="${LAYER}" output -raw "${outputs[${variable}]}")"
+    gh variable set "${variable}" --repo "${REPOSITORY}" --body "${value}"
   done
 }
 
