@@ -18,7 +18,7 @@ locals {
     }
   }
 
-  # The GitHub App credentials terraform/infrastructure/ authenticates with.
+  # The GitHub App credentials the layer CI applies authenticates with.
   deployer_secret_grants = {
     for pair in setproduct(keys(local.deployers), local.github_app_secrets) :
     "${pair[0]}-${pair[1]}" => {

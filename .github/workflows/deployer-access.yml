@@ -4,8 +4,7 @@
 
 name: Deployer access
 
-# Bootstrap applies by hand, so a run on merge would race it. Dispatch after
-# scripts/bootstrap.sh to confirm CI can reach the infrastructure state.
+# Dispatch-only: bootstrap applies by hand, so a run on merge would race it.
 on:
   workflow_dispatch:
 

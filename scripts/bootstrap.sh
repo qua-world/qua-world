@@ -4,10 +4,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-# First-time setup. Creates the GCP project and GCS bucket holding Terraform
-# state — which terraform/bootstrap/ cannot create for itself, because its own
-# state lives in them — then applies that layer and hands CI its federation
-# identifiers. Re-running is a no-op.
+# Creates the GCP project and bucket holding terraform/bootstrap/'s state,
+# which that layer can't create for itself, then applies it and hands CI its
+# federation identifiers. Every step is idempotent.
 
 set -euo pipefail
 
@@ -191,8 +190,7 @@ ensure_github_app_secrets() {
   ensure_github_app_private_key github-app-private-key
 }
 
-# Workflows authenticate to GCP with these. None is secret, and setting one
-# that already holds the value is a no-op.
+# None of these is secret, so they're Actions variables, not secrets.
 set_actions_variables() {
   local -A outputs=(
     [GCP_WORKLOAD_IDENTITY_PROVIDER]=workload_identity_provider

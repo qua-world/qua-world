@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-# terraform/infrastructure/ reads these values here because the deployers
-# cannot read this layer's state, which terraform_remote_state needs. Plan on
-# any pull request can read this object, so publish only non-secret values.
+# The layer CI applies reads these here because the deployers can't read this
+# layer's state, which terraform_remote_state needs. Plan on any pull request
+# can read this object, so publish only non-secret values.
 locals {
   published_outputs = {
     workload_identity_provider = google_iam_workload_identity_pool_provider.github.name

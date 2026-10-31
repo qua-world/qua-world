@@ -6,10 +6,10 @@ SPDX-License-Identifier: MIT
 
 # Create the GitHub App
 
-The `github` provider in the layer continuous integration applies
-authenticates as a GitHub App installed on the `qua-world` organization. These
-steps register that App and store its credentials in the Secret Manager
-secrets `terraform/bootstrap/` created empty.
+The `github` Terraform provider authenticates as a GitHub App installed on the
+`qua-world` organization. These steps register that App and store its
+credentials in the Secret Manager secrets `terraform/bootstrap/` created
+empty.
 
 You need an owner role in the organization and permission to add secret
 versions in the `qua-world-infrastructure` project. Run the
@@ -63,8 +63,8 @@ starting, so the secrets exist.
 
 ## Store the credentials
 
-Re-run the bootstrap. It reapplies the layer, which changes nothing, then
-prompts for the App ID, installation ID, and private key path:
+Re-run the bootstrap, which prompts for the App ID, installation ID, and
+private key path:
 
 ```sh
 just bootstrap

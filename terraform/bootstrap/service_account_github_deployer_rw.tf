@@ -11,7 +11,7 @@ resource "google_service_account" "github_deployer_rw" {
   depends_on = [google_project_service.iam]
 }
 
-# Extend only when a resource in terraform/infrastructure/ fails to apply without it.
+# Extend only when an apply fails without a permission.
 resource "google_project_iam_custom_role" "github_deployer_rw_applier" {
   project     = google_project.infrastructure.project_id
   role_id     = "githubDeployerApplier"
