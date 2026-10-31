@@ -158,6 +158,24 @@ jobs:
       - name: Check for dead code
         run: weeder
 
+  windows:
+    name: Set up GHC on Windows
+    runs-on: windows-2025
+    timeout-minutes: 15
+
+    # Native libraries come from MSYS2's clang64 environment, which matches
+    # GHC's bundled toolchain: clang, lld, and compiler-rt against UCRT.
+    steps:
+      - name: Set up GHC
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          # renovate: datasource=endoflife-date depName=ghc versioning=loose
+          ghc-version: "9.10"
+          cabal-version: latest
+
+      - name: Report GHC toolchain
+        run: ghc --info
+
   coverage:
     name: Measure test coverage
     runs-on: ubuntu-26.04
