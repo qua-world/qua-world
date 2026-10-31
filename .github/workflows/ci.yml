@@ -20,7 +20,7 @@ concurrency:
 jobs:
   pre-commit:
     name: Run pre-commit hooks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
@@ -58,7 +58,7 @@ jobs:
 
   scripts:
     name: Test shell scripts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     steps:
@@ -80,7 +80,7 @@ jobs:
 
   build:
     name: Build and test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     env:
@@ -160,7 +160,7 @@ jobs:
 
   coverage:
     name: Measure test coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
