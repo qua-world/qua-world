@@ -47,6 +47,11 @@ repos:
         args: [--output=line, --minAlertLevel=error]
         types: [markdown]
 
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.109.4
+    hooks:
+      - id: terraform_fmt
+
   # reuse-tool develops on Codeberg. Renovate's pre-commit manager resolves a
   # version only from this mirror, which carries the same tags.
   - repo: https://github.com/fsfe/reuse-tool
@@ -64,9 +69,15 @@ repos:
         args: [--strict, --no-global]
 
   # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
-  # these two are pinned in the CI workflow's pre-commit job instead.
+  # these are pinned in the CI workflow's pre-commit job instead.
   - repo: local
     hooks:
+      - id: just-fmt-check
+        name: just --fmt --check
+        entry: just --fmt --check
+        language: system
+        files: ^justfile$
+        pass_filenames: false
       - id: fourmolu
         name: fourmolu
         entry: fourmolu --mode inplace

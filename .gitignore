@@ -33,3 +33,9 @@ cabal.project.local~
 .ghc.environment.*
 
 # End of https://www.gitignore.io/api/haskell
+
+### Terraform ###
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
