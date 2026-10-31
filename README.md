@@ -37,12 +37,12 @@ credentials.
 
 ### Run the first-time bootstrap
 
-You need [Terraform](https://terraform.io), the
+You need [just](https://just.systems), [Terraform](https://terraform.io), the
 [gcloud CLI](https://cloud.google.com/sdk/docs/install), the
 [GitHub CLI](https://cli.github.com), a Google account that can create
 projects and link billing, and admin on this repository.
 
-The script calls `gcloud`, which keeps its own credentials, while Terraform
+Bootstrap calls `gcloud`, which keeps its own credentials, while Terraform
 reads application default credentials, so log in to both:
 
 ```sh
@@ -50,10 +50,10 @@ gcloud auth login
 gcloud auth application-default login
 gh auth login
 
-scripts/bootstrap.sh
+just bootstrap
 ```
 
-The script prompts for the billing account to attach; set
+The recipe prompts for the billing account to attach; set
 `TF_VAR_billing_account_id` to run it without a terminal. It applies the
 layer, then sets the `GCP_WORKLOAD_IDENTITY_PROVIDER`,
 `GCP_DEPLOYER_RO_EMAIL`, and `GCP_DEPLOYER_RW_EMAIL` Actions variables that

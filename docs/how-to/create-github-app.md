@@ -67,7 +67,7 @@ Re-run the bootstrap. It reapplies the layer, which changes nothing, then
 prompts for the App ID, installation ID, and private key path:
 
 ```sh
-scripts/bootstrap.sh
+just bootstrap
 ```
 
 Export `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, and
