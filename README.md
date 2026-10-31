@@ -34,8 +34,9 @@ only `qua-world-infrastructure-tfstate`, so continuous integration can't read
 or rewrite the state that defines its own credentials.
 
 Any workflow in this repository can act as the read-only deployer. Only
-workflows listed in `deployer_rw_workflow_refs`, running on `develop`, can act
-as the read-write deployer.
+workflows listed in `deployer_rw_workflow_refs`, in
+`terraform/bootstrap/github_oidc.tf`, can act as the read-write deployer, and
+only on `develop`.
 
 ### Run the first-time bootstrap
 

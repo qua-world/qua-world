@@ -147,8 +147,8 @@ read_private_key() {
   cat "${path}"
 }
 
-# transform validates the answer and prints the bytes to store. It runs before
-# the write rather than piping into it, so a rejected answer stores nothing.
+# transform validates the answer and prints the bytes to store. It finishes
+# before the write starts, so a rejected answer stores nothing.
 ensure_secret() {
   local secret="$1" prompt="$2" value="$3" transform="$4"
 

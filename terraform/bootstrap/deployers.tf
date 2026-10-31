@@ -2,10 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The two CI identities, keyed by role. Anything split per role keys off this
-# map, so the pairing is stated once: binding a read-only credential to the
-# apply account, or the reverse, would hand plan a write credential and nothing
-# else here would notice.
+# Anything split per role keys off this map, so the pairing is stated once. A
+# pairing restated elsewhere could hand plan a write credential unnoticed.
 locals {
   deployers = {
     ro = google_service_account.github_deployer_ro.email
