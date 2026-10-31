@@ -34,5 +34,5 @@ expects.
 
 This project uses the [MIT License](LICENSE).
 
-[GitHub]: https://github.com/qua-world/partir.qua.world/issues
+[GitHub]: https://github.com/qua-world/qua-world/issues
 [qua.world]: https://github.com/qua-world

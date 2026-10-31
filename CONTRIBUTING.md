@@ -103,9 +103,9 @@ outcome and the problem it solves. Questions about using partir are welcome as
 issues too. Tag them [question].
 
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
-[GitHub]: https://github.com/qua-world/partir.qua.world/issues
-[good first issue]: https://github.com/qua-world/partir.qua.world/labels/good%20first%20issue
-[help wanted]: https://github.com/qua-world/partir.qua.world/labels/help%20wanted
+[GitHub]: https://github.com/qua-world/qua-world/issues
+[good first issue]: https://github.com/qua-world/qua-world/labels/good%20first%20issue
+[help wanted]: https://github.com/qua-world/qua-world/labels/help%20wanted
 [pre-commit]: https://pre-commit.com/
-[question]: https://github.com/qua-world/partir.qua.world/labels/question
+[question]: https://github.com/qua-world/qua-world/labels/question
 [seven rules]: https://cbea.ms/git-commit/

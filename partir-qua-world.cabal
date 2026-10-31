@@ -18,8 +18,8 @@ maintainer:          alunduil@gmail.com
 
 stability:           alpha
 
-homepage:            https://github.com/qua-world/partir.qua.world
-bug-reports:         https://github.com/qua-world/partir.qua.world/issues
+homepage:            https://github.com/qua-world/qua-world
+bug-reports:         https://github.com/qua-world/qua-world/issues
 
 synopsis:            GUI Client and Client Interfaces for qua.world
 description:
@@ -50,7 +50,7 @@ data-files:
 
 source-repository head
   type:              git
-  location:          https://github.com/qua-world/partir.qua.world.git
+  location:          https://github.com/qua-world/qua-world.git
   branch:            develop
 
 common warnings
