@@ -31,6 +31,14 @@ datadir_variable="${package//-/_}_datadir"
 cabal build "exe:$exe"
 binary="$(cabal list-bin "exe:$exe")"
 
+# The GLUT package loads freeglut with dlopen, so linuxdeploy never sees it
+# among the executable's shared libraries.
+freeglut="$(ldconfig -p | awk '$1 == "libglut.so.3" { print $NF; exit }')"
+if [ -z "$freeglut" ]; then
+  echo "${0##*/}: libglut.so.3 not found; install freeglut" >&2
+  exit 1
+fi
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -67,6 +75,7 @@ cd "$output"
 LDAI_OUTPUT="$exe-x86_64.AppImage" "$linuxdeploy" \
   --appdir "$appdir" \
   --executable "$binary" \
+  --library "$freeglut" \
   --desktop-file "$work/$exe.desktop" \
   --icon-file "$work/$exe.png" \
   --custom-apprun "$work/AppRun" \
