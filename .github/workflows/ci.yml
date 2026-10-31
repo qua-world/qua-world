@@ -225,7 +225,7 @@ jobs:
 
   appimage:
     name: Package the Linux AppImage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
 
     # An AppImage runs only on a glibc at least as new as its build's, so it
@@ -237,7 +237,10 @@ jobs:
       # library fails on cabal-install 3.16, and `latest` in
       # haskell-actions/setup can lag the newest release.
       #
-      # renovate: datasource=hackage depName=cabal-install versioning=loose
+      # Git tags carry release timestamps, which Hackage lacks, so a bump
+      # waits out minimumReleaseAge while ghcup publishes its build.
+      #
+      # renovate: datasource=github-tags depName=haskell/cabal versioning=loose extractVersion=^cabal-install-v(?<version>\d+\.\d+\.\d+\.\d+)$
       CABAL_VERSION: "3.18.2.0"
       # renovate: datasource=github-releases depName=linuxdeploy/linuxdeploy versioning=loose
       LINUXDEPLOY_VERSION: "1-alpha-20251107-1"
@@ -312,7 +315,7 @@ jobs:
   appimage-launch:
     name: Launch the AppImage on stock Ubuntu
     needs: appimage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     # A stock image has none of the libraries the AppImage carries, so a
