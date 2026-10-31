@@ -24,10 +24,9 @@
   // timestamp-required mode holds every cabal update forever rather than
   // for three days. Datasources that do report them keep the full bake.
   "minimumReleaseAgeBehaviour": "timestamp-optional",
-  // No packaged manager reads either place the GHC series is pinned.
-  // endoflife.date enumerates the compiler by release series, but labels each
-  // series with its newest point release; without extractVersionTemplate the
-  // constraint would pin that point release instead of the series.
+  // No packaged manager reads the GHC series pins. endoflife.date lists GHC by
+  // release series but labels each series with its newest point release, so
+  // extractVersionTemplate trims the label back to the series.
   //
   // Both managers extract the same dependency, so one branch carries both edits.
   "customManagers": [
