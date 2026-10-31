@@ -163,10 +163,8 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 15
 
-    # GHC links with the clang, lld, and compiler-rt toolchain it bundles,
-    # against the UCRT C runtime. That matches MSYS2's clang64 environment,
-    # so native libraries come from clang64. mingw64 builds against msvcrt
-    # instead.
+    # Native libraries come from MSYS2's clang64 environment, which matches
+    # GHC's bundled toolchain: clang, lld, and compiler-rt against UCRT.
     steps:
       - name: Set up GHC
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
