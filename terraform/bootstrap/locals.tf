@@ -16,13 +16,4 @@ locals {
   # scripts/bootstrap.sh repeats this literal as LOCATION; shell cannot read a
   # Terraform local.
   region = "europe-west2"
-
-  # The App ID and installation ID aren't secret, but none of the three exists
-  # until the App is registered, so the layer CI applies has nothing to
-  # hardcode.
-  github_app_secrets = toset([
-    "github-app-id",
-    "github-app-installation-id",
-    "github-app-private-key",
-  ])
 }

@@ -11,20 +11,24 @@ resource "google_service_account" "github_deployer_rw" {
   depends_on = [google_project_service.iam]
 }
 
-# Extend only when an apply fails without a permission.
+# Apply refreshes state before it changes anything, so the applier needs every
+# permission the planner has. Add write verbs here, read permissions in
+# deployer_ro_permissions. Omits billing.* — CI never needs it. Sorted, so the
+# order can't churn against the API.
+locals {
+  deployer_rw_permissions = sort(concat(local.deployer_ro_permissions, [
+    "serviceusage.services.enable",
+    "serviceusage.services.use",
+  ]))
+}
+
 resource "google_project_iam_custom_role" "github_deployer_rw_applier" {
   project     = google_project.infrastructure.project_id
   role_id     = "githubDeployerApplier"
   title       = "GitHub Deployer Applier"
   description = "Least-privilege role for terraform apply in CI"
 
-  permissions = [
-    "resourcemanager.projects.get",
-    "serviceusage.services.enable",
-    "serviceusage.services.get",
-    "serviceusage.services.list",
-    "serviceusage.services.use",
-  ]
+  permissions = local.deployer_rw_permissions
 
   depends_on = [google_project_service.serviceusage]
 }
@@ -33,4 +37,32 @@ resource "google_project_iam_member" "github_deployer_rw_applier" {
   project = google_project.infrastructure.project_id
   role    = google_project_iam_custom_role.github_deployer_rw_applier.name
   member  = "serviceAccount:${google_service_account.github_deployer_rw.email}"
+}
+
+resource "google_storage_bucket_iam_member" "github_deployer_rw_state_object_admin" {
+  bucket = google_storage_bucket.infrastructure_state.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.github_deployer_rw.email}"
+}
+
+resource "google_storage_bucket_iam_member" "github_deployer_rw_state_bucket_reader" {
+  bucket = google_storage_bucket.infrastructure_state.name
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${google_service_account.github_deployer_rw.email}"
+}
+
+resource "google_service_account_iam_member" "github_deployer_rw_workload_identity_user" {
+  service_account_id = google_service_account.github_deployer_rw.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = local.wif_principal_deployer_rw
+
+  depends_on = [google_iam_workload_identity_pool_provider.github]
+}
+
+resource "google_service_account_iam_member" "github_deployer_rw_token_creator" {
+  service_account_id = google_service_account.github_deployer_rw.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = local.wif_principal_deployer_rw
+
+  depends_on = [google_iam_workload_identity_pool_provider.github]
 }

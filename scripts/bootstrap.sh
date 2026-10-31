@@ -16,6 +16,7 @@ BUCKET_NAME="${BUCKET_NAME:-qua-world-tfstate}"
 LOCATION="${LOCATION:-europe-west2}"
 REPOSITORY="${REPOSITORY:-qua-world/qua-world}"
 LAYER="terraform/bootstrap"
+SETUP_DOC="docs/how-to/create-terraform-github-apps.md"
 
 die() {
   echo "error: $*" >&2
@@ -139,7 +140,7 @@ ensure_github_app_identifier() {
   fi
 
   if [[ -z "${value}" ]]; then
-    echo "Leaving ${secret} empty; see docs/how-to/create-github-app.md"
+    echo "Leaving ${secret} empty; see ${SETUP_DOC}"
     return
   fi
 
@@ -149,8 +150,7 @@ ensure_github_app_identifier() {
 }
 
 ensure_github_app_private_key() {
-  local secret="$1"
-  local path="${GITHUB_APP_PRIVATE_KEY_PATH:-}"
+  local secret="$1" label="$2" path="$3"
 
   if secret_is_populated "${secret}"; then
     echo "${secret} already set."
@@ -158,11 +158,11 @@ ensure_github_app_private_key() {
   fi
 
   if [[ -z "${path}" && -t 0 ]]; then
-    read -rp "Path to the App's private key .pem (Enter to skip): " path
+    read -rp "${label} (Enter to skip): " path
   fi
 
   if [[ -z "${path}" ]]; then
-    echo "Leaving ${secret} empty; see docs/how-to/create-github-app.md"
+    echo "Leaving ${secret} empty; see ${SETUP_DOC}"
     return
   fi
 
@@ -177,17 +177,27 @@ ensure_github_app_private_key() {
     die "${path} is not a PEM private key"
 
   add_secret_version "${secret}" <"${path}"
-  echo "Shred ${path} once the infrastructure layer authenticates."
+  echo "Stored; shred ${path}."
 }
 
-# The values only exist once the App is registered, which is a browser action,
-# so a run before that legitimately leaves the secrets empty.
-ensure_github_app_secrets() {
-  ensure_github_app_identifier github-app-id \
-    "App ID" "${GITHUB_APP_ID:-}"
-  ensure_github_app_identifier github-app-installation-id \
-    "Installation ID" "${GITHUB_APP_INSTALLATION_ID:-}"
-  ensure_github_app_private_key github-app-private-key
+# The Apps differ only by permissions, and swapping their answers hands plan
+# the write key, so every prompt names its App.
+configure_terraform_github_app() {
+  local role="$1" app="$2" id="$3" key_file="$4"
+
+  ensure_github_app_identifier "terraform-github-app-id-${role}" \
+    "${app} App ID" "${id}"
+  ensure_github_app_private_key "terraform-github-app-private-key-${role}" \
+    "Path to the ${app} private key .pem" "${key_file}"
+}
+
+# The values only exist once the Apps are registered, which is a browser
+# action, so a run before that legitimately leaves the secrets empty.
+ensure_terraform_github_app_secrets() {
+  configure_terraform_github_app ro qua-world-terraform-plan \
+    "${TERRAFORM_PLAN_APP_ID:-}" "${TERRAFORM_PLAN_APP_PRIVATE_KEY_FILE:-}"
+  configure_terraform_github_app rw qua-world-terraform-apply \
+    "${TERRAFORM_APPLY_APP_ID:-}" "${TERRAFORM_APPLY_APP_PRIVATE_KEY_FILE:-}"
 }
 
 # None of these is secret, so they're Actions variables, not secrets.
@@ -215,7 +225,7 @@ main() {
   ensure_bootstrap_state_bucket
   apply_bootstrap_layer
   set_actions_variables
-  ensure_github_app_secrets
+  ensure_terraform_github_app_secrets
 }
 
 main "$@"

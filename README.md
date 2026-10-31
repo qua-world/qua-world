@@ -33,6 +33,10 @@ Bootstrap keeps its state in `qua-world-tfstate`. The deployers can reach
 only `qua-world-infrastructure-tfstate`, so continuous integration can't read
 or rewrite the state that defines its own credentials.
 
+Any workflow in this repository can act as the read-only deployer. Only
+workflows listed in `deployer_rw_workflow_refs`, running on `develop`, can act
+as the read-write deployer.
+
 ### Run the first-time bootstrap
 
 You need [just](https://just.systems), [Terraform](https://terraform.io), the
@@ -65,9 +69,11 @@ To confirm continuous integration can reach its state, dispatch the
 gh workflow run deployer-access.yml --ref develop
 ```
 
-Bootstrap also creates empty Secret Manager secrets for a GitHub App that
-Terraform authenticates to GitHub as. [Create the GitHub
-App](docs/how-to/create-github-app.md) registers the App and fills them.
+Bootstrap also creates empty Secret Manager secrets for the two GitHub Apps
+Terraform authenticates to GitHub as: a read-only App for plan and a
+read-write App for apply. [Create the Terraform GitHub
+Apps](docs/how-to/create-terraform-github-apps.md) registers them and fills
+the secrets.
 
 ## Reporting issues
 

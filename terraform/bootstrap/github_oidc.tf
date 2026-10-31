@@ -46,7 +46,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.repository"       = "assertion.repository"
     "attribute.repository_owner" = "assertion.repository_owner"
     "attribute.environment"      = "assertion.environment"
-    "attribute.ref"              = "assertion.ref"
+    "attribute.deployer"         = "assertion.job_workflow_ref in ${jsonencode(local.deployer_rw_workflow_refs)} ? '${local.deployer_rw}' : 'none'"
   }
 
   attribute_condition = "assertion.repository == '${local.github_repository}'"
@@ -56,13 +56,20 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   }
 }
 
+# Any job in this repository can request an OIDC token, so the RW deployer
+# binds on job_workflow_ref, which names the repository, workflow file, and ref.
+#
+# The bindings must match the provider's mapping and condition. A mismatch
+# fails the exchange silently.
 locals {
-  wif_pool = "projects/${google_project.infrastructure.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github.workload_identity_pool_id}"
+  wif_pool_prefix = "principalSet://iam.googleapis.com/projects/${google_project.infrastructure.number}/locations/global/workloadIdentityPools"
 
-  # Plan runs on pull requests, so no branch pins this one and
-  # attribute_condition is its only bound.
-  wif_principal_any_ref = "principalSet://iam.googleapis.com/${local.wif_pool}/attribute.repository/${local.github_repository}"
+  deployer_rw = "rw"
 
-  # Apply only ever runs against the default branch.
-  wif_principal_develop = "principalSet://iam.googleapis.com/${local.wif_pool}/attribute.ref/refs/heads/develop"
+  deployer_rw_workflow_refs = [
+    "${local.github_repository}/.github/workflows/deployer-access.yml@refs/heads/develop",
+  ]
+
+  wif_principal             = "${local.wif_pool_prefix}/github/attribute.repository/${local.github_repository}"
+  wif_principal_deployer_rw = "${local.wif_pool_prefix}/github/attribute.deployer/${local.deployer_rw}"
 }
