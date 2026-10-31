@@ -17,11 +17,6 @@ output "state_bucket" {
   description = "GCS bucket holding this layer's Terraform state"
 }
 
-output "infrastructure_state_bucket" {
-  value       = google_storage_bucket.infrastructure_state.name
-  description = "GCS bucket holding the infrastructure layer's Terraform state"
-}
-
 output "workload_identity_provider" {
   value       = local.published_outputs.workload_identity_provider
   description = "GitHub WIF provider, for google-github-actions/auth's workload_identity_provider input"
