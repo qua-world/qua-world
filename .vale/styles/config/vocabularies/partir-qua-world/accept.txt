@@ -5,7 +5,9 @@
 (?i)agents?
 Bazel
 Blockbench
+(?i)deployers?
 freeglut
+gcloud
 GHC
 GLU
 GLUT
@@ -16,6 +18,7 @@ MIT
 (?i)monorepos?
 (?i)octrees?
 (?i)rebalances?
+(?i)rulesets?
 partir
 Pixelorama
 SDKs?('s)?
