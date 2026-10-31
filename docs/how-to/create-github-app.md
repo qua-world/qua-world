@@ -33,8 +33,6 @@ starting, so the secrets exist.
    - **Repository → Environments**, read and write: deployment environments
      and their protection rules.
    - **Repository → Issues**, read and write: labels.
-   - **Repository → Variables**, read and write: the Actions variables
-     workflows authenticate to Google Cloud with.
    - **Organization → Administration**, read and write: organization
      settings and allowed actions.
 
@@ -65,8 +63,8 @@ starting, so the secrets exist.
 
 ## Store the credentials
 
-Re-run the bootstrap. It skips everything already in place and prompts for
-the App ID, installation ID, and private key path:
+Re-run the bootstrap. It reapplies the layer, which changes nothing, then
+prompts for the App ID, installation ID, and private key path:
 
 ```sh
 scripts/bootstrap.sh

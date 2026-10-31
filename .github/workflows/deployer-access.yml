@@ -23,6 +23,13 @@ jobs:
       id-token: write
 
     steps:
+      # auth writes its credentials file into the workspace and warns when
+      # the workspace is not a checkout.
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
       # The deployer's Workload Identity binding admits only refs/heads/develop,
       # so a dispatch from any other ref fails here.
       - name: Authenticate as the read-write deployer
