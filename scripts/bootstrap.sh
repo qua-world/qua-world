@@ -127,47 +127,14 @@ add_secret_version() {
   gcloud secrets versions add "$1" --project "${PROJECT_ID}" --data-file=-
 }
 
-ensure_github_app_identifier() {
-  local secret="$1" label="$2" value="$3"
-
-  if secret_is_populated "${secret}"; then
-    echo "${secret} already set."
-    return
-  fi
-
-  if [[ -z "${value}" && -t 0 ]]; then
-    read -rp "${label} (Enter to skip): " value
-  fi
-
-  if [[ -z "${value}" ]]; then
-    echo "Leaving ${secret} empty; see ${SETUP_DOC}"
-    return
-  fi
-
-  [[ "${value}" =~ ^[0-9]+$ ]] || die "${label} must be digits, got '${value}'"
-
-  printf '%s' "${value}" | add_secret_version "${secret}"
+check_digits() {
+  [[ "$1" =~ ^[0-9]+$ ]] || die "expected digits, got '$1'"
+  printf '%s' "$1"
 }
 
-ensure_github_app_private_key() {
-  local secret="$1" label="$2" path="$3"
-
-  if secret_is_populated "${secret}"; then
-    echo "${secret} already set."
-    return
-  fi
-
-  if [[ -z "${path}" && -t 0 ]]; then
-    read -rp "${label} (Enter to skip): " path
-  fi
-
-  if [[ -z "${path}" ]]; then
-    echo "Leaving ${secret} empty; see ${SETUP_DOC}"
-    return
-  fi
-
+read_private_key() {
   # read hands back the tilde the shell would have expanded.
-  path="${path/#\~/${HOME}}"
+  local path="${1/#\~/${HOME}}"
 
   [[ -r "${path}" ]] || die "cannot read ${path}"
 
@@ -176,8 +143,31 @@ ensure_github_app_private_key() {
   grep -q -- '-----BEGIN .*PRIVATE KEY-----' "${path}" ||
     die "${path} is not a PEM private key"
 
-  add_secret_version "${secret}" <"${path}"
-  echo "Stored; shred ${path}."
+  echo "Shred ${path} once this run finishes." >&2
+  cat "${path}"
+}
+
+# transform validates the answer and prints the bytes to store. It runs before
+# the write rather than piping into it, so a rejected answer stores nothing.
+ensure_secret() {
+  local secret="$1" prompt="$2" value="$3" transform="$4"
+
+  if secret_is_populated "${secret}"; then
+    echo "${secret} already set."
+    return
+  fi
+
+  if [[ -z "${value}" && -t 0 ]]; then
+    read -rp "${prompt} (Enter to skip): " value
+  fi
+
+  if [[ -z "${value}" ]]; then
+    echo "Leaving ${secret} empty; see ${SETUP_DOC}"
+    return
+  fi
+
+  value="$("${transform}" "${value}")"
+  printf '%s' "${value}" | add_secret_version "${secret}"
 }
 
 # The Apps differ only by permissions, and swapping their answers hands plan
@@ -185,10 +175,10 @@ ensure_github_app_private_key() {
 configure_terraform_github_app() {
   local role="$1" app="$2" id="$3" key_file="$4"
 
-  ensure_github_app_identifier "terraform-github-app-id-${role}" \
-    "${app} App ID" "${id}"
-  ensure_github_app_private_key "terraform-github-app-private-key-${role}" \
-    "Path to the ${app} private key .pem" "${key_file}"
+  ensure_secret "terraform-github-app-id-${role}" \
+    "${app} App ID" "${id}" check_digits
+  ensure_secret "terraform-github-app-private-key-${role}" \
+    "Path to the ${app} private key .pem" "${key_file}" read_private_key
 }
 
 # The values only exist once the Apps are registered, which is a browser
