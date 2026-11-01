@@ -84,10 +84,7 @@ test_runLoop =
 
 -- Properties
 
-{- | Split a run of wall-clock time into uneven slices, and the steps paid out
-plus the fraction still owed add back up to the time elapsed. The slices stay
-under the cap, which would otherwise drop time on purpose.
--}
+-- Slices stay under 'maxElapsed', past which 'accumulate' drops time.
 tracksElapsed :: Property
 tracksElapsed =
   forAll (choose (10, 100)) $ \hz ->
@@ -106,8 +103,7 @@ tracksElapsed =
 
 -- Fixtures
 
--- A rate whose period, an eighth of a second, and its fractions are exact in
--- binary, so the examples compare without slack.
+-- An eighth-second period is exact in binary, so the examples need no slack.
 eightHz :: TickRate
 eightHz = TickRate 8
 
@@ -118,10 +114,9 @@ scene =
     , sceneEntities = Map.singleton (EntityId 1) (Pose (V3 1 2 3) (Quaternion 1 (V3 0 0 0)))
     }
 
-{- | Clock readings, in seconds. At 'eightHz' the slices between them are half,
-one and a half, a quarter, and one and three quarters ticks long: four whole
-ticks over half a second, with a fraction carried between slices.
--}
+-- At 'eightHz' these readings sit half, one and a half, a quarter, and one and
+-- three quarters ticks apart: four ticks in all, with a fraction carried
+-- between slices.
 script :: [Instant]
 script = Instant <$> [0, 0.0625, 0.25, 0.28125, 0.5]
 
@@ -133,8 +128,8 @@ data ScriptEnded = ScriptEnded
 
 instance Exception ScriptEnded
 
--- Run the loop at 'eightHz' until the clock's script runs out, returning the
--- stored scene and every span the loop slept.
+-- Run the loop at 'eightHz' through the readings, returning the final scene
+-- and each span it slept.
 runScripted :: [Instant] -> IO (Scene, [DeltaTime])
 runScripted readings = do
   remaining <- newIORef readings

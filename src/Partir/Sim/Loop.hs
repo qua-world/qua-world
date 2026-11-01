@@ -4,18 +4,16 @@
 
 {- |
 Module      : Partir.Sim.Loop
-Description : Step the predicted scene at a fixed rate, apart from rendering
+Description : Step the scene at a fixed rate, apart from rendering
 
-The client steps its predicted 'Scene' at a fixed 'TickRate', whatever rate
-the renderer draws at. Coupling the two makes motion depend on the framerate,
+The client steps its 'Scene' at a fixed 'TickRate', whatever rate the
+renderer draws at. Coupling the two makes motion depend on the framerate,
 lets fast movers skip past collisions, and turns frame jitter into simulation
 jitter (Lopes, "The Basics"; Fiedler, "Fix Your Timestep!").
 
-Wall-clock time arrives in uneven slices. 'accumulate' banks each slice in a
-'Backlog' and pays it out as whole steps, carrying the fraction left over, so
-the number of steps tracks elapsed time however the slices fall. 'runLoop'
-drives that from a 'Clock' and writes each step through a 'SceneStore'; it
-knows nothing of windows or sockets.
+Wall-clock time arrives in uneven slices. 'accumulate' turns them into whole
+steps and carries the leftover fraction, so the step count tracks elapsed time
+however the slices fall.
 -}
 module Partir.Sim.Loop (
   DeltaTime (..),
@@ -39,32 +37,30 @@ import Partir.World.Types (Tick (..))
 newtype DeltaTime = DeltaTime Double
   deriving (Eq, Ord, Show)
 
--- | How many simulation steps run per second of wall-clock time. Positive.
+-- | Simulation steps per second. Positive.
 newtype TickRate = TickRate Double
   deriving (Eq, Ord, Show)
 
-{- | Elapsed time not yet paid out as a step, in ticks. 'accumulate' keeps it
-in @[0, 1)@, so it doubles as how far the scene sits between one step and the
-next.
+{- | Elapsed time not yet stepped, in ticks. 'accumulate' keeps it in
+@[0, 1)@: the fraction of a step since the last one.
 -}
 newtype Backlog = Backlog Double
   deriving (Eq, Ord, Show)
 
--- | Nothing owed: the scene is exactly at a step.
+-- | No elapsed time owed.
 noBacklog :: Backlog
 noBacklog = Backlog 0
 
-{- | The most wall-clock time one call to 'accumulate' banks. After a stall
-(a suspended laptop, a debugger pause) the loop would otherwise run every
-missed step at once, and a frame that takes longer than the time it simulates
-falls further behind on each pass. The time above the cap is dropped; the
-server's canonical scene corrects the drift.
+{- | The most elapsed time one call to 'accumulate' counts. Without a cap, a
+stall such as a suspended laptop replays every missed step at once, and a pass
+slower than the time it simulates falls further behind each time. Dropping the
+excess is safe because the server owns the canonical scene (ADR 0002).
 -}
 maxElapsed :: DeltaTime
 maxElapsed = DeltaTime 0.25
 
-{- | Bank a slice of elapsed time and pay out the whole steps it completes.
-The slice is clamped to @[0, 'maxElapsed']@.
+{- | Add a slice of elapsed time to the backlog, returning the whole steps it
+completes and the backlog left. Clamps the slice to @[0, 'maxElapsed']@.
 -}
 accumulate :: TickRate -> DeltaTime -> Backlog -> (Int, Backlog)
 accumulate (TickRate rate) elapsed (Backlog owed) = (steps, Backlog (total - fromIntegral steps))
@@ -73,9 +69,7 @@ accumulate (TickRate rate) elapsed (Backlog owed) = (steps, Backlog (total - fro
   total = owed + banked * rate
   steps = floor total
 
-{- | Advance the scene by one fixed step. Only the clock moves until local
-prediction (#17) acts on the scene's entities.
--}
+-- | Advance the scene by one fixed step: the tick moves, the entities don't.
 step :: Scene -> Scene
 step s = s{sceneTick = next (sceneTick s)}
  where
@@ -88,13 +82,12 @@ newtype Instant = Instant Double
 -- | Where the loop reads wall-clock time and waits for it to pass.
 data Clock = Clock
   { clockNow :: IO Instant
-  -- ^ The current reading.
   , clockSleep :: DeltaTime -> IO ()
   -- ^ Wait at least the given span.
   }
 
-{- | The scene the loop steps. The network session and the renderer share it,
-so a change applies atomically rather than as a read followed by a write.
+{- | The scene the loop steps. Other threads may share it, so
+'sceneStoreModify' applies a change atomically.
 -}
 newtype SceneStore = SceneStore
   { sceneStoreModify :: (Scene -> Scene) -> IO ()
@@ -116,7 +109,6 @@ runLoop rate clock store = clockNow clock >>= go noBacklog
 since :: Instant -> Instant -> DeltaTime
 since (Instant before) (Instant now) = DeltaTime (now - before)
 
--- | The wall-clock time left before the backlog completes its next step.
 untilNextStep :: TickRate -> Backlog -> DeltaTime
 untilNextStep (TickRate hz) (Backlog fraction) = DeltaTime ((1 - fraction) / hz)
 
