@@ -13,6 +13,7 @@ import Control.Exception (Exception, throwIO, try)
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef, writeIORef)
 import Data.List (mapAccumL)
 import qualified Data.Map.Strict as Map
+import Data.Tuple (swap)
 import Linear.Quaternion (Quaternion (..))
 import Linear.V3 (V3 (..))
 import Test.QuickCheck (
@@ -101,7 +102,6 @@ tracksElapsed =
             $ abs (paid - elapsed) < 1e-9 && owed >= 0 && owed < 1
  where
   DeltaTime cap = maxElapsed
-  swap (a, b) = (b, a)
 
 -- Fixtures
 
