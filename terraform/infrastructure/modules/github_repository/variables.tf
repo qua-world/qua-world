@@ -145,11 +145,10 @@ variable "legacy" {
     squash_only: squash merges and no master branch, in place of Git
     flow's merge commits and protected master and release/**.
 
-    unprotected: no rulesets, in place of the default, admin-only, review,
-    checks, and immutable-tags rulesets.
+    unprotected: no rulesets, except renovate_automerge's.
 
-    merge_methods: the merge methods the repository allows, from "merge"
-    and "squash", in place of the one its flow picks.
+    merge_methods: "merge", "squash", or both, in place of the flow's
+    one.
 
     allow_update_branch: false hides a pull request's button for merging
     its base branch in.

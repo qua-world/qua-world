@@ -217,7 +217,7 @@ data "github_app" "actions" {
 }
 
 locals {
-  # Each Git flow repository runs a job by this name, because rulesets on
+  # A Git flow repository must run a job by this name, because rulesets on
   # GitHub Free cannot restrict a pull request's source branch. It fails a
   # pull request into master from anything but release/* or hotfix/*.
   git_flow_source_check = "Check Git flow source branch"
@@ -343,7 +343,7 @@ resource "github_repository_ruleset" "immutable_tags" {
     }
   }
 
-  # No non_fast_forward: update already blocks fast-forwards.
+  # No non_fast_forward: update already blocks force pushes.
   rules {
     deletion = true
     update   = true
