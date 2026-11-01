@@ -94,10 +94,11 @@ jobs:
           terraform_wrapper: false
 
       - name: Validate
-        working-directory: terraform/bootstrap
         run: |
-          terraform init -backend=false -input=false
-          terraform validate
+          for layer in terraform/*/; do
+            terraform -chdir="${layer}" init -backend=false -input=false
+            terraform -chdir="${layer}" validate
+          done
 
   scripts:
     name: Test shell scripts
