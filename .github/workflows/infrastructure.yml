@@ -97,8 +97,6 @@ jobs:
           terraform plan -input=false -lock=false -no-color -out=tfplan
           terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
 
-      # Updates its own earlier comment, found by the marker, so a pull request
-      # carries one current plan.
       - name: Comment the plan on the pull request
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:

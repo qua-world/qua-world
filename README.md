@@ -39,8 +39,8 @@ workflows listed in `deployer_rw_workflow_refs`, in
 only on `develop`.
 
 `terraform/infrastructure/` declares the qua-world organization's settings.
-The **Infrastructure** workflow comments a plan on each pull request that
-touches it, and applies it on merge to `develop`.
+The **Infrastructure** workflow applies the layer on merge to `develop` and
+comments its plan on each pull request that touches it.
 
 ### Run the first-time bootstrap
 
