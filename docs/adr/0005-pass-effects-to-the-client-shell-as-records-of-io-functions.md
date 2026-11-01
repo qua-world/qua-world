@@ -56,19 +56,19 @@ in the last 24 months. These fail that gate:
 - `in-other-words`, `eveff`, and `freer-effects` compile, but their last
   releases were in 2022, 2021, and 2017.
 
-The rest differ in what they put in front of a user. For a function that looks
-around, then moves or speaks:
+The rest differ in what they put in front of a user. For a function that
+checks a link's health, then transmits a frame or logs a line:
 
 | Style | Signature | Missing capability | Lines to add one |
 | --- | --- | --- | --- |
-| One record per domain noun | `Body -> IO ()` | can't happen | 1 |
-| One record per capability | `Eyes -> Legs -> Voice -> IO ()` | 7 lines, not in scope | 5 |
-| `bluefin` | `(e1 :> es, …) => Eyes e1 -> … -> Eff es ()` | 5 lines, not in scope | 4 |
-| `mtl` | `(MonadEyes m, …) => m ()` | 19 lines, can't deduce | 2 |
-| `effectful` | `(Eyes :> es, …) => Eff es ()` | 17 lines, can't deduce | 2 |
-| `polysemy` | `Members '[Eyes, …] r => Sem r ()` | 17 lines, can't deduce | 2 |
-| `fused-effects` | `(Has Eyes sig m, …) => m ()` | 18 lines, can't deduce | 2 |
-| `heftia-effects` | `(Eyes :> es, …) => Eff es ()` | 24 lines of library internals | 2 |
+| One record per domain noun | `Session -> IO ()` | can't happen | 1 |
+| One record per capability | `Link -> Connection -> Log -> IO ()` | 5 lines, not in scope | 5 |
+| `bluefin` | `(e1 :> es, …) => Link e1 -> … -> Eff es ()` | 5 lines, not in scope | 4 |
+| `mtl` | `(MonadLink m, …) => m ()` | 23 lines, can't deduce | 2 |
+| `effectful` | `(Link :> es, …) => Eff es ()` | 17 lines, can't deduce | 2 |
+| `polysemy` | `Members '[Link, …] r => Sem r ()` | 17 lines, can't deduce | 2 |
+| `fused-effects` | `(Has Link sig m, …) => m ()` | 18 lines, can't deduce | 2 |
+| `heftia-effects` | `(Link :> es, …) => Eff es ()` | 24 lines of library internals | 2 |
 
 `rio` is the record style inside a `ReaderT` environment, and `capability` is
 the `mtl` style.
@@ -78,7 +78,7 @@ the `mtl` style.
   changes every call site. One record per domain noun changes neither.
 - Every effect library puts its own types in user signatures and needs its own
   import in user code. `polysemy` also needs `DataKinds`.
-- Records map onto objects in other languages, as in `body.move(North)`.
+- Records map onto objects in other languages, as in `session.transmit(hello)`.
 - Every style runs against fakes. A record fake runs in `IO`; an effect
   library's fake can run pure.
 
@@ -94,7 +94,9 @@ effects.
 The Haskell client shell and the Haskell SDK run in plain `IO`. An effect is a
 record of `IO` functions, named for a domain noun and passed whole as an
 argument. Capabilities that travel together share one record (Introduce
-Parameter Object, Preserve Whole Object). Neither uses an effect library,
+Parameter Object, Preserve Whole Object). A record whose callers use disjoint
+subsets of its fields splits into one record per subset (Extract Class).
+Neither uses an effect library,
 `mtl`-style effect classes, or a `ReaderT` environment.
 
 `Partir.World.*`, `Partir.Agent.*`, and the wire types in
@@ -108,6 +110,7 @@ agent performs I/O while deciding is #184.
 - The same records map onto objects in the SDKs for other languages.
 - A test fake is an ordinary record value, and it runs in `IO`.
 - A record that bundles capabilities hides which of them a function uses. Its
-  type doesn't list them, and the compiler can't report one as missing.
+  type doesn't list them, and the compiler can't report one as missing. Extract Class keeps that set
+  small.
 - A later move to `effectful` or `bluefin` maps each record field onto an
   `effectful` effect constructor or a field of a `bluefin` handle.
