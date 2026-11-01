@@ -4,8 +4,8 @@
 
 name: Git flow
 
-# Retargeting a pull request fires only edited. Without it, a pass recorded
-# against the old base would still satisfy the new base's ruleset.
+# Retargeting a pull request fires only edited. A pass recorded against the
+# old base would otherwise satisfy the new base's ruleset.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
