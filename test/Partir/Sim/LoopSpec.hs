@@ -33,6 +33,7 @@ import Partir.Sim.Loop (
   Backlog (..),
   Clock (..),
   DeltaTime (..),
+  Instant (..),
   SceneStore (..),
   TickRate (..),
   accumulate,
@@ -121,8 +122,8 @@ scene =
 one and a half, a quarter, and one and three quarters ticks long: four whole
 ticks over half a second, with a fraction carried between slices.
 -}
-script :: [Double]
-script = [0, 0.0625, 0.25, 0.28125, 0.5]
+script :: [Instant]
+script = Instant <$> [0, 0.0625, 0.25, 0.28125, 0.5]
 
 -- Helpers
 
@@ -134,7 +135,7 @@ instance Exception ScriptEnded
 
 -- Run the loop at 'eightHz' until the clock's script runs out, returning the
 -- stored scene and every span the loop slept.
-runScripted :: [Double] -> IO (Scene, [DeltaTime])
+runScripted :: [Instant] -> IO (Scene, [DeltaTime])
 runScripted readings = do
   remaining <- newIORef readings
   sleeps <- newIORef []
@@ -142,7 +143,7 @@ runScripted readings = do
   _ <- try (runLoop eightHz (scriptedClock remaining sleeps) (refStore stored)) :: IO (Either ScriptEnded ())
   (,) <$> readIORef stored <*> (reverse <$> readIORef sleeps)
 
-scriptedClock :: IORef [Double] -> IORef [DeltaTime] -> Clock
+scriptedClock :: IORef [Instant] -> IORef [DeltaTime] -> Clock
 scriptedClock remaining sleeps =
   Clock
     { clockNow = readIORef remaining >>= next

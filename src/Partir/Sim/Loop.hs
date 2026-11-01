@@ -25,6 +25,7 @@ module Partir.Sim.Loop (
   maxElapsed,
   accumulate,
   step,
+  Instant (..),
   Clock (..),
   SceneStore (..),
   runLoop,
@@ -80,10 +81,14 @@ step s = s{sceneTick = next (sceneTick s)}
  where
   next (Tick n) = Tick (n + 1)
 
+-- | A reading of a monotonic clock, in seconds from any fixed origin.
+newtype Instant = Instant Double
+  deriving (Eq, Ord, Show)
+
 -- | Where the loop reads wall-clock time and waits for it to pass.
 data Clock = Clock
-  { clockNow :: IO Double
-  -- ^ Seconds on a monotonic clock, from any fixed origin.
+  { clockNow :: IO Instant
+  -- ^ The current reading.
   , clockSleep :: DeltaTime -> IO ()
   -- ^ Wait at least the given span.
   }
@@ -99,14 +104,21 @@ newtype SceneStore = SceneStore
 sleeps until the next step is due.
 -}
 runLoop :: TickRate -> Clock -> SceneStore -> IO a
-runLoop rate@(TickRate hz) clock store = clockNow clock >>= go noBacklog
+runLoop rate clock store = clockNow clock >>= go noBacklog
  where
   go owed before = do
     now <- clockNow clock
-    let (steps, owed'@(Backlog fraction)) = accumulate rate (DeltaTime (now - before)) owed
+    let (steps, owed') = accumulate rate (since before now) owed
     sceneStoreModify store (applyTimes steps step)
-    clockSleep clock (DeltaTime ((1 - fraction) / hz))
+    clockSleep clock (untilNextStep rate owed')
     go owed' now
+
+since :: Instant -> Instant -> DeltaTime
+since (Instant before) (Instant now) = DeltaTime (now - before)
+
+-- | The wall-clock time left before the backlog completes its next step.
+untilNextStep :: TickRate -> Backlog -> DeltaTime
+untilNextStep (TickRate hz) (Backlog fraction) = DeltaTime ((1 - fraction) / hz)
 
 applyTimes :: Int -> (a -> a) -> a -> a
 applyTimes n f x = iterate f x !! n
