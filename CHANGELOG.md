@@ -32,6 +32,11 @@ bucket. Later `[Unreleased]` sections split by change type.
   sample it projects the agent along the velocity the last two samples imply,
   as far as a `Horizon`, then holds. `prune` bounds a history by dropping the
   samples the render clock has passed.
+* `Partir.Sim.Loop`: steps the client's predicted scene at a fixed
+  `TickRate`, independent of the render rate. `accumulate` banks uneven
+  wall-clock slices and pays them out as whole steps, capping the time banked
+  after a stall. `runLoop` drives it in plain `IO` from a `Clock` and a
+  `SceneStore` record.
 * `Partir.Asset`: a renderer-ready mesh naming no source format, filled by
   `Partir.Asset.GLTF` from binary glTF 2.0 (`.glb`), so content authored in
   Blockbench or any glTF-emitting tool loads. Node translation, rotation, and
