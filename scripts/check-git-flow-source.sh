@@ -29,11 +29,9 @@ if [ "$base" != master ]; then
 fi
 
 case "$head" in
-  release/* | hotfix/*) ;;
-  *)
-    # GitHub reads ::error workflow commands from stdout, so this stays off
-    # stderr.
-    echo "::error::pull requests into master come from release/* or hotfix/*, not $head"
-    exit 1
-    ;;
+  release/* | hotfix/*) exit 0 ;;
 esac
+
+# GitHub reads ::error workflow commands from stdout, so this stays off stderr.
+echo "::error::pull requests into master come from release/* or hotfix/*, not $head"
+exit 1
