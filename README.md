@@ -38,6 +38,10 @@ workflows listed in `deployer_rw_workflow_refs`, in
 `terraform/bootstrap/github_oidc.tf`, can act as the read-write deployer, and
 only on `develop`.
 
+`terraform/infrastructure/` declares the qua-world organization's settings.
+The **Infrastructure** workflow applies the layer on merge to `develop` and
+comments its plan on each pull request that touches it.
+
 ### Run the first-time bootstrap
 
 You need [just](https://just.systems), [Terraform](https://terraform.io), the

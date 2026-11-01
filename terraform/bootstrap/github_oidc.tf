@@ -68,6 +68,7 @@ locals {
 
   deployer_rw_workflow_refs = [
     "${local.github_repository}/.github/workflows/deployer-access.yml@refs/heads/develop",
+    "${local.github_repository}/.github/workflows/infrastructure.yml@refs/heads/develop",
   ]
 
   wif_principal             = "${local.wif_pool_prefix}/github/attribute.repository/${local.github_repository}"
