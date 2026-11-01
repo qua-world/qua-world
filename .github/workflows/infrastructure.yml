@@ -12,14 +12,13 @@ name: Infrastructure
 on:
   pull_request:
     branches: [develop]
-    paths:
+    # Shared so a pull request never plans a change its merge won't apply.
+    paths: &infrastructure-paths
       - terraform/infrastructure/**
       - .github/workflows/infrastructure.yml
   push:
     branches: [develop]
-    paths:
-      - terraform/infrastructure/**
-      - .github/workflows/infrastructure.yml
+    paths: *infrastructure-paths
   workflow_dispatch:
 
 permissions:
