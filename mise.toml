@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+[settings]
+locked = true
+lockfile_platforms = ["linux-x64"]
+
+[tools]
+bats = "1.14.0"
+hlint = "3.10"
+just = "1.59.0"
+terraform = "1.17.1"
