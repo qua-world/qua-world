@@ -5,7 +5,8 @@
 # Each import block is idempotent once its resource is in state, so it stays.
 import {
   to = github_organization_settings.org
-  id = local.github_owner_id
+  # The organization's numeric ID; this resource doesn't import by login.
+  id = "65674695"
 }
 
 resource "github_organization_settings" "org" {
@@ -31,24 +32,6 @@ import {
   id = local.github_owner
 }
 
-locals {
-  # Actions outside GitHub's own, including those a composite action calls.
-  # `@*` admits any ref, and sha_pinning_required then demands a SHA.
-  allowed_action_patterns = [
-    "8c6794b6/hpc-codecov-action@*",
-    "astral-sh/setup-uv@*",
-    "bats-core/bats-action@*",
-    "codecov/codecov-action@*",
-    "google-github-actions/auth@*",
-    "google-github-actions/get-secretmanager-secrets@*",
-    "google-github-actions/setup-gcloud@*",
-    "hashicorp/setup-terraform@*",
-    "haskell-actions/hlint-setup@*",
-    "haskell-actions/setup@*",
-    "tox-dev/action-pre-commit-uv@*",
-  ]
-}
-
 resource "github_actions_organization_permissions" "org" {
   allowed_actions      = "selected"
   enabled_repositories = "all"
@@ -57,7 +40,22 @@ resource "github_actions_organization_permissions" "org" {
   allowed_actions_config {
     github_owned_allowed = true
     verified_allowed     = true
-    patterns_allowed     = local.allowed_action_patterns
+
+    # Actions outside GitHub's own, including those a composite action calls.
+    # `@*` admits any ref, and sha_pinning_required then demands a SHA.
+    patterns_allowed = [
+      "8c6794b6/hpc-codecov-action@*",
+      "astral-sh/setup-uv@*",
+      "bats-core/bats-action@*",
+      "codecov/codecov-action@*",
+      "google-github-actions/auth@*",
+      "google-github-actions/get-secretmanager-secrets@*",
+      "google-github-actions/setup-gcloud@*",
+      "hashicorp/setup-terraform@*",
+      "haskell-actions/hlint-setup@*",
+      "haskell-actions/setup@*",
+      "tox-dev/action-pre-commit-uv@*",
+    ]
   }
 }
 
@@ -72,7 +70,7 @@ resource "github_actions_organization_workflow_permissions" "org" {
   can_approve_pull_request_reviews = false
 }
 
-# The org holds qua-world/qua-world alone; anything else arrived unplanned.
+# The org holds this repository alone; anything else arrived unplanned.
 # fork:true admits forks, which search otherwise omits. A check warns rather
 # than fails, so an unexpected repository never blocks an apply.
 check "org_holds_only_qua_world" {
@@ -81,7 +79,7 @@ check "org_holds_only_qua_world" {
   }
 
   assert {
-    condition     = toset(data.github_repositories.org.full_names) == toset(["qua-world/qua-world"])
-    error_message = "Expected only qua-world/qua-world in the organization, found: ${join(", ", data.github_repositories.org.full_names)}"
+    condition     = toset(data.github_repositories.org.full_names) == toset([local.github_repository])
+    error_message = "Expected only ${local.github_repository} in the organization, found: ${join(", ", data.github_repositories.org.full_names)}"
   }
 }

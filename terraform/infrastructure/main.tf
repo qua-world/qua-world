@@ -12,8 +12,8 @@ terraform {
   }
 }
 
-# The token comes from GITHUB_TOKEN: a GitHub App installation token in CI, or
-# the operator's `gh auth token` for a local break-glass apply.
+# The token comes from GITHUB_TOKEN, which CI fills with a GitHub App
+# installation token.
 provider "github" {
   owner = local.github_owner
 }
