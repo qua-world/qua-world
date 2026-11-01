@@ -81,8 +81,9 @@ it.
   types.
 - The compiler doesn't track which effects a function performs. A reader learns
   that from the records the function takes.
-- A function that needs several effects takes several records. If that
-  argument list becomes a measured cost, revisit this decision.
-- A record of `IO` functions maps one-to-one onto an `effectful` interpreter or
-  a `bluefin` handle, so switching to one of them later is a mechanical
-  rewrite.
+- A function that needs several effects takes several records. Records that
+  travel together get bundled into one record (Introduce Parameter Object) and
+  passed whole (Preserve Whole Object). The bundle is still an argument, not a
+  `ReaderT` environment.
+- Each field of a record maps onto an `effectful` effect constructor or a field
+  of a `bluefin` handle.
