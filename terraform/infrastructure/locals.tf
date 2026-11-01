@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 locals {
-  github_owner      = "qua-world"
-  github_repository = "${local.github_owner}/qua-world"
+  github_owner           = "qua-world"
+  github_repository_name = "qua-world"
+  github_repository      = "${local.github_owner}/${local.github_repository_name}"
 }

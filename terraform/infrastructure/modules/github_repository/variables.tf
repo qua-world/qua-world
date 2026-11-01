@@ -41,7 +41,7 @@ variable "required_status_checks" {
   })
   default     = null
   description = <<-EOT
-    Status checks that must pass before merging into develop, main, or
+    Status checks that must pass before merging into develop, master, or
     release/**. Omit to leave develop ungated.
 
     contexts are GitHub Actions check-run names, each unique on a pull
@@ -50,7 +50,7 @@ variable "required_status_checks" {
     request changes, so leave out dependency scans: they fail on newly
     disclosed advisories.
 
-    strict requires a pull request into develop to be up to date; main
+    strict requires a pull request into develop to be up to date; master
     and release/** always require it. It defaults to false under
     renovate_automerge, true otherwise.
 
@@ -65,7 +65,7 @@ variable "require_code_owner_review" {
   type        = bool
   default     = false
   description = <<-EOT
-    Require a code owner's approval before merging into develop, main, or
+    Require a code owner's approval before merging into develop, master, or
     release/**. Gates only pull requests that change a path
     .github/CODEOWNERS assigns.
   EOT
@@ -76,7 +76,7 @@ variable "admin_only_updates" {
   default     = true
   description = <<-EOT
     Only the repository admin, and Renovate under renovate_automerge, can
-    push or merge to develop, main, or release/**. Set false once others
+    push or merge to develop, master, or release/**. Set false once others
     merge pull requests.
   EOT
 }
@@ -87,7 +87,7 @@ variable "renovate_automerge" {
   description = <<-EOT
     Renovate merges its own pull requests without review once the required
     status checks pass; GitHub auto-merge ignores checks that aren't
-    required. Only Renovate and the hook-fix App can push to renovate/**.
+    required. Only Renovate can push to renovate/**.
   EOT
 
   validation {
@@ -127,6 +127,11 @@ variable "environments" {
 variable "legacy" {
   type = object({
     squash_only                      = optional(bool, false)
+    unprotected                      = optional(bool, false)
+    merge_methods                    = optional(list(string))
+    allow_update_branch              = optional(bool, true)
+    squash_merge_commit_title        = optional(string, "PR_TITLE")
+    squash_merge_commit_message      = optional(string, "PR_BODY")
     allowed_action_patterns          = optional(list(string))
     can_approve_pull_request_reviews = optional(bool, false)
     dependabot_security_updates      = optional(bool, false)
@@ -137,8 +142,21 @@ variable "legacy" {
     Pre-Terraform settings a repository keeps in place of org defaults.
     Omit it once the repository adopts them all.
 
-    squash_only: squash merges and no main branch, in place of Git flow's
-    merge commits and protected main and release/**.
+    squash_only: squash merges and no master branch, in place of Git
+    flow's merge commits and protected master and release/**.
+
+    unprotected: no rulesets, in place of the default, admin-only, review,
+    checks, and immutable-tags rulesets.
+
+    merge_methods: the merge methods the repository allows, from "merge"
+    and "squash", in place of the one its flow picks.
+
+    allow_update_branch: false hides a pull request's button for merging
+    its base branch in.
+
+    squash_merge_commit_title, squash_merge_commit_message: GitHub's
+    values for a squash commit's title and message, in place of the pull
+    request's title and body.
 
     allowed_action_patterns: owner/repo@* patterns for a repository
     allowlist inside the org's, in place of org_allowed_action_patterns.
