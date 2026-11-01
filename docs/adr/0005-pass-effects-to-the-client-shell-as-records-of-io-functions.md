@@ -13,9 +13,8 @@ Accepted
 ## Context
 
 The Haskell client keeps its world model (`Partir.World.*`) and agents
-(`Partir.Agent.*`) free of `IO`. An agent decides through a pure
-`step :: WorldView -> a -> (a, [Intent])`, and its caller carries out the
-intents. The shell around them isn't pure: the network session (#13), the
+(`Partir.Agent.*`) free of `IO`. An agent decides purely, returning intents
+that its caller carries out. The shell around them isn't pure: the network session (#13), the
 WebSocket proxy (#14), the cell hand-off (#27), the simulation loop (#15), and
 the client main loop all deal with sockets, timers, and windowing. The Haskell
 SDK that the headless bot (#21) runs on has the same effects.
@@ -29,20 +28,20 @@ style for the rest. The Erlang server
 other languages are out of scope.
 
 SDK users include newcomers to Haskell, experienced Haskell programmers, bots
-written by language models, and the client team itself. Where their needs conflict,
+written by language models, and the client team. Where their needs conflict,
 newcomers decide. The criteria come from Clarke's API usability dimensions
 ([Measuring API Usability](https://jacobfilipp.com/DrDobbs/articles/DDJ/2004/0405/0405j/0405j.htm))
 and Green and Blackwell's
 [cognitive dimensions](https://www.cl.cam.ac.uk/~afb21/CognitiveDimensions/CDtutorial.pdf):
 
-- **Domain correspondence**: the API reads in domain terms, not library terms.
-- **Consistency**: the client and the SDK share one notation, and it carries
-  over to SDKs in other languages.
+- **Domain correspondence**: whether the API reads in domain terms.
+- **Consistency**: whether the client and the SDK share one notation that
+  carries over to SDKs in other languages.
 - **Learning cost**: what a user learns before a first bot runs.
 - **Premature commitment**: whether user code must adopt the SDK's effect
   library.
 - **Viscosity**: what adding one capability to existing code changes.
-- **Progressive evaluation**: part of a program runs against fakes.
+- **Progressive evaluation**: whether part of a program runs against fakes.
 - **Error-proneness**: what a common mistake looks like, and how readable its
   error is.
 
@@ -50,8 +49,7 @@ A candidate also has to build on the pinned GHC 9.10.3 and have had a release
 in the last 24 months. These fail that gate:
 
 - `effet`, `extensible-effects`, `freer-simple`, and `simple-effects` don't
-  compile on GHC 9.10.3. The newest `freer-simple` release doesn't resolve, and
-  the older one the solver picks doesn't compile.
+  compile on GHC 9.10.3.
 - `cleff` caps `template-haskell` below the version GHC 9.10.3 ships.
 - `in-other-words`, `eveff`, and `freer-effects` compile, but their last
   releases were in 2022, 2021, and 2017.
@@ -82,26 +80,25 @@ the `mtl` style.
 - Every style runs against fakes. A record fake runs in `IO`; an effect
   library's fake can run pure.
 
-Records named for domain nouns lead or tie on every criterion except
-progressive evaluation, where they still run against fakes. They remove the
-missing-capability mistake instead of reporting it.
+Records named for domain nouns lead or tie on every criterion but progressive
+evaluation, where their fakes need `IO`. They remove the missing-capability
+mistake instead of reporting it.
 
 ## Decision
 
-Agents stay pure: an agent's logic is a `Partir.Agent.Class` instance, with no
-effects.
+Agent logic stays a pure `Partir.Agent.Class` instance.
 
 The Haskell client shell and the Haskell SDK run in plain `IO`. An effect is a
 record of `IO` functions, named for a domain noun and passed whole as an
 argument. Capabilities that travel together share one record (Introduce
 Parameter Object, Preserve Whole Object). A record whose callers use disjoint
-subsets of its fields splits into one record per subset (Extract Class).
-Neither uses an effect library,
-`mtl`-style effect classes, or a `ReaderT` environment.
+subsets of its fields splits into one record per subset (Extract Class). The
+shell and the SDK use no effect library, no `mtl`-style effect classes, and no
+`ReaderT` environment.
 
-`Partir.World.*`, `Partir.Agent.*`, and the wire types in
-`Partir.Net.Protocol` (#12) stay pure and take no effect records. How an
-agent performs I/O while deciding is #184.
+`Partir.World.*` and the wire types in `Partir.Net.Protocol` (#12) stay pure
+and take no effect records. #184 covers agents that perform I/O while
+deciding.
 
 ## Consequences
 
@@ -110,7 +107,7 @@ agent performs I/O while deciding is #184.
 - The same records map onto objects in the SDKs for other languages.
 - A test fake is an ordinary record value, and it runs in `IO`.
 - A record that bundles capabilities hides which of them a function uses. Its
-  type doesn't list them, and the compiler can't report one as missing. Extract Class keeps that set
-  small.
-- A later move to `effectful` or `bluefin` maps each record field onto an
-  `effectful` effect constructor or a field of a `bluefin` handle.
+  type doesn't list them, and the compiler can't report one as missing.
+  Extract Class keeps that set small.
+- If the SDK later moves to `effectful` or `bluefin`, each record field becomes
+  an `effectful` effect constructor or a field of a `bluefin` handle.
