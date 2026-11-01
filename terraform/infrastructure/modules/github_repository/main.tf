@@ -204,7 +204,7 @@ resource "github_repository_ruleset" "review" {
   rules {
     # Code owner review applies even with a review count of 0.
     pull_request {
-      allowed_merge_methods             = local.flow.merge_methods
+      allowed_merge_methods             = local.merge_methods
       required_approving_review_count   = 0
       require_code_owner_review         = var.require_code_owner_review
       required_review_thread_resolution = true
