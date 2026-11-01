@@ -9,8 +9,7 @@
 # branch.
 #
 # Rulesets on GitHub Free cannot restrict a pull request's source branch, so
-# the checks-release ruleset requires this check instead. A push has no base
-# branch and passes.
+# the checks-release ruleset requires this check instead.
 #
 # Usage: check-git-flow-source.sh <base-branch> <head-branch>
 
