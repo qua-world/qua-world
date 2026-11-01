@@ -81,6 +81,7 @@ library
     , Partir.Asset.Tilemap.LDtk
     , Partir.Asset.Tilemap.Tiled
     , Partir.Sim.Interpolate
+    , Partir.Sim.Loop
     , Partir.World.Event
     , Partir.World.Scene
     , Partir.World.Types
@@ -161,6 +162,7 @@ test-suite partir-qua-world-test
     , Partir.Client.GLUT.ControlsSpec
     , Partir.Client.GLUT.ViewSpec
     , Partir.Sim.InterpolateSpec
+    , Partir.Sim.LoopSpec
     , Partir.World.SceneSpec
     , Paths_partir_qua_world
 
