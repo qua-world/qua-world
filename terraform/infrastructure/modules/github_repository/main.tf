@@ -26,7 +26,6 @@ locals {
   }
 
   protected_refs = concat(local.develop_refs, local.flow.release_refs)
-  has_rulesets   = !var.legacy.unprotected
 
   merge_methods = coalesce(var.legacy.merge_methods, local.flow.merge_methods)
 }
@@ -107,8 +106,6 @@ locals {
 }
 
 resource "github_repository_ruleset" "default" {
-  count = local.has_rulesets ? 1 : 0
-
   name        = "default"
   repository  = github_repository.this.name
   target      = "branch"
@@ -144,7 +141,7 @@ resource "github_repository_ruleset" "default" {
 # Merging a pull request updates the branch too, so only bypass actors can
 # merge.
 resource "github_repository_ruleset" "admin_only" {
-  count = local.has_rulesets && var.admin_only_updates ? 1 : 0
+  count = var.admin_only_updates ? 1 : 0
 
   name        = "admin-only"
   repository  = github_repository.this.name
@@ -176,8 +173,6 @@ resource "github_repository_ruleset" "admin_only" {
 
 # The admin bypasses because a solo maintainer can't satisfy a required review.
 resource "github_repository_ruleset" "review" {
-  count = local.has_rulesets ? 1 : 0
-
   name        = "review"
   repository  = github_repository.this.name
   target      = "branch"
@@ -243,7 +238,7 @@ locals {
         contexts = concat([local.git_flow_source_check], local.required_checks)
         strict   = true
       }
-    } : name => policy if local.has_rulesets && length(policy.refs) > 0 && length(policy.contexts) > 0
+    } : name => policy if length(policy.refs) > 0 && length(policy.contexts) > 0
   }
 }
 
@@ -320,8 +315,6 @@ resource "github_repository_ruleset" "renovate" {
 # tag leaves the registry and the repository silently disagreeing. The admin
 # bypass keeps a botched tag fixable.
 resource "github_repository_ruleset" "immutable_tags" {
-  count = local.has_rulesets ? 1 : 0
-
   name        = "immutable-tags"
   repository  = github_repository.this.name
   target      = "tag"

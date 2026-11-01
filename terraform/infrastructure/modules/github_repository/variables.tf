@@ -127,7 +127,6 @@ variable "environments" {
 variable "legacy" {
   type = object({
     squash_only                      = optional(bool, false)
-    unprotected                      = optional(bool, false)
     merge_methods                    = optional(list(string))
     allow_update_branch              = optional(bool, true)
     squash_merge_commit_title        = optional(string, "PR_TITLE")
@@ -144,8 +143,6 @@ variable "legacy" {
 
     squash_only: squash merges and no master branch, in place of Git
     flow's merge commits and protected master and release/**.
-
-    unprotected: no rulesets, except renovate_automerge's.
 
     merge_methods: "merge", "squash", or both, in place of the flow's
     one.
