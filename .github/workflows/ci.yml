@@ -23,21 +23,15 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
-    # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
-    # the hooks that run from PATH are pinned here instead.
+    # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, and
+    # mise's registry lacks fourmolu, so it is pinned here instead.
     #
-    # Both tools version with PVP. The default versioning coerces those
+    # Fourmolu versions with PVP. The default versioning coerces those
     # four-component releases to semver and reports them unstable, which
     # `ignoreUnstable` then hides. `loose` compares them component-wise.
     env:
       # renovate: datasource=github-releases depName=fourmolu/fourmolu versioning=loose extractVersion=^v(?<version>.+)$
       FOURMOLU_VERSION: "0.20.1.0"
-      # renovate: datasource=github-releases depName=ndmitchell/hlint versioning=loose extractVersion=^v(?<version>.+)$
-      HLINT_VERSION: "3.10"
-      # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
-      TERRAFORM_VERSION: "1.17.1"
-      # renovate: datasource=github-releases depName=casey/just
-      JUST_VERSION: "1.59.0"
 
     steps:
       - name: Checkout
@@ -52,22 +46,10 @@ jobs:
           chmod +x "$HOME/.local/bin/fourmolu"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Set up HLint
-        uses: haskell-actions/hlint-setup@fe9cd1cd1af94a23900c06738e73f6ddb092966a # v2.4.10
+      - name: Set up HLint, just, and Terraform
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          version: ${{ env.HLINT_VERSION }}
-
-      - name: Install just
-        run: |
-          curl -fsSL "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-            | tar -xz -C "$HOME/.local/bin" just
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          # Nothing reads the wrapper's step outputs.
-          terraform_wrapper: false
+          install_args: hlint just terraform
 
       - name: Run pre-commit
         uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
@@ -79,19 +61,14 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
-    env:
-      # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
-      TERRAFORM_VERSION: "1.17.1"
-
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
+          install_args: terraform
 
       - name: Validate
         run: |
@@ -109,15 +86,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # The helper libraries stay off: the suite asserts with plain bash, and
-      # each one installed is another version to pin and track.
       - name: Set up bats
-        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          support-install: false
-          assert-install: false
-          detik-install: false
-          file-install: false
+          install_args: bats
 
       - name: Test
         run: bats scripts
