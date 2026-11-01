@@ -11,8 +11,11 @@ module "qua_world" {
 
   org_allowed_action_patterns = tolist(github_actions_organization_permissions.org.allowed_actions_config[0].patterns_allowed)
 
+  required_status_checks    = { ci_results_check = true }
+  require_code_owner_review = true
+  renovate_automerge        = true
+
   legacy = {
-    unprotected                 = true
     merge_methods               = ["merge", "squash"]
     allow_update_branch         = false
     squash_merge_commit_title   = "COMMIT_OR_PR_TITLE"
