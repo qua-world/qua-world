@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+name: Git flow
+
+# Retargeting a pull request fires only edited. Without it, a pass recorded
+# against the old base would still satisfy the new base's ruleset.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  git-flow-source:
+    name: Check Git flow source branch
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check source branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: scripts/check-git-flow-source.sh "$BASE_REF" "$HEAD_REF"

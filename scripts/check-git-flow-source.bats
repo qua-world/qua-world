@@ -39,11 +39,6 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "accepts a push, which has no base branch" {
-    run "$script" "" ""
-    [ "$status" -eq 0 ]
-}
-
 @test "rejects a missing head branch" {
     run "$script" master
     [ "$status" -eq 2 ]
