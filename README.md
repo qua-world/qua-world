@@ -29,10 +29,6 @@ buckets, and deployer service accounts that workflows impersonate through
 Workload Identity Federation, so no service account key exists. An owner
 applies it by hand, rarely.
 
-`terraform/infrastructure/` declares the qua-world organization's settings.
-The **Infrastructure** workflow plans it on each pull request that touches it,
-with the plan in the job summary, and applies it on merge to `develop`.
-
 Bootstrap keeps its state in `qua-world-tfstate`. The deployers can reach
 only `qua-world-infrastructure-tfstate`, so continuous integration can't read
 or rewrite the state that defines its own credentials.
@@ -41,6 +37,10 @@ Any workflow in this repository can act as the read-only deployer. Only
 workflows listed in `deployer_rw_workflow_refs`, in
 `terraform/bootstrap/github_oidc.tf`, can act as the read-write deployer, and
 only on `develop`.
+
+`terraform/infrastructure/` declares the qua-world organization's settings.
+The **Infrastructure** workflow plans it on each pull request that touches it,
+with the plan in the job summary, and applies it on merge to `develop`.
 
 ### Run the first-time bootstrap
 

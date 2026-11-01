@@ -4,11 +4,8 @@
 
 name: Infrastructure
 
-# Bootstrap applies by hand, since the deployers cannot reach its state, so
-# only terraform/infrastructure/ runs here.
-#
-# The read-write deployer admits any job in this file running on develop, so
-# every job but the apply stays on pull requests.
+# The read-write deployer admits any job in this file that runs on develop, so
+# only the apply job runs there.
 on:
   pull_request:
     branches: [develop]
@@ -30,15 +27,13 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
-    # GitHub already withholds OIDC tokens from forks; this skips the job
-    # rather than letting it fail at authentication.
+    # Forks get no OIDC token, so skip rather than fail at authentication.
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
 
     # The read-only deployer cannot write a lock, so plan runs -lock=false and
-    # waits out any apply in this group instead. queue: max keeps every waiting
-    # run rather than cancelling all but the newest.
+    # queues behind any apply instead.
     concurrency:
       group: terraform-state
       queue: max
@@ -81,8 +76,8 @@ jobs:
             id:qua-world-infrastructure/terraform-github-app-id-ro
             private-key:qua-world-infrastructure/terraform-github-app-private-key-ro
 
-      # Without owner the token covers this repository alone and carries none
-      # of the App's organization permissions.
+      # Without owner, the token covers this repository alone and none of the
+      # App's organization permissions.
       - name: Mint the plan App's token
         id: app-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
@@ -144,9 +139,9 @@ jobs:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
 
-      # The read-write deployer admits this file on develop alone, so a
-      # dispatch from any other ref fails here. Renaming the file means adding
-      # the new name to terraform/bootstrap/'s allowlist first.
+      # terraform/bootstrap/ admits this file by name, on develop alone. A
+      # dispatch from another ref fails here, and a rename needs the new name in
+      # that allowlist first.
       - name: Authenticate as the read-write deployer
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:

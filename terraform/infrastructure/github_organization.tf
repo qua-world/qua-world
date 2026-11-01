@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Each import block is idempotent once its resource is in state, so it stays.
+# Import blocks are no-ops once their resource is in state, so they stay.
 import {
   to = github_organization_settings.org
   # The organization's numeric ID; this resource doesn't import by login.
@@ -16,15 +16,13 @@ resource "github_organization_settings" "org" {
 
   default_repository_permission = "read"
 
-  # Only owners create repositories.
   members_can_create_repositories         = false
   members_can_create_public_repositories  = false
   members_can_create_private_repositories = false
   members_can_fork_private_repositories   = false
 
-  # The *_enabled_for_new_repositories fields stay at their false defaults. The
-  # org's code security configuration sets those features on new repositories,
-  # and supersedes these older fields.
+  # The *_enabled_for_new_repositories fields keep their false defaults. The
+  # org's code security configuration enables those features instead.
 }
 
 import {
@@ -70,9 +68,8 @@ resource "github_actions_organization_workflow_permissions" "org" {
   can_approve_pull_request_reviews = false
 }
 
-# The org holds this repository alone; anything else arrived unplanned.
-# fork:true admits forks, which search otherwise omits. A check warns rather
-# than fails, so an unexpected repository never blocks an apply.
+# The org should hold this repository alone. Search omits forks unless the
+# query sets fork:true.
 check "org_holds_only_qua_world" {
   data "github_repositories" "org" {
     query = "org:${local.github_owner} fork:true"
