@@ -41,6 +41,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
 
     env:
       # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
@@ -94,13 +95,58 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           terraform plan -input=false -lock=false -no-color -out=tfplan
-          {
-            echo '## Infrastructure plan'
-            echo
-            echo '```'
-            terraform show -no-color tfplan
-            echo '```'
-          } >>"${GITHUB_STEP_SUMMARY}"
+          terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
+
+      # Updates its own earlier comment, found by the marker, so a pull request
+      # carries one current plan.
+      - name: Comment the plan on the pull request
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('plan.txt', 'utf8');
+            const summaryLine = plan.match(/^(No changes\..+|Plan: .+)$/m);
+            const summary = summaryLine ? summaryLine[0] : 'Plan generated';
+            // GitHub rejects a comment over 65,536 characters; the Plan step's
+            // log keeps the whole plan.
+            const limit = 60000;
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const shown = plan.length > limit
+              ? `${plan.slice(0, limit)}\n… truncated; the full plan is in ${run}`
+              : plan;
+            const marker = '<!-- terraform-plan:infrastructure -->';
+            const body = [
+              marker,
+              '## Terraform plan: infrastructure',
+              '',
+              `**${summary}**`,
+              '',
+              '<details>',
+              '<summary>Show full plan output</summary>',
+              '',
+              '```',
+              shown,
+              '```',
+              '</details>',
+            ].join('\n');
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
   terraform-apply:
     name: Apply the infrastructure layer
