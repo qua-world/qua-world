@@ -84,7 +84,7 @@ the `mtl` style.
 
 Records named for domain nouns lead or tie on every criterion except
 progressive evaluation, where they still run against fakes. They remove the
-missing-capability mistake rather than report it clearly.
+missing-capability mistake instead of reporting it.
 
 ## Decision
 
