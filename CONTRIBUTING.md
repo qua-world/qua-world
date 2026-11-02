@@ -56,8 +56,8 @@ show both shapes.
 
 ## Before you commit
 
-[pre-commit] gates each commit on formatting, linting, and file hygiene, and
-runs the same hooks again in CI:
+[pre-commit] gates each commit on formatting, linting, file hygiene, and the
+commit message. CI runs the same checks again:
 
 ```sh
 pre-commit install
@@ -83,9 +83,8 @@ and target `develop` with the pull request.
 Open it as a draft and mark it ready once CI is green and you want review.
 Unrelated cleanup goes in a separate pull request. CI must pass before merge.
 
-Leave `version:` in `partir-qua-world.cabal` alone. The maintainer cuts
-releases. Record user-visible changes under `[Unreleased]` in
-[CHANGELOG.md](CHANGELOG.md) instead.
+Leave `version:` in `partir-qua-world.cabal` and
+[CHANGELOG.md](CHANGELOG.md) alone. The maintainer cuts releases.
 
 ### Commit messages
 
@@ -95,6 +94,16 @@ of a great commit message][seven rules]: an imperative subject under 50
 characters, a blank line, then a wrapped body. The body covers why the change
 matters and anything a reader of the diff would find surprising.
 
+Start the subject with a [Conventional Commits] type naming the
+[CHANGELOG.md](CHANGELOG.md) section the change belongs in: `add`, `change`,
+`deprecate`, `remove`, `fix`, or `security`. Use `chore` for work a player
+never sees, such as CI, tooling, refactoring, and docs. For example,
+`add: Show the server address in observe mode`. Mark a breaking change with
+`!` after the type, for example `change!: Drop the legacy wire format`.
+
+The `commit-msg` hook runs `commitlint` on each message. CI runs `commitlint`
+on every commit in the pull request.
+
 ## Filing an issue
 
 File it on [GitHub]. For bugs, include your GHC and cabal versions, your
@@ -102,6 +111,7 @@ platform, and a minimal reproduction. For proposals, include the user-visible
 outcome and the problem it solves. Questions about using partir are welcome as
 issues too. Tag them [question].
 
+[Conventional Commits]: https://www.conventionalcommits.org/
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [GitHub]: https://github.com/qua-world/qua-world/issues
 [good first issue]: https://github.com/qua-world/qua-world/labels/good%20first%20issue

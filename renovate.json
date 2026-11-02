@@ -7,8 +7,13 @@
   "extends": [
     "config:best-practices",
     "security:openssf-scorecard",
-    "customManagers:githubActionsVersions"
+    "customManagers:githubActionsVersions",
+    ":semanticCommits",
+    ":semanticCommitScopeDisabled"
   ],
+  // Renovate lowercases commit subjects by default, and CONTRIBUTING.md asks
+  // for a capital.
+  "commitMessageLowerCase": "never",
   "timezone": "Europe/London",
   "reviewers": [
     "alunduil"
