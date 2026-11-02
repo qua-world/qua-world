@@ -62,9 +62,9 @@ path = "CODE_OF_CONDUCT.md"
 SPDX-FileCopyrightText = "Organization for Ethical Source"
 SPDX-License-Identifier = "CC-BY-4.0"
 
-# `terraform init` regenerates the lock file whole, so an inline header would
-# not survive.
+# `terraform init` and `mise lock` regenerate their lock files whole, so an
+# inline header would not survive.
 [[annotations]]
-path = "**/.terraform.lock.hcl"
+path = ["**/.terraform.lock.hcl", "mise.lock"]
 SPDX-FileCopyrightText = "2026 Alex Brandt"
 SPDX-License-Identifier = "MIT"
