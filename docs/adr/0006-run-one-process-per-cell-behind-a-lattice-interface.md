@@ -12,12 +12,12 @@ Accepted
 
 ## Context
 
-[Record 2](0002-run-an-authoritative-world-server-on-erlang.md) makes the
-Erlang world-server authoritative and has it partition space dynamically, but
-doesn't say which processes own what. The first server code (#194) and the
-client's interest set (#16) need that answer.
+[Record 2](0002-run-an-authoritative-world-server-on-erlang.md) chose an
+authoritative Erlang world-server that partitions space dynamically. It didn't
+decide which process owns each entity. The server code (#194) and the client's
+interest set (#16) can't start without that decision.
 
-The answer has to meet these requirements:
+The decision has to meet these requirements:
 
 - The server starts on one BEAM node, runs on three or more local nodes in
   tests, and later runs on Kubernetes (#170). It adds and removes nodes as
@@ -60,13 +60,13 @@ The server uses the lattice through three functions:
 
 The lattice issues cell identities. Splitting or merging cells creates new
 identities and retires the old ones. An identity never names a second region.
-Issue #97 decides how the lattice keeps that promise.
+Issue #97 decides how the lattice guarantees this.
 
 ### Placement
 
-Rendezvous hashing of a cell's identity over the current node list picks the
-node the cell runs on. When a node joins or leaves, only the cells whose
-top-scoring node changes move. Each cell joins a `pg` group named after its
+The server places each cell on a node with rendezvous hashing over the cell's
+identity and the current node list. When a node joins or leaves, only the cells
+whose top-scoring node changes move. Each cell joins a `pg` group named after its
 identity, and callers find the cell through that group.
 
 ### Sharing state between cells
@@ -109,8 +109,9 @@ restarted cell, which resumes from its last tick.
   message to each neighbour per tick.
 - Placement and lookup take no cluster-wide lock. When a lookup reaches a stale
   process, session replay recovers the inputs.
-- Render distance sets how many cells a client subscribes to, and with it the
-  client's bandwidth and drawing load. #196 measures where a client overloads.
+- Render distance sets how many cells a client subscribes to. That count sets
+  the client's bandwidth and drawing load. #196 measures the render distance at
+  which a client overloads.
 - The protocol needs a sequence number on each input and an acknowledgement
   from the server (#13, #28).
 - A cell crash loses nothing. A node crash loses every cell on that node,
