@@ -24,12 +24,13 @@ The process structure has to meet these requirements:
   changes (#197).
 - The server doesn't lose a client's intent when a process crashes or an
   entity changes cells.
-- An entity standing on a cell boundary stays in one cell.
-- A client receives updates only from the cells inside its area of interest,
-  which its render distance sets.
-- The structure works with any way of dividing space into cells, and with any
-  interaction range, render distance, entity count per process, and tick rate.
-  Issue #97 chooses those from the load tests in #195 and #196.
+- An entity standing on a cell boundary stays owned by one cell.
+- A client's render distance, how far away it draws entities, sets its area of
+  interest. The client receives updates only from cells inside that area.
+- The structure works with any way of dividing space into cells. It also works
+  with any interaction range (how far one entity can affect another), render
+  distance, entity count per process, and tick rate. Issue #97 chooses how to
+  divide space and sets each value from the load tests in #195 and #196.
 
 With a process per entity, every interaction between entities is a message.
 With a process per cell, entities in the same cell interact through function
@@ -78,15 +79,15 @@ that `within` returns for the entity's position and the interaction range. A
 receiving cell simulates against those copies but never changes them, so an
 interaction across a boundary runs inside one cell.
 
-A session subscribes to the cells that `within` returns for its entity's
-position and its client's render distance. Those cells form the client's area
-of interest, and they send the session entity updates every tick. The session
-updates its subscriptions as its entity moves.
+A session subscribes to the cells that `within` returns for the position of
+the client's entity and the client's render distance. Those cells form the
+client's area of interest. Every tick, they send the session updates for their
+entities. The session renews its subscriptions as the client's entity moves.
 
 ### Moving an entity
 
-Every tick, a cell calls `within` with each entity's position and a set
-distance. When the result no longer includes the owning cell, the owning cell
+Every tick, a cell calls `within` for each of its entities, with the entity's
+position and a set distance. When the result no longer includes the owning cell, the owning cell
 hands the entity off to the cell that `locate` returns. The set distance keeps
 an entity on a boundary from being handed back and forth between two cells.
 The old cell sends the entity's state to the new cell, which holds it without
@@ -126,6 +127,5 @@ restarted cell, which resumes from its last tick.
   because their tables live there. Surviving node loss needs persistence or
   replication, which no record covers.
 - When many entities crowd one place, the copies each cell receives include
-  most of the crowd, and splitting cells stops helping. #97 covers
-  crowds.
+  most of the crowd, and splitting cells stops helping. #97 covers crowds.
 - No server code exists, so nothing in the build checks this record.
