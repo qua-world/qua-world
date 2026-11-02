@@ -99,16 +99,16 @@ cell's region by more than a hysteresis margin:
 1. **Prepare.** The old cell sends the entity's state to the new cell, which
    holds it without simulating it.
 2. **Commit.** The new cell takes ownership and acknowledges. The old cell
-   points the session at the new cell, then forwards anything still addressed
-   to it for that entity.
+   points the session at the new cell.
 
 Between prepare and commit the entity's owner is still the old cell.
 
 ### Inputs in flight
 
 A session keeps each input until a cell acknowledges the tick that applied it.
-After a hand-off, a crash, or a lookup that reached a stale process, the
-session sends the unacknowledged inputs again. Cells apply each input at
+Whenever its entity's owner changes, whether by hand-off, crash, or a lookup
+that reached a stale process, the session sends the unacknowledged inputs again.
+This is the only way an input reaches a new owner; old owners forward nothing. Cells apply each input at
 most once, by its sequence number within the session.
 
 ### Supervision
@@ -116,20 +116,13 @@ most once, by its sequence number within the session.
 Each node runs one cell supervisor, with the `one_for_one` restart strategy.
 Each node also runs a table keeper. A cell keeps its entities in an `ets` table
 whose heir is the keeper. When a cell crashes, the keeper inherits the table
-and gives it to the restarted cell, which resumes from its last tick. Sessions
-then send their unacknowledged inputs again.
+and gives it to the restarted cell, which resumes from its last tick.
 
 ### Splitting and merging
 
 When the lattice splits or merges cells to follow density, the affected cells
 move their entities as a batch of hand-offs. A node joining or leaving moves
 cells the same way.
-
-### First milestone
-
-The 2027-02 milestone needs only part of this: one node, one cell, sessions,
-inputs held until acknowledged, and crash recovery. Placement, halo pushes,
-visibility subscriptions, and hand-off land with multiple cells.
 
 ## Consequences
 
