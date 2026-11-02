@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-# CONTRIBUTING.md defines each type and starts subjects with a capital.
 extends:
   - "@commitlint/config-conventional"
 rules:
+  # CONTRIBUTING.md asks for subjects that start with a capital.
   subject-case: [0]
+  # CONTRIBUTING.md defines each type.
   type-enum:
     - 2
     - always

@@ -72,7 +72,8 @@ jobs:
       - name: Run pre-commit
         uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
 
-  # Git flow merges pull requests, so every commit lands on develop.
+  # Git flow merges pull requests, so every commit lands on develop and needs a
+  # change type.
   commitlint:
     name: Check commit messages
     runs-on: ubuntu-26.04
@@ -85,8 +86,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # A job-level guard would skip the job on pushes, and a skipped job fails
-      # `Check CI results`.
+      # A skipped job fails `Check CI results`, so the `if:` sits on the step.
       - name: Lint commits
         if: github.base_ref == 'develop'
         uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6.2.1

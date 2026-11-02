@@ -70,7 +70,8 @@ repos:
       - id: renovate-config-validator
         args: [--strict, --no-global]
 
-  # Renovate updates additional_dependencies only under an explicit language.
+  # Renovate updates additional_dependencies only when the hook states its
+  # language here.
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.27.0
     hooks:

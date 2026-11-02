@@ -11,8 +11,8 @@
     ":semanticCommits",
     ":semanticCommitScopeDisabled"
   ],
-  // Renovate lowercases commit subjects by default. CONTRIBUTING.md starts
-  // them with a capital.
+  // Renovate lowercases commit subjects by default, and CONTRIBUTING.md asks
+  // for a capital.
   "commitMessageLowerCase": "never",
   "timezone": "Europe/London",
   "reviewers": [

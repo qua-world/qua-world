@@ -57,7 +57,7 @@ show both shapes.
 ## Before you commit
 
 [pre-commit] gates each commit on formatting, linting, file hygiene, and the
-commit message. CI runs the same hooks again:
+commit message. CI runs the same checks again:
 
 ```sh
 pre-commit install
@@ -101,8 +101,8 @@ never sees, such as CI, tooling, refactoring, and docs. For example,
 `add: Show the server address in observe mode`. Mark a breaking change with
 `!` after the type, for example `change!: Drop the legacy wire format`.
 
-The `commit-msg` hook runs `commitlint` on each message. CI runs it again on
-every commit in the pull request.
+The `commit-msg` hook runs `commitlint` on each message. CI runs `commitlint`
+on every commit in the pull request.
 
 ## Filing an issue
 
