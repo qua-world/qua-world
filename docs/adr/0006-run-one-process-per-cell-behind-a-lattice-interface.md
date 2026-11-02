@@ -90,8 +90,9 @@ distance. When the result no longer includes the owning cell, the owning cell
 hands the entity off to the cell that `locate` returns. The set distance keeps
 an entity on a boundary from being handed back and forth between two cells.
 The old cell sends the entity's state to the new cell, which holds it without
-simulating it. The new cell then takes ownership and acknowledges. On that acknowledgement, the old cell points the session at the
-new cell. Until then, the old cell owns the entity.
+simulating it. The new cell then takes ownership and acknowledges. On that
+acknowledgement, the old cell points the session at the new cell. Until then,
+the old cell owns the entity.
 
 Splitting or merging cells, or a node joining or leaving, moves the affected
 entities as a batch of hand-offs to the new cell processes.
