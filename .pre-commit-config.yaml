@@ -71,7 +71,7 @@ repos:
         args: [--strict, --no-global]
 
   # git-cliff renders CHANGELOG.md from these types; CONTRIBUTING.md defines
-  # each. CI runs this hook over every commit of a pull request, so the list
+  # each. scripts/check-commit-messages.sh runs this hook in CI, so the list
   # lives here alone. Naming `fix` replaces the hook's defaults rather than
   # extending them.
   - repo: https://github.com/compilerla/conventional-pre-commit
