@@ -13,138 +13,109 @@ Accepted
 ## Context
 
 [Record 2](0002-run-an-authoritative-world-server-on-erlang.md) makes the
-Erlang world-server authoritative and partitions space dynamically. It doesn't
-say which processes own what. The first server code (#194) and the client's
-interest set (#16) both depend on that structure.
+Erlang world-server authoritative and has it partition space dynamically, but
+doesn't say which processes own what. The first server code (#194) and the
+client's interest set (#16) need that answer.
 
-The structure has to meet these requirements:
+The answer has to meet these requirements:
 
-- **Multiple nodes.** The server runs on one BEAM node at first, runs on three
-  or more local nodes in tests, and later runs on Kubernetes (#170). Nodes are
-  added and removed as load changes (#197).
-- **No lost input.** The server shouldn't drop a client's input if the protocol
-  can prevent it, including when a process crashes or an entity changes cells.
-- **Stable boundaries.** A player standing on a cell boundary doesn't bounce
-  between cells.
-- **Cell visibility.** What a client renders maps onto a set of cells, so the
-  server sends a client only the cells it can see.
-- **Measured numbers.** The interest radius, the render distance, the entity
-  budget per process, and the tick rate come from load tests (#195, #196).
-  #97 chooses them, and it also chooses the lattice: octree or body-centred
-  cubic.
+- The server starts on one BEAM node, runs on three or more local nodes in
+  tests, and later runs on Kubernetes (#170). It adds and removes nodes as
+  load changes (#197).
+- The server doesn't drop a client's input when a process crashes or an entity
+  changes cells.
+- A player standing on a cell boundary stays in one cell.
+- A client receives updates only from the cells within its render distance.
+- Load tests (#195, #196) set the interest radius, the render distance, the
+  entities per process, and the tick rate. #97 picks those numbers and the
+  lattice.
 
-Each part has alternatives:
+A process per entity turns every interaction into a message. A process per cell
+keeps interactions inside a cell as function calls.
 
-- **Process unit.** One process per cell, one per entity, or one per entity
-  supervised by its cell. A process per entity turns every interaction into a
-  message between processes. A process per cell keeps the interactions inside
-  a cell local.
-- **Finding a cell.** The OTP module `global` registers a name on every node
-  or on none, and every change reaches every node. The OTP module `pg` keeps
-  groups with members on any node, and its views "may temporarily diverge"
-  between nodes. A fixed map from cell to node can't follow nodes joining and
-  leaving.
-- **Neighbour awareness.** Cells can push the entities near their edges to
-  their neighbours, or neighbours can poll each other. A shared table isn't an
-  option, because an `ets` table lives on one node.
-- **Messages in flight.** These can be dropped, forwarded, or replayed. Only
-  replay from the sender survives a process that crashes before it forwards
-  anything.
-- **Recovering a crashed cell.** A cell can restart empty or recover its
-  state. An `ets` table outlives its owner if it names an heir, and the heir
-  must be a local process.
+OTP offers two ways to find a process on another node. `global` registers a
+name on every node or on none, so every registration involves the whole
+cluster. `pg` groups processes across nodes without locks, but its views of a
+group can briefly differ between nodes. A caller can then reach a process that
+no longer owns a cell.
+
+An `ets` table lives on one node, so cells on different nodes can't share one.
+A table survives its owner's crash if it names an heir, and the heir must run on
+the same node.
 
 ## Decision
 
-Each cell is one Erlang process. It owns the authoritative state of the
-entities inside its region, and it runs their simulation one tick at a time.
-Each session is a separate process that forwards inputs for its entity to the
-cell that owns that entity. A client connects to its session and never to a
-cell, so moving an entity between cells leaves the client's connection alone.
+Each cell is one Erlang process. It owns the entities inside its region and
+simulates them one tick at a time. Each client connects to its own session
+process, never to a cell. The session forwards the client's inputs to the cell
+that owns the client's entity.
 
-### Lattice interface
+### Lattice
 
-The server reaches the geometry only through three functions, so #97's choice
-of lattice plugs in without changing the cell mechanism:
+The server uses the lattice through three functions:
 
-- **Locate:** from a position to the cell that contains it.
-- **Neighbours:** from a cell to the cells adjacent to it.
-- **Within:** from a position and a distance to every cell within that
-  distance.
+- `locate` returns the cell containing a position.
+- `neighbours` returns the cells adjacent to a cell.
+- `within` returns the cells within a distance of a position.
 
-Cell identities come from the lattice. Splitting or merging cells retires the
-old identities and creates new ones; the lattice never reuses an identity for a
-different region. Placement and lookup key on identity, so they stay correct
-as the lattice changes. How the lattice keeps that promise is #97's decision.
+The lattice issues cell identities. Splitting or merging cells creates new
+identities and retires the old ones. An identity never names a second region.
+Issue #97 decides how the lattice keeps that promise.
 
-### Placement and lookup
+### Placement
 
-A cell runs on the node chosen by rendezvous hashing of the cell's identity
-over the current node list. A node joining or leaving moves only the cells
-whose highest-scoring node changes. Each cell joins a `pg` group named for its
-identity, and callers find a cell through that group.
+Rendezvous hashing of a cell's identity over the current node list picks the
+node the cell runs on. When a node joins or leaves, only the cells whose
+top-scoring node changes move. Each cell joins a `pg` group named after its
+identity, and callers find the cell through that group.
 
-### Awareness
+### Sharing state between cells
 
-Simulation and visibility are separate mechanisms:
+Every tick, each cell sends its neighbours the entities within the interest
+radius of their shared boundary. A neighbour keeps them as a read-only halo, so
+an interaction across a boundary runs inside one cell.
 
-- **Simulation.** Each tick, a cell pushes the entities within the interest
-  radius of its boundary to the neighbouring cells. A neighbour holds them as a
-  read-only halo, so interactions across a boundary run in one cell. The
-  number of messages per tick is bounded by the number of neighbours.
-- **Visibility.** A session subscribes to every cell within its client's
-  render distance (the Within function). Those cells push entity updates to the
-  subscribed sessions every tick. The session updates its subscriptions when
-  its entity moves.
+A session subscribes to every cell `within` its client's render distance, and
+those cells send it entity updates every tick. The session updates its
+subscriptions as its entity moves.
 
-### Hand-off
+### Moving an entity
 
-The cell that owns an entity starts a hand-off when the entity leaves the
-cell's region by more than a hysteresis margin:
+A cell hands an entity off once the entity is more than a hysteresis margin
+outside the cell's region. The old cell sends the entity's state to the new
+cell, which holds it without simulating it. The new cell then takes ownership
+and acknowledges, and the old cell points the session at the new cell. Until
+that acknowledgement, the old cell owns the entity.
 
-1. **Prepare.** The old cell sends the entity's state to the new cell, which
-   holds it without simulating it.
-2. **Commit.** The new cell takes ownership and acknowledges. The old cell
-   points the session at the new cell.
+Splitting or merging cells moves their entities as a batch of hand-offs. A node
+joining or leaving moves its cells the same way.
 
-Between prepare and commit the entity's owner is still the old cell.
+### Inputs and crashes
 
-### Inputs in flight
+The session keeps each input until a cell acknowledges the tick that applied
+it. After a hand-off, a cell crash, or a lookup that reached a stale process,
+the session sends its unacknowledged inputs again. Cells forward nothing. Each
+input carries a sequence number, and a cell ignores a number it has already
+applied.
 
-A session keeps each input until a cell acknowledges the tick that applied it.
-The session sends its unacknowledged inputs again after a hand-off, after a
-cell crash, and after a lookup that reached a stale process. Old owners forward
-nothing. Cells apply each input at most once, by its sequence number within the
-session.
-
-### Supervision
-
-Each node runs one cell supervisor, with the `one_for_one` restart strategy.
-Each node also runs a table keeper. A cell keeps its entities in an `ets` table
-whose heir is the keeper. When a cell crashes, the keeper inherits the table
-and gives it to the restarted cell, which resumes from its last tick.
-
-### Splitting and merging
-
-When the lattice splits or merges cells to follow density, the affected cells
-move their entities as a batch of hand-offs. A node joining or leaving moves
-cells the same way.
+Each node runs one table keeper and one cell supervisor with the `one_for_one`
+strategy. Each cell keeps its entities in an `ets` table with the keeper as
+heir. When a cell crashes, the keeper inherits the table and gives it to the
+restarted cell, which resumes from its last tick.
 
 ## Consequences
 
-- Interactions inside a cell are function calls, and interactions across a
-  boundary cost one halo message per neighbour per tick.
-- Neither placement nor lookup takes a cluster-wide lock. A lookup can
-  briefly reach a stale process instead, and session replay recovers from it.
-- A client's render distance sets how many cells it subscribes to, so it also
-  sets the client's bandwidth and drawing load. #196 measures where that
-  overloads a client.
-- Sessions hold their unacknowledged inputs and send them again, so the protocol
-  needs sequence numbers and acknowledgements (#13, #28).
-- A cell crash loses nothing. A node crash loses that node's cells, because
-  their tables live only on that node. Surviving node loss needs persistence or
-  replication, which no record covers yet.
-- Halo pushes don't help in a dense hot spot, because the halo becomes the
-  whole population. #97 owns that case.
-- The server code doesn't exist yet, so nothing in the build checks this
-  record.
+- An interaction inside a cell costs a function call. Each cell sends one halo
+  message to each neighbour per tick.
+- Placement and lookup take no cluster-wide lock. When a lookup reaches a stale
+  process, session replay recovers the inputs.
+- Render distance sets how many cells a client subscribes to, and with it the
+  client's bandwidth and drawing load. #196 measures where a client overloads.
+- The protocol needs a sequence number on each input and an acknowledgement
+  from the server (#13, #28).
+- A cell crash loses nothing. A node crash loses every cell on that node,
+  because their tables live there. Surviving node loss needs persistence or
+  replication, which no record covers.
+- In a dense hot spot the halo holds the whole crowd, so halos don't help. #97
+  covers hot spots.
+- No server code exists, so nothing in the build checks this record.
