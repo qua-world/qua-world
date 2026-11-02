@@ -70,10 +70,9 @@ repos:
       - id: renovate-config-validator
         args: [--strict, --no-global]
 
-  # git-cliff renders CHANGELOG.md from these types; CONTRIBUTING.md defines
-  # each. scripts/check-commit-messages.sh runs this hook in CI, so the list
-  # lives here alone. Naming `fix` replaces the hook's defaults rather than
-  # extending them.
+  # CONTRIBUTING.md defines each type. CI runs conventional-pre-commit through
+  # scripts/check-commit-messages.sh. The hook adds `feat` and `fix` to a type
+  # list holding neither, so listing `fix` keeps `feat` out.
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.5.0
     hooks:

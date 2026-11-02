@@ -4,8 +4,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The stub stands in for the hook and accepts only `chore:` subjects, so these
-# tests cover which commits reach the hook, not the hook's parsing.
+# The stub hook accepts only `chore:` subjects, so these tests cover which
+# commits reach the hook.
 setup() {
     script="$BATS_TEST_DIRNAME/check-commit-messages.sh"
     cd "$BATS_TEST_TMPDIR"

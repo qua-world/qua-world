@@ -11,8 +11,8 @@
     ":semanticCommits",
     ":semanticCommitScopeDisabled"
   ],
-  // The commit convention in CONTRIBUTING.md starts subjects with a capital
-  // that the default lowercasing would drop.
+  // Renovate lowercases commit subjects by default. CONTRIBUTING.md starts
+  // them with a capital.
   "commitMessageLowerCase": "never",
   "timezone": "Europe/London",
   "reviewers": [

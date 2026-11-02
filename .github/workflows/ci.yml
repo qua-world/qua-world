@@ -43,7 +43,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          # Checking commit messages walks the pull request's commits.
+          # The commit message check reads the pull request's history.
           fetch-depth: 0
 
       - name: Install Fourmolu
@@ -76,8 +76,9 @@ jobs:
         uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
 
       # A job-level guard would skip the job on pushes, and a skipped job fails
-      # `Check CI results`. The pre-commit action leaves uv on PATH but runs
-      # pre-commit through uvx, so the script needs its own install.
+      # `Check CI results`. The pre-commit action leaves no `pre-commit` on
+      # PATH. `uv tool install` puts `pre-commit` in ~/.local/bin, which the
+      # Fourmolu step added to PATH.
       - name: Check commit messages
         if: github.base_ref == 'develop'
         env:

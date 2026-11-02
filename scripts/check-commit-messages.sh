@@ -8,9 +8,8 @@
 # Fail unless every non-merge commit in <base>..<head> passes the
 # conventional-pre-commit hook.
 #
-# Git flow merges rather than squashes, so every commit reaches develop and
-# git-cliff reads each one. Running the hook keeps .pre-commit-config.yaml the
-# one place the types are listed.
+# Git flow merges pull requests, so every commit lands on develop. Running the
+# hook keeps the type list in .pre-commit-config.yaml alone.
 #
 # Usage: check-commit-messages.sh <base-commit> <head-commit>
 
