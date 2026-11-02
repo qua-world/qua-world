@@ -95,14 +95,14 @@ characters, a blank line, then a wrapped body. The body covers why the change
 matters and anything a reader of the diff would find surprising.
 
 Start the subject with a [Conventional Commits] type naming the
-[CHANGELOG.md](CHANGELOG.md) section the change belongs in: `add`, `change`, `deprecate`, `remove`, `fix`, or `security`. Use
-`chore` for work a player never sees, such as CI, tooling, refactoring, and
-docs. For example, `add: Show the server address in observe mode`. Mark a
-breaking change with `!` after the type, for example
-`change!: Drop the legacy wire format`.
+[CHANGELOG.md](CHANGELOG.md) section the change belongs in: `add`, `change`,
+`deprecate`, `remove`, `fix`, or `security`. Use `chore` for work a player
+never sees, such as CI, tooling, refactoring, and docs. For example,
+`add: Show the server address in observe mode`. Mark a breaking change with
+`!` after the type, for example `change!: Drop the legacy wire format`.
 
-The `commit-msg` hook checks each subject, and CI checks every commit in the
-pull request.
+The `commit-msg` hook runs `commitlint` on each message. CI runs it again on
+every commit in the pull request.
 
 ## Filing an issue
 

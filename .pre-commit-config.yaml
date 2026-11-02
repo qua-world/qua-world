@@ -70,14 +70,14 @@ repos:
       - id: renovate-config-validator
         args: [--strict, --no-global]
 
-  # CONTRIBUTING.md defines each type. CI runs conventional-pre-commit through
-  # scripts/check-commit-messages.sh. The hook adds `feat` and `fix` to a type
-  # list holding neither, so listing `fix` keeps `feat` out.
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.5.0
+  # Renovate updates additional_dependencies only under an explicit language.
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.27.0
     hooks:
-      - id: conventional-pre-commit
-        args: [add, change, deprecate, remove, fix, security, chore]
+      - id: commitlint
+        stages: [commit-msg]
+        language: node
+        additional_dependencies: ["@commitlint/config-conventional@21.2.4"]
 
   # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
   # these are pinned in the CI workflow's pre-commit job instead.
