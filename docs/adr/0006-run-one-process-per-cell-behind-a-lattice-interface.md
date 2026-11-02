@@ -55,10 +55,9 @@ cell that owns the client's entity.
 ### Lattice
 
 The lattice is the scheme that divides space into cells, such as an octree.
-The server uses it through three functions:
+The server uses it through two functions:
 
 - `locate` returns the cell containing a position.
-- `neighbours` returns the cells adjacent to a cell.
 - `within` returns the cells within a distance of a position.
 
 The lattice issues cell identities. Splitting or merging cells creates new
@@ -74,10 +73,10 @@ identity, and callers find the cell through that group.
 
 ### Sharing state between cells
 
-Every tick, each cell sends its neighbours a copy of every entity within
-interaction range of their shared boundary. A neighbour simulates against those
-copies but never changes them, so an interaction across a boundary runs inside
-one cell.
+Every tick, each cell sends a copy of each of its entities to the other cells
+that `within` returns for the entity's position and the interaction range. A
+receiving cell simulates against those copies but never changes them, so an
+interaction across a boundary runs inside one cell.
 
 A session subscribes to the cells that `within` returns for its entity's
 position and its client's render distance. Those cells form the client's area
@@ -86,24 +85,24 @@ updates its subscriptions as its entity moves.
 
 ### Moving an entity
 
-A cell hands an entity off once the entity has moved a set distance past the
-cell's boundary. That distance keeps an entity on the boundary from being
-handed back and forth between two cells. The old cell sends the entity's state to the new cell, which
-holds it without simulating it. The new cell then takes ownership and
-acknowledges. On that acknowledgement, the old cell points the session at the
+Every tick, a cell calls `within` with each entity's position and a set
+distance. When the result no longer includes the owning cell, the owning cell
+hands the entity off to the cell that `locate` returns. The set distance keeps
+an entity on a boundary from being handed back and forth between two cells.
+The old cell sends the entity's state to the new cell, which holds it without
+simulating it. The new cell then takes ownership and acknowledges. On that acknowledgement, the old cell points the session at the
 new cell. Until then, the old cell owns the entity.
 
-Splitting or merging cells moves their entities as a batch of hand-offs. When a
-node joins or leaves, each cell that moves hands its entities to a new process
-on its new node.
+Splitting or merging cells, or a node joining or leaving, moves the affected
+entities as a batch of hand-offs to the new cell processes.
 
 ### Intents and crashes
 
 The session keeps each intent until a cell acknowledges the tick that applied
-it. The session sends its unacknowledged intents again after a hand-off, after a
-cell crash, and after a lookup reaches a process that no longer owns the cell. A cell
-never forwards an intent to another cell. Each intent carries a sequence
-number, and a cell ignores a number it has already applied.
+it. The session sends its unacknowledged intents again after a hand-off, after
+a cell crash, and after a lookup reaches a process that no longer owns the
+cell. A cell never forwards an intent to another cell. Each intent carries a
+sequence number, and a cell ignores a number it has already applied.
 
 Each node runs one cell supervisor with the `one_for_one` strategy. Each node
 also runs a table keeper, a process that holds the tables of crashed cells.
@@ -114,10 +113,9 @@ restarted cell, which resumes from its last tick.
 ## Consequences
 
 - An interaction inside a cell costs a function call. Each cell sends one
-  message to each neighbour per tick.
-- Placement and lookup take no cluster-wide lock. When a lookup reaches a
-  process that no longer owns the cell, the session recovers by sending its
-  unacknowledged intents again.
+  message per tick to each cell that receives copies of its entities.
+- Placement and lookup take no cluster-wide lock, so a lookup can briefly
+  reach a process that no longer owns the cell.
 - A larger render distance means a larger area of interest, more bandwidth,
   and more rendering for the client. #196 measures the render distance at
   which a client overloads.
@@ -126,7 +124,7 @@ restarted cell, which resumes from its last tick.
 - A cell crash loses nothing. A node crash loses every cell on that node,
   because their tables live there. Surviving node loss needs persistence or
   replication, which no record covers.
-- When many entities crowd one place, each cell's copies from its neighbours
-  include most of the crowd, and splitting cells stops helping. #97 covers
+- When many entities crowd one place, the copies each cell receives include
+  most of the crowd, and splitting cells stops helping. #97 covers
   crowds.
 - No server code exists, so nothing in the build checks this record.
