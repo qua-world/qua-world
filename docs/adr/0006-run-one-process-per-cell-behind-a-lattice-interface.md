@@ -14,8 +14,8 @@ Accepted
 
 [Record 2](0002-run-an-authoritative-world-server-on-erlang.md) makes the
 Erlang world-server authoritative and partitions space dynamically. It doesn't
-say which processes own what. The first server code, the client's interest set
-(#16), and the client's cell hand-off (#27) all depend on that structure.
+say which processes own what. The first server code (#194) and the client's
+interest set (#16) both depend on that structure.
 
 The structure has to meet these requirements:
 
@@ -42,17 +42,17 @@ Each part has alternatives:
 - **Finding a cell.** The OTP module `global` registers a name on every node
   or on none, and every change reaches every node. The OTP module `pg` keeps
   groups with members on any node, and its views "may temporarily diverge"
-  between nodes.
-  A static table can't follow nodes joining and leaving.
-- **Neighbour awareness.** Cells push the entities near their edges to their
-  neighbours. The alternatives are neighbours polling each other, or a shared
-  table, which `ets` can't provide across nodes.
+  between nodes. A fixed map from cell to node can't follow nodes joining and
+  leaving.
+- **Neighbour awareness.** Cells can push the entities near their edges to
+  their neighbours, or neighbours can poll each other. A shared table isn't an
+  option, because an `ets` table lives on one node.
 - **Messages in flight.** These can be dropped, forwarded, or replayed. Only
   replay from the sender survives a process that crashes before it forwards
   anything.
 - **Recovering a crashed cell.** A cell can restart empty or recover its
-  state. An `ets` table outlives its owner if it names an heir, and the OTP
-  documentation requires that the heir is a local process.
+  state. An `ets` table outlives its owner if it names an heir, and the heir
+  must be a local process.
 
 ## Decision
 
@@ -112,10 +112,10 @@ Between prepare and commit the entity's owner is still the old cell.
 ### Inputs in flight
 
 A session keeps each input until a cell acknowledges the tick that applied it.
-Whenever its entity's owner changes, whether by hand-off, crash, or a lookup
-that reached a stale process, the session sends the unacknowledged inputs again.
-This is the only way an input reaches a new owner; old owners forward nothing. Cells apply each input at
-most once, by its sequence number within the session.
+The session sends its unacknowledged inputs again after a hand-off, after a
+cell crash, and after a lookup that reached a stale process. Old owners forward
+nothing. Cells apply each input at most once, by its sequence number within the
+session.
 
 ### Supervision
 
@@ -134,11 +134,8 @@ cells the same way.
 
 - Interactions inside a cell are function calls, and interactions across a
   boundary cost one halo message per neighbour per tick.
-- Changing the lattice means implementing the three interface functions. The
-  mechanism doesn't change.
-- Neither placement nor lookup takes a cluster-wide lock. The cost is that a
-  lookup can briefly reach a stale process, and replay from the session covers
-  that.
+- Neither placement nor lookup takes a cluster-wide lock. A lookup can
+  briefly reach a stale process instead, and session replay recovers from it.
 - A client's render distance sets how many cells it subscribes to, so it also
   sets the client's bandwidth and drawing load. #196 measures where that
   overloads a client.
