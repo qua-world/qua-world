@@ -75,7 +75,7 @@ of lattice plugs in without changing the cell mechanism:
 Cell identities come from the lattice. Splitting or merging cells retires the
 old identities and creates new ones; the lattice never reuses an identity for a
 different region. Placement and lookup key on identity, so they stay correct
-across rebalancing. How the lattice keeps that promise is #97's decision.
+as the lattice changes. How the lattice keeps that promise is #97's decision.
 
 ### Placement and lookup
 
