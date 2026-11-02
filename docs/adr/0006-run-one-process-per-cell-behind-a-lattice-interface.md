@@ -59,7 +59,8 @@ Each part has alternatives:
 Each cell is one Erlang process. It owns the authoritative state of the
 entities inside its region, and it runs their simulation one tick at a time.
 Each session is a separate process that forwards inputs for its entity to the
-cell that owns that entity.
+cell that owns that entity. A client connects to its session and never to a
+cell, so moving an entity between cells leaves the client's connection alone.
 
 ### Lattice interface
 
@@ -70,6 +71,11 @@ of lattice plugs in without changing the cell mechanism:
 - **Neighbours:** from a cell to the cells adjacent to it.
 - **Within:** from a position and a distance to every cell within that
   distance.
+
+Cell identities come from the lattice. Splitting or merging cells retires the
+old identities and creates new ones; the lattice never reuses an identity for a
+different region. Placement and lookup key on identity, so they stay correct
+across rebalancing. How the lattice keeps that promise is #97's decision.
 
 ### Placement and lookup
 
