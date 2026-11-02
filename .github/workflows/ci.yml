@@ -42,6 +42,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Checking commit messages walks the pull request's commits.
+          fetch-depth: 0
 
       - name: Install Fourmolu
         run: |
@@ -71,6 +74,27 @@ jobs:
 
       - name: Run pre-commit
         uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
+
+      # Git flow merges rather than squashes, so every commit reaches develop
+      # and git-cliff reads each one. A job-level guard would skip the job on
+      # pushes, and a skipped job fails `Check CI results`.
+      - name: Check commit messages
+        if: github.base_ref == 'develop'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          status=0
+          message="$RUNNER_TEMP/commit-message"
+          for sha in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            git log -1 --format=%B "$sha" > "$message"
+            if ! uvx --with pre-commit-uv pre-commit run conventional-pre-commit \
+                --hook-stage commit-msg --commit-msg-filename "$message"; then
+              echo "::error::commit $sha lacks a recognised type"
+              status=1
+            fi
+          done
+          exit "$status"
 
   # terraform validate needs an initialized working directory, which the commit
   # hooks lack. Initializing without a backend needs no credentials.
