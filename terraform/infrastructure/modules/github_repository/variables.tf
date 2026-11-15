@@ -126,11 +126,7 @@ variable "environments" {
 
 variable "legacy" {
   type = object({
-    squash_only                      = optional(bool, false)
-    merge_methods                    = optional(list(string))
     allow_update_branch              = optional(bool, true)
-    squash_merge_commit_title        = optional(string, "PR_TITLE")
-    squash_merge_commit_message      = optional(string, "PR_BODY")
     allowed_action_patterns          = optional(list(string))
     can_approve_pull_request_reviews = optional(bool, false)
     dependabot_security_updates      = optional(bool, false)
@@ -141,18 +137,8 @@ variable "legacy" {
     Pre-Terraform settings a repository keeps in place of org defaults.
     Omit it once the repository adopts them all.
 
-    squash_only: squash merges and no master branch, in place of Git
-    flow's merge commits and protected master and release/**.
-
-    merge_methods: "merge", "squash", or both, in place of the flow's
-    one.
-
     allow_update_branch: false hides a pull request's button for merging
     its base branch in.
-
-    squash_merge_commit_title, squash_merge_commit_message: GitHub's
-    values for a squash commit's title and message, in place of the pull
-    request's title and body.
 
     allowed_action_patterns: owner/repo@* patterns for a repository
     allowlist inside the org's, in place of org_allowed_action_patterns.
