@@ -198,7 +198,7 @@ data "github_app" "actions" {
 }
 
 locals {
-  # A Git flow repository must run a job by this name, because rulesets on
+  # The repository must run a job by this name, because rulesets on
   # GitHub Free cannot restrict a pull request's source branch. It fails a
   # pull request into master from anything but release/* or hotfix/*.
   git_flow_source_check = "Check Git flow source branch"
