@@ -90,10 +90,9 @@ jobs:
       - name: Initialize Terraform
         run: terraform init -input=false
 
-      # No refresh: GitHub hides merge settings and ruleset bypass actors from
-      # a read-only token, so a refresh reads them as blank and plans changes
-      # the repository doesn't need. The diff runs against the state apply
-      # last refreshed.
+      # GitHub hides merge settings and ruleset bypass actors from a read-only
+      # token, so a refresh reads them as blank and plans false changes. This
+      # plan misses changes made outside Terraform; apply's refresh sees them.
       - name: Plan
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
