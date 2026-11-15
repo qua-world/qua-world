@@ -11,29 +11,12 @@ locals {
   develop_refs = ["refs/heads/${local.develop_branch}"]
 
   # A squashed release shares no ancestry with develop, so the next release
-  # re-presents its changes as conflicts. Release branches become master,
-  # so they take master's protections.
-  flow = var.legacy.squash_only ? {
-    branches       = []
-    merge_methods  = ["squash"]
-    linear_history = true
-    release_refs   = []
-    } : {
-    branches       = [local.master_branch]
-    merge_methods  = ["merge"]
-    linear_history = false
-    release_refs   = ["refs/heads/${local.master_branch}", "refs/heads/release/**"]
-  }
+  # re-presents its changes as conflicts.
+  merge_methods = ["merge"]
 
-  protected_refs = concat(local.develop_refs, local.flow.release_refs)
-
-  merge_methods = coalesce(var.legacy.merge_methods, local.flow.merge_methods)
-
-  # The provider writes the squash commit title and message only while squash
-  # is allowed but always reads them back, so a value set without squash would
-  # show a diff on every plan. Null takes the provider default, which is also
-  # GitHub's.
-  allow_squash = contains(local.merge_methods, "squash")
+  # Release branches become master, so they take master's protections.
+  release_refs   = ["refs/heads/${local.master_branch}", "refs/heads/release/**"]
+  protected_refs = concat(local.develop_refs, local.release_refs)
 }
 
 # Public because the org is on GitHub Free, where a private repository cannot
@@ -45,22 +28,20 @@ resource "github_repository" "this" {
   homepage_url = var.homepage_url
   topics       = var.topics
 
-  visibility                  = "public"
-  has_issues                  = true
-  has_projects                = false
-  has_wiki                    = false
-  has_discussions             = var.has_discussions
-  allow_merge_commit          = contains(local.merge_methods, "merge")
-  allow_squash_merge          = local.allow_squash
-  allow_rebase_merge          = false
-  allow_auto_merge            = var.renovate_automerge
-  allow_update_branch         = var.legacy.allow_update_branch
-  squash_merge_commit_title   = local.allow_squash ? var.legacy.squash_merge_commit_title : null
-  squash_merge_commit_message = local.allow_squash ? var.legacy.squash_merge_commit_message : null
-  merge_commit_title          = "MERGE_MESSAGE"
-  merge_commit_message        = "PR_TITLE"
-  delete_branch_on_merge      = true
-  archive_on_destroy          = true
+  visibility             = "public"
+  has_issues             = true
+  has_projects           = false
+  has_wiki               = false
+  has_discussions        = var.has_discussions
+  allow_merge_commit     = contains(local.merge_methods, "merge")
+  allow_squash_merge     = contains(local.merge_methods, "squash")
+  allow_rebase_merge     = false
+  allow_auto_merge       = var.renovate_automerge
+  allow_update_branch    = var.legacy.allow_update_branch
+  merge_commit_title     = "MERGE_MESSAGE"
+  merge_commit_message   = "PR_TITLE"
+  delete_branch_on_merge = true
+  archive_on_destroy     = true
 }
 
 resource "github_branch_default" "this" {
@@ -69,7 +50,7 @@ resource "github_branch_default" "this" {
 }
 
 resource "github_branch" "long_lived" {
-  for_each = toset(local.flow.branches)
+  for_each = toset([local.master_branch])
 
   repository    = github_repository.this.name
   branch        = each.key
@@ -138,9 +119,8 @@ resource "github_repository_ruleset" "default" {
   # No required_signatures: GitHub signs the merges it makes, so the rule
   # would only block unsigned direct pushes.
   rules {
-    deletion                = true
-    non_fast_forward        = true
-    required_linear_history = local.flow.linear_history
+    deletion         = true
+    non_fast_forward = true
   }
 }
 
@@ -240,11 +220,11 @@ locals {
         strict   = coalesce(try(var.required_status_checks.strict, null), !var.renovate_automerge)
       }
       release = {
-        refs     = local.flow.release_refs
+        refs     = local.release_refs
         contexts = concat([local.git_flow_source_check], local.required_checks)
         strict   = true
       }
-    } : name => policy if length(policy.refs) > 0 && length(policy.contexts) > 0
+    } : name => policy if length(policy.contexts) > 0
   }
 }
 
