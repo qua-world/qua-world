@@ -89,16 +89,9 @@
       "automerge": false
     },
     {
-      "description": "A merge to develop applies the infrastructure layer, and a green plan only shows the plan ran",
-      "matchManagers": [
-        "terraform"
-      ],
-      "automerge": false
-    },
-    {
-      "description": "A merge to develop applies the infrastructure layer, and a green plan only shows the plan ran",
-      "matchDepNames": [
-        "hashicorp/terraform"
+      "description": "The admin's next bootstrap run applies these with admin credentials, and no CI job plans them first",
+      "matchFileNames": [
+        "terraform/bootstrap/**"
       ],
       "automerge": false
     },
