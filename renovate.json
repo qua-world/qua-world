@@ -22,21 +22,6 @@
   // Renovate waits only on the checks the branch ruleset requires, so a
   // stuck optional check such as Codecov can't stall an automerge.
   "ignoreTests": true,
-  "lockFileMaintenance": {
-    "automerge": true
-  },
-  "minor": {
-    "automerge": true
-  },
-  "patch": {
-    "automerge": true
-  },
-  "pin": {
-    "automerge": true
-  },
-  "digest": {
-    "automerge": true
-  },
   "minimumReleaseAge": "3 days",
   // hackage reports no release timestamps, so the default
   // timestamp-required mode holds every cabal update forever rather than
@@ -86,6 +71,17 @@
         "replacement"
       ],
       "minimumReleaseAge": null
+    },
+    {
+      // The hold rules below must come after this one to override it.
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "lockFileMaintenance"
+      ],
+      "automerge": true
     },
     {
       "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers",
