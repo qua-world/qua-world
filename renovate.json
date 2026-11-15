@@ -19,6 +19,9 @@
   "labels": [
     "dependencies"
   ],
+  // The branch ruleset's required checks gate the merge. Renovate's own wait
+  // covers every check, so a stuck optional one such as Codecov would stall it.
+  "ignoreTests": true,
   "minimumReleaseAge": "3 days",
   // hackage reports no release timestamps, so the default
   // timestamp-required mode holds every cabal update forever rather than
@@ -68,6 +71,48 @@
         "replacement"
       ],
       "minimumReleaseAge": null
+    },
+    {
+      // A hold overrides this rule only when listed after it.
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "lockFileMaintenance"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers",
+      "matchIsBreaking": true,
+      "automerge": false
+    },
+    {
+      "description": "The admin applies the bootstrap layer by hand with admin credentials, and no CI job plans it",
+      "matchFileNames": [
+        "terraform/bootstrap/**"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "A merge to develop applies the infrastructure layer, and a green plan doesn't show the change is safe",
+      "matchFileNames": [
+        "terraform/infrastructure/**",
+        ".github/workflows/infrastructure.yml"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "A release job runs its actions beside its publishing credential. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
+      "matchFileNames": [
+        ".github/workflows/release.yml",
+        ".github/actions/**"
+      ],
+      "matchDatasources": [
+        "!github-runners"
+      ],
+      "automerge": false
     }
   ],
   "osvVulnerabilityAlerts": true,
