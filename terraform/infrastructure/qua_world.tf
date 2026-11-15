@@ -16,10 +16,7 @@ module "qua_world" {
   renovate_automerge        = true
 
   legacy = {
-    merge_methods               = ["merge", "squash"]
     allow_update_branch         = false
-    squash_merge_commit_title   = "COMMIT_OR_PR_TITLE"
-    squash_merge_commit_message = "COMMIT_MESSAGES"
     dependabot_security_updates = true
   }
 }
