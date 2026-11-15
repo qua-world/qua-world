@@ -19,6 +19,24 @@
   "labels": [
     "dependencies"
   ],
+  // Renovate waits only on the checks the branch ruleset requires, so a
+  // stuck optional check such as Codecov can't stall an automerge.
+  "ignoreTests": true,
+  "lockFileMaintenance": {
+    "automerge": true
+  },
+  "minor": {
+    "automerge": true
+  },
+  "patch": {
+    "automerge": true
+  },
+  "pin": {
+    "automerge": true
+  },
+  "digest": {
+    "automerge": true
+  },
   "minimumReleaseAge": "3 days",
   // hackage reports no release timestamps, so the default
   // timestamp-required mode holds every cabal update forever rather than
@@ -68,6 +86,44 @@
         "replacement"
       ],
       "minimumReleaseAge": null
+    },
+    {
+      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers",
+      "matchIsBreaking": true,
+      "automerge": false
+    },
+    {
+      "description": "A merge to develop applies the infrastructure layer, and a green plan only shows the plan ran",
+      "matchManagers": [
+        "terraform"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "A merge to develop applies the infrastructure layer, and a green plan only shows the plan ran",
+      "matchDepNames": [
+        "hashicorp/terraform"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "A merge to develop applies the infrastructure layer, and a green plan only shows the plan ran",
+      "matchFileNames": [
+        "terraform/infrastructure/**",
+        ".github/workflows/infrastructure.yml"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "A release job runs these beside the credential it publishes with. Runner images are exempt because GitHub also issues that job's OIDC token.",
+      "matchFileNames": [
+        ".github/workflows/release.yml",
+        ".github/actions/**"
+      ],
+      "matchDatasources": [
+        "!github-runners"
+      ],
+      "automerge": false
     }
   ],
   "osvVulnerabilityAlerts": true,
