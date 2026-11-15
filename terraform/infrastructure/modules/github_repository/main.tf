@@ -28,6 +28,12 @@ locals {
   protected_refs = concat(local.develop_refs, local.flow.release_refs)
 
   merge_methods = coalesce(var.legacy.merge_methods, local.flow.merge_methods)
+
+  # The provider writes the squash commit title and message only while squash
+  # is allowed but always reads them back, so a value set without squash would
+  # show a diff on every plan. Null takes the provider default, which is also
+  # GitHub's.
+  allow_squash = contains(local.merge_methods, "squash")
 }
 
 # Public because the org is on GitHub Free, where a private repository cannot
@@ -45,12 +51,12 @@ resource "github_repository" "this" {
   has_wiki                    = false
   has_discussions             = var.has_discussions
   allow_merge_commit          = contains(local.merge_methods, "merge")
-  allow_squash_merge          = contains(local.merge_methods, "squash")
+  allow_squash_merge          = local.allow_squash
   allow_rebase_merge          = false
   allow_auto_merge            = var.renovate_automerge
   allow_update_branch         = var.legacy.allow_update_branch
-  squash_merge_commit_title   = var.legacy.squash_merge_commit_title
-  squash_merge_commit_message = var.legacy.squash_merge_commit_message
+  squash_merge_commit_title   = local.allow_squash ? var.legacy.squash_merge_commit_title : null
+  squash_merge_commit_message = local.allow_squash ? var.legacy.squash_merge_commit_message : null
   merge_commit_title          = "MERGE_MESSAGE"
   merge_commit_message        = "PR_TITLE"
   delete_branch_on_merge      = true
