@@ -6,6 +6,8 @@
 # LICENSES/ has to stay byte-identical to what `reuse download` fetches.
 exclude: ^(\.vale/styles/(?!config/)|LICENSES/)
 
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -67,6 +69,16 @@ repos:
     hooks:
       - id: renovate-config-validator
         args: [--strict, --no-global]
+
+  # Renovate updates additional_dependencies only when the hook states its
+  # language here.
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.27.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        language: node
+        additional_dependencies: ["@commitlint/config-conventional@21.2.4"]
 
   # Renovate's pre-commit manager tracks only hooks carrying a `rev:`, so
   # these are pinned in the CI workflow's pre-commit job instead.
