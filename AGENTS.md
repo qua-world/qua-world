@@ -11,7 +11,7 @@ steps live in [`CONTRIBUTING.md`](CONTRIBUTING.md); decisions live in
 [`docs/adr/`](docs/adr/). Claude Code reads [`CLAUDE.md`](CLAUDE.md), which
 imports this file.
 
-## Scope and tracking
+## Issues and decisions
 
 - When a change depends on something the repository lacks, file the
   prerequisite as an issue, add a native blocked-by edge, and stop. Land the
@@ -22,6 +22,9 @@ imports this file.
   `CONTRIBUTING.md` where judgment decides. Record platform and release choices
   in the issues that implement them. An ADR is for a choice between shippable
   options that's costly to reverse.
+
+## Documentation
+
 - Put provenance for an opaque file in the code that depends on it. A directory
   gets a README only once an index helps.
 - Attribution comes from git history and SPDX headers; the repository keeps no
@@ -31,13 +34,13 @@ imports this file.
 
 ## Haskell
 
+- Build and test with `-w ghc-<version>`, naming a compiler in the
+  `tested-with` series of `partir-qua-world.cabal`, whenever the default `ghc`
+  falls outside it.
 - Before recommending a Hackage package, run `cabal update`, solve it against
-  the pinned compiler in a throwaway package with
-  `cabal build --dry-run -w ghc-9.10.3`, and judge the result by exit code.
-  Then compile it with `cabal build --dependencies-only`. Check its last
-  release date too.
-- Build and test with `-w ghc-9.10.3` when the default `ghc` isn't in the
-  `tested-with` series.
+  that compiler in a throwaway package with `cabal build --dry-run`, and judge
+  the result by exit code. Then compile it with
+  `cabal build --dependencies-only`. Check its last release date too.
 - Each asset loader converts its upstream library's types into `Partir.Asset`
   inside its own `Partir.Asset.<Format>` module, so the library never reaches
   the public API. Decode failures return a typed per-loader error in `Left`;
