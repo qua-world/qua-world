@@ -6,64 +6,64 @@ SPDX-License-Identifier: MIT
 
 # Agent instructions for qua-world
 
-Rules a coding agent can't infer from the files. Build, test, and pull request
-steps live in [`CONTRIBUTING.md`](CONTRIBUTING.md); decisions live in
-[`docs/adr/`](docs/adr/). Claude Code reads [`CLAUDE.md`](CLAUDE.md), which
-imports this file.
+Add a rule here only when no file in the repository states it. Build, test, and
+pull request steps are in [`CONTRIBUTING.md`](CONTRIBUTING.md); decisions are in
+[`docs/adr/`](docs/adr/).
 
 ## Issues and decisions
 
-- When a change depends on something the repository lacks, file the
-  prerequisite as an issue, add a native blocked-by edge, and stop. Land the
-  change once the prerequisite exists.
+- When a change depends on something the repository lacks, file that
+  prerequisite as an issue, mark the change blocked by it, and stop.
 - Before documenting or enforcing a convention, grep for the code it governs.
-  With no call sites yet, file an issue and wait.
-- Ratify a convention in a linter where one can check it and in
-  `CONTRIBUTING.md` where judgment decides. Record platform and release choices
-  in the issues that implement them. An ADR is for a choice between shippable
-  options that's costly to reverse.
+  If nothing follows the convention yet, file an issue and wait.
+- Enforce a convention with a linter when a linter can check it; otherwise,
+  state it in `CONTRIBUTING.md`.
+- Record platform and release choices in the issues that implement them.
+- Reserve an ADR for a hard-to-reverse choice between shippable options.
 
 ## Documentation
 
-- Put provenance for an opaque file in the code that depends on it. A directory
-  gets a README only once an index helps.
-- Attribution comes from git history and SPDX headers; the repository keeps no
-  `AUTHORS` or `COPYRIGHT` roster.
+- Record where a binary file came from in the code that loads it.
+- Add a directory README only when the directory holds enough to need an index.
+- Carry attribution in SPDX headers and git history alone, without an `AUTHORS`
+  or `COPYRIGHT` file.
 - Leave compiler, dependency-bound, and build-environment changes out of
   `CHANGELOG.md`.
 
 ## Haskell
 
-- Build and test with `-w ghc-<version>`, naming a compiler in the
-  `tested-with` series of `partir-qua-world.cabal`, whenever the default `ghc`
-  falls outside it.
-- Before recommending a Hackage package, run `cabal update`, solve it against
-  that compiler in a throwaway package with `cabal build --dry-run`, and judge
-  the result by exit code. Then compile it with
-  `cabal build --dependencies-only`. Check its last release date too.
-- Each asset loader converts its upstream library's types into `Partir.Asset`
-  inside its own `Partir.Asset.<Format>` module, so the library never reaches
-  the public API. Decode failures return a typed per-loader error in `Left`;
-  file I/O failures stay exceptions.
-- Name the Fowler catalogue entry a refactoring applies in issues and commit
-  messages. Before fixing a smell in passing, check whether an open issue
-  already claims it.
+- When the default `ghc` falls outside the `tested-with` series in
+  `partir-qua-world.cabal`, pass `-w ghc-<version>` with a compiler from that
+  series.
+- Before recommending a Hackage package, prove it builds and is maintained:
+  1. Run `cabal update`.
+  2. In a throwaway package, run `cabal build --dry-run -w ghc-<version>` and
+     read the exit code.
+  3. Compile it with `cabal build --dependencies-only`.
+  4. Check the date of its latest release.
+- Put a new asset loader in `Partir.Asset.<Format>` and convert its library's
+  types to `Partir.Asset` there, keeping the library out of the public API.
+  Return decode failures as a typed per-loader error in `Left`; let file I/O
+  failures throw.
+- In issues and commit messages, name the Fowler catalogue entry each
+  refactoring applies.
+- Before fixing a smell in passing, check whether an open issue claims it.
 
 ## CI and coverage
 
-- When code needs a device the test suite lacks, move its pure decisions into
-  a tested module first. The `codecov.yml` ignore then names that one file and
-  the issue that brings its real check.
-- Push a new CI gate's wiring commit on its own so the pull request shows the
-  gate failing on real findings, then push the fixes.
-- When pinning a runner or image, read the `Image:` line in `develop`'s latest
-  CI log and pin what `-latest` resolves to today.
+- When code needs a device the test suite lacks, such as an OpenGL context,
+  move its pure logic into a tested module. Ignore only the remaining file in
+  `codecov.yml`, with a comment naming the issue that will test it.
+- When adding a CI gate, push the commit that enables it alone, let CI fail on
+  the existing findings, then push the fixes.
+- To replace a `-latest` runner label, pin the image on the `Image:` line of
+  `develop`'s most recent CI log.
 
 ## Pull requests
 
-- A stale bot closes quiet pull requests. Read a closed pull request's comments
-  before treating it as rejected, and check whether the issue it claimed is
-  still open.
-- Fetch `origin/develop` again before opening a pull request and before each
-  push. When a sibling change touched the same module, read its merged code
-  before resolving the conflict.
+- Before treating a pull request closed without merging as rejected, read its
+  comments. A stale bot closes inactive pull requests and leaves their issues
+  open.
+- Fetch `origin/develop` before opening a pull request and before each push.
+  If a merged change touched the same module, read its code before resolving
+  conflicts.
