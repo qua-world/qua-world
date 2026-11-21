@@ -121,25 +121,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 2
 
-      # Reading the apply trigger's paths plans a pull request exactly when
-      # its merge would apply. HEAD is the pull request's merge commit, so
-      # HEAD^1 is the base branch's tip. Only develop applies, and forks get no
-      # OIDC token.
       - name: Diff against the apply trigger's paths
         id: diff
         env:
           BASE_REF: ${{ github.base_ref }}
           SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
-          plan=false
-          if [ "$BASE_REF" = develop ] && [ "$SAME_REPOSITORY" = true ]; then
-            mapfile -t paths < <(yq '.on.push.paths[] | ":(glob)" + .' .github/workflows/infrastructure.yml)
-            if [ "${#paths[@]}" -eq 0 ]; then
-              echo "::error::infrastructure.yml's push trigger lists no paths"
-              exit 1
-            fi
-            git diff --quiet HEAD^1 HEAD -- "${paths[@]}" || plan=true
-          fi
+          plan=$(scripts/detect-infrastructure-changes.sh "$BASE_REF" "$SAME_REPOSITORY")
           echo "plan=${plan}" >>"$GITHUB_OUTPUT"
 
   terraform-plan:
