@@ -44,13 +44,10 @@ resource "github_actions_organization_permissions" "org" {
     patterns_allowed = [
       "8c6794b6/hpc-codecov-action@*",
       "astral-sh/setup-uv@*",
-      "bats-core/bats-action@*",
       "codecov/codecov-action@*",
       "google-github-actions/auth@*",
       "google-github-actions/get-secretmanager-secrets@*",
       "google-github-actions/setup-gcloud@*",
-      "hashicorp/setup-terraform@*",
-      "haskell-actions/hlint-setup@*",
       "haskell-actions/setup@*",
       "tox-dev/action-pre-commit-uv@*",
     ]

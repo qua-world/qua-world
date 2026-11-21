@@ -65,7 +65,8 @@ pre-commit run --all-files
 ```
 
 The `fourmolu` and `hlint` hooks invoke those tools from `PATH`, so install
-both alongside `cabal-install`. The versions CI pins are in
+both alongside `cabal-install`. `mise install` installs `hlint` at the version
+CI uses, from [mise.toml](mise.toml). CI pins `fourmolu` in
 [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Haskell Language Server formats with ormolu unless told otherwise, and ormolu
