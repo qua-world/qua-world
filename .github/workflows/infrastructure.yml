@@ -240,12 +240,12 @@ jobs:
             const title = 'Infrastructure apply failed on develop';
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = `Apply run ${run} failed (triggered by \`${context.actor}\`).`;
-            const open = await github.paginate(github.rest.issues.listForRepo, {
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
               ...context.repo,
               state: 'open',
               creator: 'github-actions[bot]',
             });
-            const report = open.find((i) => !i.pull_request && i.title === title);
+            const report = openIssues.find((i) => !i.pull_request && i.title === title);
             if (report) {
               await github.rest.issues.createComment({
                 ...context.repo,
