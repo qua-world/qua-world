@@ -227,15 +227,14 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: terraform apply -input=false -no-color tfplan
 
-      # GitHub emails a failed run only to the actor that triggered it, which
-      # is a bot for Renovate merges and scheduled dispatches. Repeat failures
-      # comment on the open report, so each incident is one issue to close.
+      # GitHub emails a failed run only to its triggering account. When a bot
+      # triggers the apply, this report is the only notice the admin gets.
       - name: Report the failure to the admin
         if: failure() && github.ref == 'refs/heads/develop'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // Matches CODEOWNERS; github.repository_owner names the org.
+            // Must match CODEOWNERS. github.repository_owner is the org, not a user.
             const admin = 'alunduil';
             const title = 'Infrastructure apply failed on develop';
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
