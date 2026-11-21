@@ -211,12 +211,24 @@ jobs:
       # GitHub hides merge settings and ruleset bypass actors from a read-only
       # token, so a refresh reads them as blank and plans false changes. This
       # plan misses changes made outside Terraform; apply's refresh sees them.
+      #
+      # -detailed-exitcode exits 2 on a plan with changes and 1 on an error.
       - name: Plan
+        id: plan
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          terraform plan -input=false -lock=false -refresh=false -no-color -out=tfplan
+          status=0
+          terraform plan -input=false -lock=false -refresh=false -no-color -detailed-exitcode -out=tfplan || status=$?
+          if [ "$status" -eq 1 ]; then
+            exit 1
+          fi
           terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
+          if [ "$status" -eq 2 ]; then
+            echo changes=true >>"$GITHUB_OUTPUT"
+          else
+            echo changes=false >>"$GITHUB_OUTPUT"
+          fi
 
       - name: Comment the plan on the pull request
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -266,6 +278,19 @@ jobs:
                 body,
               });
             }
+
+      # A dependency update is meant to change nothing live, and merging
+      # applies its plan. This step follows the comment so a failure still
+      # shows what the update would change.
+      - name: Fail a dependency update whose plan changes resources
+        if: >-
+          steps.plan.outputs.changes == 'true' && (
+            github.event.pull_request.user.login == 'renovate[bot]' ||
+            contains(github.event.pull_request.labels.*.name, 'dependencies')
+          )
+        run: |
+          echo "::error::This dependency update changes resources; see the plan comment."
+          exit 1
 
   scripts:
     name: Test shell scripts
