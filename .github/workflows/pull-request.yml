@@ -92,15 +92,11 @@ jobs:
         run: |
           status=0
           terraform plan -input=false -lock=false -refresh=false -no-color -detailed-exitcode -out=tfplan || status=$?
+          echo "exitcode=${status}" >>"$GITHUB_OUTPUT"
           if [ "$status" -eq 1 ]; then
             exit 1
           fi
           terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
-          if [ "$status" -eq 2 ]; then
-            echo changes=true >>"$GITHUB_OUTPUT"
-          else
-            echo changes=false >>"$GITHUB_OUTPUT"
-          fi
 
       - name: Comment the plan on the pull request
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -156,7 +152,7 @@ jobs:
       # its plan.
       - name: Fail a dependency update whose plan changes resources
         if: >-
-          steps.plan.outputs.changes == 'true' && (
+          steps.plan.outputs.exitcode == '2' && (
             github.event.pull_request.user.login == 'renovate[bot]' ||
             contains(github.event.pull_request.labels.*.name, 'dependencies')
           )
