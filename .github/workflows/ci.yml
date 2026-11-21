@@ -31,7 +31,7 @@ jobs:
     # `ignoreUnstable` then hides. `loose` compares them component-wise.
     env:
       # renovate: datasource=github-releases depName=fourmolu/fourmolu versioning=loose extractVersion=^v(?<version>.+)$
-      FOURMOLU_VERSION: "0.20.1.0"
+      FOURMOLU_VERSION: "0.21.0.0"
       # renovate: datasource=github-releases depName=ndmitchell/hlint versioning=loose extractVersion=^v(?<version>.+)$
       HLINT_VERSION: "3.10"
       # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
