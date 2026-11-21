@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Alex Brandt
+#
+# SPDX-License-Identifier: MIT
+
+extends:
+  - "@commitlint/config-conventional"
+rules:
+  # CONTRIBUTING.md asks for subjects that start with a capital.
+  subject-case: [0]
+  # CONTRIBUTING.md defines each type.
+  type-enum:
+    - 2
+    - always
+    - [add, change, deprecate, remove, fix, security, chore]
