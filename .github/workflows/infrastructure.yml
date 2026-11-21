@@ -9,8 +9,6 @@ name: Infrastructure
 on:
   push:
     branches: [develop]
-    # The infrastructure-changes job in ci.yml reads this list, so a pull
-    # request plans exactly when its merge would apply.
     paths:
       - terraform/infrastructure/**
       - .github/workflows/infrastructure.yml
@@ -25,8 +23,9 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 20
 
-    # Shared with CI's plan so a plan never reads state mid-write. queue: max
-    # also forbids cancelling an apply in progress, which would orphan its lock.
+    # Shared with the pull request plan so a plan never reads state mid-write.
+    # queue: max also forbids cancelling an apply in progress, which would
+    # orphan its lock.
     concurrency:
       group: terraform-state
       queue: max

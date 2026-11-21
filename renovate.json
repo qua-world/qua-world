@@ -105,14 +105,12 @@
       "automerge": false
     },
     {
-      "description": "CI's infrastructure plan runs these actions beside a credential that can read the plan App's private key",
+      "description": "The infrastructure plan runs its actions beside a credential that can read the plan App's private key. Runner images are exempt, as for release.yml.",
       "matchFileNames": [
-        ".github/workflows/ci.yml"
+        ".github/workflows/pull-request.yml"
       ],
-      "matchPackageNames": [
-        "google-github-actions/*",
-        "actions/create-github-app-token",
-        "actions/github-script"
+      "matchDatasources": [
+        "!github-runners"
       ],
       "automerge": false
     },
