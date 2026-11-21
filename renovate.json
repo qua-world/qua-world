@@ -105,6 +105,18 @@
       "automerge": false
     },
     {
+      "description": "CI's infrastructure plan runs these actions beside the read-only deployer's credentials, which can read the plan App's private key",
+      "matchFileNames": [
+        ".github/workflows/ci.yml"
+      ],
+      "matchPackageNames": [
+        "google-github-actions/*",
+        "actions/create-github-app-token",
+        "actions/github-script"
+      ],
+      "automerge": false
+    },
+    {
       "description": "A release job runs its actions beside its publishing credential. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
       "matchFileNames": [
         ".github/workflows/release.yml",
