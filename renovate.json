@@ -105,7 +105,7 @@
       "automerge": false
     },
     {
-      "description": "CI's infrastructure plan runs these actions beside the read-only deployer's credentials, which can read the plan App's private key",
+      "description": "CI's infrastructure plan runs these actions beside a credential that can read the plan App's private key",
       "matchFileNames": [
         ".github/workflows/ci.yml"
       ],

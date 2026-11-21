@@ -9,11 +9,12 @@
 # otherwise.
 #
 # A pull request needs it when it targets develop, comes from this repository,
-# and changes a path that infrastructure.yml's push trigger applies on. Reading
-# that trigger plans a pull request exactly when its merge would apply. Forks
-# get no OIDC token, so they never plan.
+# and changes a path in infrastructure.yml's push trigger. Because that list
+# triggers the apply, a pull request plans exactly when its merge would apply.
+# Forks get no OIDC token, so they never plan.
 #
-# HEAD must be the pull request's merge commit, so HEAD^1 is the base tip.
+# HEAD must be the pull request's merge commit, whose first parent is the base
+# branch's tip.
 #
 # Usage: detect-infrastructure-changes.sh <base-branch> <same-repository>
 

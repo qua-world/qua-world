@@ -100,10 +100,9 @@ jobs:
             terraform -chdir="${layer}" validate
           done
 
-  # A required check skipped by a trigger's paths: filter stays pending
-  # forever, so the plan is gated on this job's output instead. Deciding here
-  # also keeps a pull request that plans nothing out of the plan's
-  # terraform-state queue.
+  # GitHub filters paths per workflow, and the plan stays in CI so Check CI
+  # results can gate on it. As its own job, the check keeps a pull request with
+  # nothing to plan out of the terraform-state queue.
   infrastructure-changes:
     name: Detect infrastructure changes
     runs-on: ubuntu-26.04
@@ -197,8 +196,6 @@ jobs:
       # GitHub hides merge settings and ruleset bypass actors from a read-only
       # token, so a refresh reads them as blank and plans false changes. This
       # plan misses changes made outside Terraform; apply's refresh sees them.
-      #
-      # -detailed-exitcode exits 2 on a plan with changes and 1 on an error.
       - name: Plan
         id: plan
         env:
@@ -265,9 +262,9 @@ jobs:
               });
             }
 
-      # A dependency update is meant to change nothing live, and merging
-      # applies its plan. This step follows the comment so a failure still
-      # shows what the update would change.
+      # Merging applies the plan, and a dependency update should change nothing
+      # live. Keep this step after the comment so a failing update still shows
+      # its plan.
       - name: Fail a dependency update whose plan changes resources
         if: >-
           steps.plan.outputs.changes == 'true' && (

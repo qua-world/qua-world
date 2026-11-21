@@ -9,9 +9,8 @@ name: Infrastructure
 on:
   push:
     branches: [develop]
-    # CI's Detect infrastructure changes reads this list to decide which pull
-    # requests to plan, so a pull request never plans a change its merge won't
-    # apply.
+    # The infrastructure-changes job in ci.yml reads this list, so a pull
+    # request plans exactly when its merge would apply.
     paths:
       - terraform/infrastructure/**
       - .github/workflows/infrastructure.yml

@@ -5,10 +5,9 @@
 # SPDX-License-Identifier: MIT
 
 #
-# Fail Check CI results unless every job it needs succeeded.
-#
-# Only the infrastructure plan may skip, and only when the change detection
-# said not to plan.
+# Exit nonzero unless every job in a needs context succeeded. The one
+# exception: terraform-plan may skip when infrastructure-changes reports
+# nothing to plan.
 #
 # Usage: check-ci-results.sh <needs-json>
 
