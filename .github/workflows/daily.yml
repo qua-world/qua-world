@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       debug-only:
-        description: Log what the sweep would do without labelling or closing
+        description: Log each verdict without labelling or closing anything
         type: boolean
         default: false
 
