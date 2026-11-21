@@ -11,6 +11,11 @@ on:
     - cron: '47 6 * * *'
       timezone: Europe/London
   workflow_dispatch:
+    inputs:
+      debug-only:
+        description: Log each verdict without labelling or closing anything
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,6 +44,9 @@ jobs:
       # that already carry the label.
       - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11
         with:
+          debug-only: ${{ inputs.debug-only }}
+          # Must match the `labels` in renovate.json.
+          exempt-pr-labels: dependencies
           days-before-issue-stale: -1
           days-before-issue-close: -1
           days-before-pr-stale: ${{ env.PR_STALE_DAYS }}
