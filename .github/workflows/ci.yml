@@ -292,7 +292,7 @@ jobs:
 
     # An AppImage runs only on a glibc at least as new as its build's, so it
     # builds on the oldest glibc of any supported distro.
-    container: almalinux:8
+    container: almalinux:8@sha256:768bedc30fe0a536adb0a65d2eddb7caad364e514fbddd0ae9e026975f590342
 
     env:
       # A relocatable build of a library that depends on another in-place
@@ -382,7 +382,7 @@ jobs:
 
     # A stock image has none of the libraries the AppImage carries, so a
     # missing one fails the launch.
-    container: ubuntu:22.04
+    container: ubuntu:22.04@sha256:f64b2ffc2f10ab8f8505aa56b2664bd846cbb9df87c7e2532e30f7667021c0e6
 
     steps:
       # A player's desktop supplies the display and OpenGL driver.
