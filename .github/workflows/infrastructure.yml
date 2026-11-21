@@ -165,6 +165,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      issues: write
 
     env:
       # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
@@ -225,3 +226,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: terraform apply -input=false -no-color tfplan
+
+      # GitHub emails a failed run only to its triggering account. When a bot
+      # triggers the apply, this report is the only notice the admin gets.
+      - name: Report the failure to the admin
+        if: failure() && github.ref == 'refs/heads/develop'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // Must match CODEOWNERS. github.repository_owner is the org, not a user.
+            const admin = 'alunduil';
+            const title = 'Infrastructure apply failed on develop';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `Apply run ${run} failed (triggered by \`${context.actor}\`).`;
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo,
+              state: 'open',
+              creator: 'github-actions[bot]',
+            });
+            const report = openIssues.find((i) => !i.pull_request && i.title === title);
+            if (report) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: report.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                ...context.repo,
+                title,
+                body,
+                assignees: [admin],
+                labels: ['bug'],
+              });
+            }
