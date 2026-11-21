@@ -4,8 +4,8 @@
 
 name: Pull request
 
-# The ruleset requires the plan by name, so it must report on every pull
-# request. A path filter here would leave it pending.
+# The develop and release rulesets require the plan by name, so it must report
+# on every pull request. A path filter would leave it pending.
 on:
   pull_request:
 
@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
-    # Only develop applies, and forks get no OIDC token. A job skipped by its
-    # if: reports success, so other pull requests pass.
+    # Only a merge to develop applies, and forks get no OIDC token. A job
+    # skipped by its if: reports success, so other pull requests pass.
     if: >-
       github.event.pull_request.base.ref == 'develop' &&
       github.event.pull_request.head.repo.full_name == github.repository
 
-    # The read-only deployer cannot write a lock, so plan runs -lock=false and
-    # queues behind any apply instead.
+    # The read-only deployer cannot write a lock, so the plan runs -lock=false
+    # and waits out any apply through the shared terraform-state group.
     concurrency:
       group: terraform-state
       queue: max
