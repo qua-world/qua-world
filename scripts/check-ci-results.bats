@@ -43,13 +43,13 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "passes on a push, where detection and the plan both skip" {
+@test "fails when detection skips" {
     run "$script" '{
-        "build": {"result": "success"},
         "infrastructure-changes": {"result": "skipped", "outputs": {}},
         "terraform-plan": {"result": "skipped"}
     }'
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"infrastructure-changes: skipped"* ]]
 }
 
 @test "fails when the plan skips although detection asked for it" {

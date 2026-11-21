@@ -109,8 +109,6 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 5
 
-    if: github.event_name == 'pull_request'
-
     outputs:
       plan: ${{ steps.diff.outputs.plan }}
 

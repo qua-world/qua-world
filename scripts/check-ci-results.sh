@@ -7,9 +7,8 @@
 #
 # Fail Check CI results unless every job it needs succeeded.
 #
-# Two jobs may skip. The infrastructure change detection runs on pull requests
-# alone, and the infrastructure plan runs only when that detection says to.
-# A plan skipped for any other reason fails.
+# Only the infrastructure plan may skip, and only when the change detection
+# said not to plan.
 #
 # Usage: check-ci-results.sh <needs-json>
 
@@ -21,14 +20,12 @@ if [ "$#" -ne 1 ]; then
 fi
 
 failed=$(jq -r '
-  (.["infrastructure-changes"].outputs.plan // "false") as $plan
-  | to_entries[]
+  .["infrastructure-changes"].outputs.plan as $plan
+  | def unplanned_skip:
+      .key == "terraform-plan" and .value.result == "skipped" and $plan != "true";
+  to_entries[]
   | select(.value.result != "success")
-  | select(
-      .value.result != "skipped"
-      or (.key != "infrastructure-changes"
-        and (.key != "terraform-plan" or $plan == "true"))
-    )
+  | select(unplanned_skip | not)
   | "\(.key): \(.value.result)"
 ' <<<"$1")
 
