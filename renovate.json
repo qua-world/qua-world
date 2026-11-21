@@ -105,9 +105,10 @@
       "automerge": false
     },
     {
-      "description": "A release job runs its actions beside its publishing credential. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
+      "description": "A release job runs its actions beside its publishing credential. The infrastructure plan runs its actions beside a credential that can read the plan App's private key. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
       "matchFileNames": [
         ".github/workflows/release.yml",
+        ".github/workflows/pull-request.yml",
         ".github/actions/**"
       ],
       "matchDatasources": [
