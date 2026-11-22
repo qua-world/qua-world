@@ -97,18 +97,25 @@
       "automerge": false
     },
     {
-      "description": "A merge to develop applies the infrastructure layer, and a green plan doesn't show the change is safe",
+      "description": "Renovate automerges a branch only when every update in it automerges, so a held bootstrap update would hold a lock file branch it shares with the infrastructure layer",
       "matchFileNames": [
-        "terraform/infrastructure/**",
-        ".github/workflows/infrastructure.yml"
+        "terraform/bootstrap/**"
+      ],
+      "groupName": "bootstrap layer"
+    },
+    {
+      "description": "A newer Terraform can write state an older one cannot read, so reverting a bump after it applies may not recover",
+      "matchDepNames": [
+        "hashicorp/terraform"
       ],
       "automerge": false
     },
     {
-      "description": "A release job runs its actions beside its publishing credential. The infrastructure plan runs its actions beside a credential that can read the plan App's private key. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
+      "description": "A release job runs its actions beside its publishing credential. The infrastructure plan and apply run their actions beside a credential that can read a Terraform App's private key. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
       "matchFileNames": [
         ".github/workflows/release.yml",
         ".github/workflows/pull-request.yml",
+        ".github/workflows/infrastructure.yml",
         ".github/actions/**"
       ],
       "matchDatasources": [
