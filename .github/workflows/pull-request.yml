@@ -86,19 +86,11 @@ jobs:
       # token, so a refresh reads them as blank and plans false changes. This
       # plan misses changes made outside Terraform; apply's refresh sees them.
       - name: Plan
-        id: plan
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           terraform plan -input=false -lock=false -refresh=false -no-color -out=tfplan
           terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
-          terraform show -json tfplan >plan.json
-          # -detailed-exitcode would report changes on every plan, because a
-          # check block's data source always plans a read.
-          count=$(jq '[.resource_changes[]
-            | select(.mode != "data" and .change.actions != ["no-op"])]
-            | length' plan.json)
-          echo "resource_changes=${count}" >>"$GITHUB_OUTPUT"
 
       - name: Comment the plan on the pull request
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -154,10 +146,16 @@ jobs:
       # its plan.
       - name: Fail a dependency update whose plan changes resources
         if: >-
-          steps.plan.outputs.resource_changes != '0' && (
-            github.event.pull_request.user.login == 'renovate[bot]' ||
-            contains(github.event.pull_request.labels.*.name, 'dependencies')
-          )
+          github.event.pull_request.user.login == 'renovate[bot]' ||
+          contains(github.event.pull_request.labels.*.name, 'dependencies')
         run: |
-          echo "::error::This dependency update changes resources; see the plan comment."
-          exit 1
+          terraform show -json tfplan >plan.json
+          # -detailed-exitcode would report changes on every plan, because a
+          # check block's data source always plans a read.
+          count=$(jq '[.resource_changes[]
+            | select(.mode != "data" and .change.actions != ["no-op"])]
+            | length' plan.json)
+          if [ "$count" != 0 ]; then
+            echo "::error::This dependency update changes resources; see the plan comment."
+            exit 1
+          fi
