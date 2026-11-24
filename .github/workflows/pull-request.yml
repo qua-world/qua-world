@@ -150,8 +150,8 @@ jobs:
           contains(github.event.pull_request.labels.*.name, 'dependencies')
         run: |
           terraform show -json tfplan >plan.json
-          # -detailed-exitcode would report changes on every plan, because a
-          # check block's data source always plans a read.
+          # Terraform rereads data sources inside check blocks at apply, and
+          # -detailed-exitcode counts each reread as a change.
           count=$(jq '[.resource_changes[]
             | select(.mode != "data" and .change.actions != ["no-op"])]
             | length' plan.json)
