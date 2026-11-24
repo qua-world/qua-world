@@ -86,16 +86,10 @@ jobs:
       # token, so a refresh reads them as blank and plans false changes. This
       # plan misses changes made outside Terraform; apply's refresh sees them.
       - name: Plan
-        id: plan
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          status=0
-          terraform plan -input=false -lock=false -refresh=false -no-color -detailed-exitcode -out=tfplan || status=$?
-          echo "exitcode=${status}" >>"$GITHUB_OUTPUT"
-          if [ "$status" -eq 1 ]; then
-            exit 1
-          fi
+          terraform plan -input=false -lock=false -refresh=false -no-color -out=tfplan
           terraform show -no-color tfplan >"${GITHUB_WORKSPACE}/plan.txt"
 
       - name: Comment the plan on the pull request
@@ -152,10 +146,16 @@ jobs:
       # its plan.
       - name: Fail a dependency update whose plan changes resources
         if: >-
-          steps.plan.outputs.exitcode == '2' && (
-            github.event.pull_request.user.login == 'renovate[bot]' ||
-            contains(github.event.pull_request.labels.*.name, 'dependencies')
-          )
+          github.event.pull_request.user.login == 'renovate[bot]' ||
+          contains(github.event.pull_request.labels.*.name, 'dependencies')
         run: |
-          echo "::error::This dependency update changes resources; see the plan comment."
-          exit 1
+          terraform show -json tfplan >plan.json
+          # Terraform rereads data sources inside check blocks at apply, and
+          # -detailed-exitcode counts each reread as a change.
+          count=$(jq '[.resource_changes[]
+            | select(.mode != "data" and .change.actions != ["no-op"])]
+            | length' plan.json)
+          if [ "$count" != 0 ]; then
+            echo "::error::This dependency update changes resources; see the plan comment."
+            exit 1
+          fi
