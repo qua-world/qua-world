@@ -382,7 +382,7 @@ jobs:
 
     # A stock image has none of the libraries the AppImage carries, so a
     # missing one fails the launch.
-    container: ubuntu:22.04@sha256:f64b2ffc2f10ab8f8505aa56b2664bd846cbb9df87c7e2532e30f7667021c0e6
+    container: ubuntu:22.04@sha256:b000e69a50ff940390233025e7a337fb8469b509e2334fa4d018ac30f3e18cdb
 
     steps:
       # A player's desktop supplies the display and OpenGL driver.
