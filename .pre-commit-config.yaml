@@ -55,7 +55,7 @@ repos:
   # reuse-tool develops on Codeberg. Renovate's pre-commit manager resolves a
   # version only from this mirror, which carries the same tags.
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v6.2.0
+    rev: v6.3.0
     hooks:
       - id: reuse
 
