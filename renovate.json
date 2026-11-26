@@ -90,6 +90,18 @@
       "automerge": false
     },
     {
+      "description": "No hook ships, and Run pre-commit hooks runs the new version over every file it governs, so the breaking hold's reason doesn't apply",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
       "description": "The admin applies the bootstrap layer by hand with admin credentials, and no CI job plans it",
       "matchFileNames": [
         "terraform/bootstrap/**"
