@@ -147,7 +147,7 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
           ghc-version: "9.14"
@@ -211,7 +211,7 @@ jobs:
     # GHC's bundled toolchain: clang, lld, and compiler-rt against UCRT.
     steps:
       - name: Set up GHC
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
           ghc-version: "9.14"
@@ -236,7 +236,7 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
           ghc-version: "9.14"
@@ -323,7 +323,7 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
           ghc-version: "9.14"
