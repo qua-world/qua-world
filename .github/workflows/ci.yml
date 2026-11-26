@@ -70,7 +70,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Run pre-commit
-        uses: tox-dev/action-pre-commit-uv@e09b8958484dfe71f4ac3bc7afb230ba506402ec # v1.0.5
+        uses: tox-dev/action-pre-commit-uv@9316eafda3550b0365575c60b9f53725a81d0cfd # v1.1.2
 
   # terraform validate needs an initialized working directory, which the commit
   # hooks lack. Initializing without a backend needs no credentials.
@@ -147,10 +147,10 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
-          ghc-version: "9.10"
+          ghc-version: "9.14"
           cabal-version: latest
 
       - name: Check tested-with matches the installed GHC
@@ -211,10 +211,10 @@ jobs:
     # GHC's bundled toolchain: clang, lld, and compiler-rt against UCRT.
     steps:
       - name: Set up GHC
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
-          ghc-version: "9.10"
+          ghc-version: "9.14"
           cabal-version: latest
 
       - name: Report GHC toolchain
@@ -236,10 +236,10 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
-          ghc-version: "9.10"
+          ghc-version: "9.14"
           cabal-version: latest
 
       - name: Update Hackage index
@@ -323,10 +323,10 @@ jobs:
 
       - name: Set up GHC
         id: setup
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
           # renovate: datasource=endoflife-date depName=ghc versioning=loose
-          ghc-version: "9.10"
+          ghc-version: "9.14"
           cabal-version: ${{ env.CABAL_VERSION }}
 
       - name: Update Hackage index
