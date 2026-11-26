@@ -125,6 +125,21 @@
         "!github-runners"
       ],
       "automerge": false
+    },
+    {
+      "description": "Terraform changes its state format only in a minor or major release, so an applied patch can be reverted. Keep this rule last so it overrides the Terraform and credential holds. The file list leaves out bootstrap's required_version, which Renovate also extracts as hashicorp/terraform.",
+      "matchFileNames": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/pull-request.yml",
+        ".github/workflows/infrastructure.yml"
+      ],
+      "matchDepNames": [
+        "hashicorp/terraform"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true
     }
   ],
   "osvVulnerabilityAlerts": true,
