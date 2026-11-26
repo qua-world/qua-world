@@ -55,7 +55,7 @@ repos:
   # reuse-tool develops on Codeberg. Renovate's pre-commit manager resolves a
   # version only from this mirror, which carries the same tags.
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v6.2.0
+    rev: v6.3.0
     hooks:
       - id: reuse
 
@@ -63,7 +63,7 @@ repos:
   # that errors. --no-global reads the file as repository configuration;
   # the default reads it as global config and misreports repository fields.
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 44.235.1
+    rev: 44.258.1
     hooks:
       - id: renovate-config-validator
         args: [--strict, --no-global]
