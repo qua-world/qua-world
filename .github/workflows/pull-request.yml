@@ -145,9 +145,9 @@ jobs:
       # live. Keep this step after the comment so a failing update still shows
       # its plan.
       #
-      # Renovate edits the body after it pushes, so the event's copy can state
-      # the hold the previous push had. Reading the pull request here also lets
-      # a re-run see a hold added since.
+      # Renovate pushes before it edits the body, so the event can carry the
+      # previous push's hold. Reading the pull request also lets a re-run see
+      # an edited body.
       - name: Fail an unheld dependency update whose plan changes resources
         if: >-
           github.event.pull_request.user.login == 'renovate[bot]' ||

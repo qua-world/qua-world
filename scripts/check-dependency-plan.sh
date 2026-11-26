@@ -8,12 +8,12 @@
 # Fail a dependency update whose plan changes resources, unless Renovate holds
 # the update for the admin to merge.
 #
-# The ruleset that requires this check has no bypass actors, so a held update
-# that failed here could not be merged by anyone.
+# Nobody can bypass the ruleset that requires this check, so a held update
+# failing here would be unmergeable.
 #
 # Usage: check-dependency-plan.sh <pull-request-json> <plan-json>
 #
-# <pull-request-json> is GET /repos/{owner}/{repo}/pulls/{number}.
+# <pull-request-json> is the response to GET /repos/{owner}/{repo}/pulls/{number}.
 # <plan-json> is the output of terraform show -json.
 
 set -euo pipefail
@@ -26,7 +26,8 @@ fi
 pull_request="$1"
 plan="$2"
 
-# jq exits 0 without output on an empty file unless the filter calls input.
+# Calling input makes jq fail on an empty file instead of printing nothing
+# and succeeding.
 author=$(jq -nr 'input | .user.login' "$pull_request")
 body=$(jq -nr 'input | .body // ""' "$pull_request")
 auto_merge=$(jq -nr 'input | .auto_merge != null' "$pull_request")
@@ -45,8 +46,8 @@ if [ "$author" = 'renovate[bot]' ]; then
   esac
 fi
 
-# Terraform rereads data sources inside check blocks at apply, and
-# -detailed-exitcode counts each reread as a change.
+# Terraform plans a read for each data source inside a check block, and a
+# read changes nothing.
 count=$(jq -n 'input | [.resource_changes[]
   | select(.mode != "data" and .change.actions != ["no-op"])]
   | length' "$plan")
