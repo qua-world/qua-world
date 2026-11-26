@@ -85,7 +85,7 @@
       "automerge": true
     },
     {
-      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers. Pre-commit hooks are exempt: no hook ships, and Run pre-commit hooks runs a hook's new version over every file it governs",
+      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers. A pre-commit hook ships in nothing, and CI runs its new version over every file it governs",
       "matchIsBreaking": true,
       "matchManagers": [
         "!pre-commit"
