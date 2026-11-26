@@ -111,11 +111,12 @@
       "automerge": false
     },
     {
-      "description": "A release job runs its actions beside its publishing credential. The infrastructure plan and apply run their actions beside a credential that can read their App's private key. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
+      "description": "A release job runs its actions beside its publishing credential. The infrastructure plan, the apply, and the deployer access check run their actions beside a credential that can read an App's private key. Runner images are exempt: GitHub supplies them and issues the job's OIDC token, so the job already trusts GitHub.",
       "matchFileNames": [
         ".github/workflows/release.yml",
         ".github/workflows/pull-request.yml",
         ".github/workflows/infrastructure.yml",
+        ".github/workflows/deployer-access.yml",
         ".github/actions/**"
       ],
       "matchDatasources": [
