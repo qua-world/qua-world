@@ -10,6 +10,7 @@ setup() {
     plan="$BATS_TEST_TMPDIR/plan.json"
     enabled='🚦 **Automerge**: Enabled.'
     disabled='🚦 **Automerge**: Disabled by config. Please merge this manually once you are satisfied.'
+    armed='{"enabled_by": {"login": "renovate[bot]"}}'
 }
 
 # write_pull_request <author> <body> [auto-merge-json]
@@ -26,8 +27,6 @@ write_plan() {
         {mode: "managed", change: {actions: [$action]}}
     ]}' >"$plan"
 }
-
-armed='{"enabled_by": {"login": "renovate[bot]"}}'
 
 @test "accepts a held update that changes resources" {
     write_pull_request 'renovate[bot]' "$disabled"
