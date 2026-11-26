@@ -85,21 +85,12 @@
       "automerge": true
     },
     {
-      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers",
+      "description": "A breaking change, such as a semver 0.x minor, can pass every check and still break behaviour no test covers. Pre-commit hooks are exempt: no hook ships, and Run pre-commit hooks runs a hook's new version over every file it governs",
       "matchIsBreaking": true,
-      "automerge": false
-    },
-    {
-      "description": "No hook ships, and Run pre-commit hooks runs the new version over every file it governs, so the breaking hold's reason doesn't apply",
       "matchManagers": [
-        "pre-commit"
+        "!pre-commit"
       ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest"
-      ],
-      "automerge": true
+      "automerge": false
     },
     {
       "description": "The admin applies the bootstrap layer by hand with admin credentials, and no CI job plans it",
