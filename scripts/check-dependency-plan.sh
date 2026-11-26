@@ -55,17 +55,16 @@ if [ "$count" = 0 ]; then
   exit 0
 fi
 
+if [ "$held" != true ]; then
+  echo "::error::This dependency update changes resources; see the plan comment."
+  exit 1
+fi
+
 # Renovate leaves auto-merge on when it starts holding an update, so GitHub
 # would merge the update as soon as this check passed.
-if [ "$held" = true ] && [ "$auto_merge" = true ]; then
+if [ "$auto_merge" = true ]; then
   echo "::error::This held update changes resources and auto-merge is on. Disable auto-merge, then re-run this job."
   exit 1
 fi
 
-if [ "$held" = true ]; then
-  echo "::notice::This held update changes resources; read the plan comment before merging."
-  exit 0
-fi
-
-echo "::error::This dependency update changes resources; see the plan comment."
-exit 1
+echo "::notice::This held update changes resources; read the plan comment before merging."
