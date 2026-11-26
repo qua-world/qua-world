@@ -144,18 +144,18 @@ jobs:
       # Merging applies the plan, and a dependency update should change nothing
       # live. Keep this step after the comment so a failing update still shows
       # its plan.
-      - name: Fail a dependency update whose plan changes resources
+      #
+      # Renovate pushes before it edits the body, so the event can carry the
+      # previous push's hold. Reading the pull request also lets a re-run see
+      # an edited body.
+      - name: Fail an unheld dependency update whose plan changes resources
         if: >-
           github.event.pull_request.user.login == 'renovate[bot]' ||
           contains(github.event.pull_request.labels.*.name, 'dependencies')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}" >pull_request.json
           terraform show -json tfplan >plan.json
-          # Terraform rereads data sources inside check blocks at apply, and
-          # -detailed-exitcode counts each reread as a change.
-          count=$(jq '[.resource_changes[]
-            | select(.mode != "data" and .change.actions != ["no-op"])]
-            | length' plan.json)
-          if [ "$count" != 0 ]; then
-            echo "::error::This dependency update changes resources; see the plan comment."
-            exit 1
-          fi
+          "${GITHUB_WORKSPACE}/scripts/check-dependency-plan.sh" pull_request.json plan.json
