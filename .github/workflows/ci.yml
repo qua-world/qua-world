@@ -35,7 +35,7 @@ jobs:
       # renovate: datasource=github-releases depName=ndmitchell/hlint versioning=loose extractVersion=^v(?<version>.+)$
       HLINT_VERSION: "3.10"
       # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
-      TERRAFORM_VERSION: "1.17.1"
+      TERRAFORM_VERSION: "1.17.2"
       # renovate: datasource=github-releases depName=casey/just
       JUST_VERSION: "1.59.0"
 
@@ -81,7 +81,7 @@ jobs:
 
     env:
       # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
-      TERRAFORM_VERSION: "1.17.1"
+      TERRAFORM_VERSION: "1.17.2"
 
     steps:
       - name: Checkout
