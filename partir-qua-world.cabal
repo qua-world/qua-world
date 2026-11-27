@@ -179,7 +179,7 @@ test-suite partir-qua-world-test
     , OpenGL >= 3.0 && < 3.1
     , partir-qua-world
     , partir-qua-world:glut-client
-    , QuickCheck >= 2.14 && < 2.19
+    , QuickCheck >=2.14 && <2.20
     , tasty >= 1.5 && < 1.6
     , tasty-hunit >= 0.10 && < 0.11
     , tasty-quickcheck >= 0.10 && < 0.12
