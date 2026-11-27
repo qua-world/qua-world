@@ -89,7 +89,7 @@ library
   other-modules:
 
   build-depends:
-      aeson >= 2.2 && < 2.3
+      aeson >=2.2 && <2.4
     , aeson-tiled >= 0.0.2 && < 0.1
     , bytestring >= 0.12 && < 0.13
     , containers >= 0.7 && < 0.9
