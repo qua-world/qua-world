@@ -292,7 +292,7 @@ jobs:
 
     # An AppImage runs only on a glibc at least as new as its build's, so it
     # builds on the oldest glibc of any supported distro.
-    container: almalinux:8@sha256:768bedc30fe0a536adb0a65d2eddb7caad364e514fbddd0ae9e026975f590342
+    container: almalinux:10@sha256:ccf217024b3d5e268cc208d1edb384a1edee6359370cf6ea1ecbc42254e57375
 
     env:
       # A relocatable build of a library that depends on another in-place
